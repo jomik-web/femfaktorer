@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-white text-ink dark:bg-ink dark:text-warmgray;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  /* WCAG 2.2 AA: synlig fokusmarkør på alle interaktive elementer (Dokument 02 §20) */
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-teal;
+  }
+
+  /* Respekter redusert bevegelse (Dokument 02 §6.5) */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

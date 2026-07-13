@@ -1,0 +1,17 @@
+# Avhengigheter og bygg-output (regenereres alltid av npm/Next.js)
+node_modules/
+.next/
+out/
+
+# Hemmeligheter -- skal ALDRI committes
+.env
+.env.local
+.env*.local
+
+# Admin-panelets midlertidige fillagring (se src/lib/admin/store.ts -- skal
+# erstattes av ekte datalagring før produksjon)
+.data/
+
+# OS- og editor-støy
+.DS_Store
+*.log

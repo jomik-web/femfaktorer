@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Netlify sitt offisielle Next.js-runtime-plugin oppdages og aktiveres
+# automatisk for Next.js-prosjekter -- ingen ekstra plugin-oppføring nødvendig.
