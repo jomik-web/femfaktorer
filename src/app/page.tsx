@@ -20,6 +20,9 @@ export default function ForsidePage() {
       >
         Start testen
       </Link>
+      <Link href="/slik-fungerer" className="text-sm text-ink/70 underline underline-offset-2 dark:text-warmgray/70">
+        Se hvordan testen fungerer
+      </Link>
       <p className="max-w-md text-xs text-ink/50 dark:text-warmgray/50">
         Svarene dine lagres bare i denne nettleseren. Ingen konto er nødvendig.
       </p>
