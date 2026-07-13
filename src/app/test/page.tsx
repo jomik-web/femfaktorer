@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ALL_QUESTIONS, FREE_QUESTIONS, FREE_TIER_LENGTH } from "@/data/questions";
+import { ALL_QUESTIONS, FREE_QUESTIONS, FREE_TIER_LENGTH, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
 import type { AnswerValue } from "@/lib/scoring";
 import { computeTestResult, type AnswerMap, type ResultTier } from "@/lib/scoring";
-import { loadAnswers, saveAnswers } from "@/lib/storage";
+import { loadAnswers, saveAnswers, loadO6, saveO6, type O6ConsentStatus } from "@/lib/storage";
 import { AnswerScale } from "@/components/AnswerScale";
 import { ProgressBar } from "@/components/ProgressBar";
 
@@ -15,6 +15,11 @@ import { ProgressBar } from "@/components/ProgressBar";
  * hovedfaktorene. Ved spørsmål 50 stopper vi og spør -- på en smakfull, ikke
  * pushy måte (jf. Dokument 04 KORTRESULTAT-005/008) -- om brukeren vil
  * fortsette til alle 120 for et mer presist resultat og tilgang til Spir.
+ *
+ * Etter fullført 120-test tilbys en HELT VALGFRI bonusseksjon (O6, se
+ * questions.ts) med eget, uttrykkelig samtykke (GDPR art. 9(2)(a)) -- satt
+ * inn for utprøving på brukerens oppdrag, endelig beslutning om å beholde
+ * tas etter test.
  */
 export default function TestPage() {
   const router = useRouter();
@@ -24,6 +29,11 @@ export default function TestPage() {
   const [showCheckpoint, setShowCheckpoint] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
+  const [o6Status, setO6Status] = useState<O6ConsentStatus>("not_asked");
+  const [o6Answers, setO6Answers] = useState<AnswerMap>({});
+  const [o6Phase, setO6Phase] = useState<"none" | "offer" | "questions">("none");
+  const [o6Index, setO6Index] = useState(0);
+
   const activeQuestions = continuedToFull ? ALL_QUESTIONS : FREE_QUESTIONS;
 
   // Last lagrede svar ved oppstart (autolagring, Dokument 09 §10.3).
@@ -31,14 +41,23 @@ export default function TestPage() {
     const stored = loadAnswers();
     setAnswers(stored.answers);
     setContinuedToFull(stored.continuedToFull);
+    const storedO6 = loadO6();
+    setO6Status(storedO6.status);
+    setO6Answers(storedO6.answers);
+
     const list = stored.continuedToFull ? ALL_QUESTIONS : FREE_QUESTIONS;
     const firstUnanswered = list.findIndex((q) => stored.answers[q.id] === undefined);
     if (firstUnanswered === -1) {
-      setShowCheckpoint(!stored.continuedToFull);
+      if (!stored.continuedToFull) {
+        setShowCheckpoint(true);
+      } else {
+        goToO6OrResult(storedO6.status, storedO6.answers);
+      }
     } else {
       setIndex(firstUnanswered);
     }
     setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const question = activeQuestions[index];
@@ -49,7 +68,101 @@ export default function TestPage() {
     [answers, activeQuestions]
   );
 
+  /** Etter fullført 120-test: avgjør om O6-tilbudet skal vises, fortsettes, eller hoppes over. */
+  function goToO6OrResult(status: O6ConsentStatus, o6answers: AnswerMap) {
+    if (status === "not_asked") {
+      setO6Phase("offer");
+      return;
+    }
+    if (status === "consented") {
+      const unanswered = OPTIONAL_O6_QUESTIONS.some((q) => o6answers[q.id] === undefined);
+      if (unanswered) {
+        setO6Index(OPTIONAL_O6_QUESTIONS.findIndex((q) => o6answers[q.id] === undefined));
+        setO6Phase("questions");
+        return;
+      }
+    }
+    router.push("/resultat");
+  }
+
   if (!hydrated) return null;
+
+  if (o6Phase === "offer") {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
+          En helt valgfri tilleggsseksjon
+        </h1>
+        <p className="text-ink/80 dark:text-warmgray/80">
+          Vi tester ut fire ekstra spørsmål om en sjette side ved åpenhet for erfaring, som handler
+          om politiske og verdimessige holdninger. Disse påvirker IKKE hovedresultatet ditt over --
+          de vises eventuelt som et helt eget, atskilt tillegg.
+        </p>
+        <p className="text-sm text-ink/60 dark:text-warmgray/60">
+          Dette er informasjon om politisk oppfatning, en særlig kategori persondata. Du kan når som
+          helst slette akkurat denne dataen uavhengig av resten av testresultatet ditt.
+        </p>
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              setO6Status("consented");
+              saveO6("consented", o6Answers);
+              setO6Index(0);
+              setO6Phase("questions");
+            }}
+            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
+          >
+            Ja, jeg vil svare
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setO6Status("declined");
+              saveO6("declined", {});
+              setO6Phase("none");
+              router.push("/resultat");
+            }}
+            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
+          >
+            Nei takk
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (o6Phase === "questions") {
+    const o6Question = OPTIONAL_O6_QUESTIONS[o6Index];
+    if (!o6Question) {
+      router.push("/resultat");
+      return null;
+    }
+    return (
+      <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-12">
+        <ProgressBar current={o6Index + 1} total={OPTIONAL_O6_QUESTIONS.length} />
+        <div key={o6Question.id} className="flex flex-col gap-6">
+          <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
+            {o6Question.textNo}
+          </h1>
+          <AnswerScale
+            questionId={o6Question.id}
+            value={o6Answers[o6Question.id]}
+            onAnswer={(value) => {
+              const next = { ...o6Answers, [o6Question.id]: value };
+              setO6Answers(next);
+              saveO6("consented", next);
+              if (o6Index < OPTIONAL_O6_QUESTIONS.length - 1) {
+                setO6Index(o6Index + 1);
+              } else {
+                router.push("/resultat");
+              }
+            }}
+          />
+        </div>
+      </main>
+    );
+  }
 
   if (showCheckpoint) {
     return (
@@ -104,7 +217,7 @@ export default function TestPage() {
       if (tier === "free") {
         setShowCheckpoint(true);
       } else {
-        router.push("/resultat");
+        goToO6OrResult(o6Status, o6Answers);
       }
       return;
     }

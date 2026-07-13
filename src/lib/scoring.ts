@@ -21,7 +21,7 @@
  * samme skåringslogikk fungerer korrekt for begge trinn.
  */
 
-import type { Domain, Question } from "@/data/questions";
+import type { Domain, OptionalQuestion, Question } from "@/data/questions";
 
 export type AnswerValue = 1 | 2 | 3 | 4 | 5;
 
@@ -172,4 +172,22 @@ export function computeTestResult(
   });
 
   return { complete: true, factors, tier, incompleteDomains: [] };
+}
+
+/**
+ * Skårer den valgfrie O6-tilleggsseksjonen (se questions.ts) HELT ISOLERT --
+ * blandes ALDRI inn i de fem hovedfaktorskårene. Krever alle 4 item besvart.
+ * Returnerer `null` dersom seksjonen ikke er fullført (aldri en gjetning).
+ */
+export function computeOptionalO6Score(
+  answers: AnswerMap,
+  questions: readonly OptionalQuestion[]
+): number | null {
+  let sum = 0;
+  for (const q of questions) {
+    const raw = answers[q.id];
+    if (raw === undefined || !isValidAnswerValue(raw)) return null;
+    sum += q.reverse ? 6 - raw : raw;
+  }
+  return rescaleLinear(sum, questions.length);
 }

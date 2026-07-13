@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ALL_QUESTIONS, FREE_QUESTIONS } from "@/data/questions";
-import { computeTestResult, type FactorResult, type ResultTier } from "@/lib/scoring";
-import { loadAnswers, clearAnswers } from "@/lib/storage";
+import { ALL_QUESTIONS, FREE_QUESTIONS, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
+import { computeTestResult, computeOptionalO6Score, type FactorResult, type ResultTier } from "@/lib/scoring";
+import { loadAnswers, clearAnswers, loadO6, clearO6 } from "@/lib/storage";
 import { FactorScale } from "@/components/FactorScale";
 import { INTERPRETATIONS, NON_DIAGNOSTIC_NOTICE, bandFor } from "@/data/interpretations";
 
@@ -13,6 +13,7 @@ export default function ResultatPage() {
   const [tier, setTier] = useState<ResultTier | null>(null);
   const [incomplete, setIncomplete] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [o6Score, setO6Score] = useState<number | null>(null);
 
   useEffect(() => {
     const stored = loadAnswers();
@@ -28,6 +29,13 @@ export default function ResultatPage() {
     } else {
       setIncomplete(true);
     }
+
+    // O6-tilleggsseksjonen (helt valgfri, se questions.ts) -- vises KUN
+    // dersom brukeren aktivt har samtykket og fullført den, og ALDRI blandet
+    // inn i de fem hovedfaktorene over.
+    const storedO6 = loadO6();
+    setO6Score(computeOptionalO6Score(storedO6.answers, OPTIONAL_O6_QUESTIONS));
+
     setHydrated(true);
   }, []);
 
@@ -51,7 +59,13 @@ export default function ResultatPage() {
 
   function handleDelete() {
     clearAnswers();
+    clearO6();
     window.location.href = "/";
+  }
+
+  function handleDeleteO6() {
+    clearO6();
+    setO6Score(null);
   }
 
   return (
@@ -92,6 +106,26 @@ export default function ResultatPage() {
           );
         })}
       </section>
+
+      {o6Score !== null && (
+        <section className="flex flex-col gap-3 rounded-lg border border-coral/40 p-5">
+          <h2 className="font-semibold text-ink dark:text-white">
+            Tilleggsseksjon: politiske og verdimessige holdninger
+          </h2>
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
+            Dette er et helt eget, valgfritt tillegg du samtykket til separat -- det er IKKE en del
+            av de fem hovedfaktorene over, og teller ikke med i noen av dem. Skåren din her er{" "}
+            {o6Score} av 100.
+          </p>
+          <button
+            type="button"
+            onClick={handleDeleteO6}
+            className="self-start text-sm text-coral underline underline-offset-2"
+          >
+            Slett bare denne dataen
+          </button>
+        </section>
+      )}
 
       {tier === "free" ? (
         <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5">

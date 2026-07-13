@@ -203,6 +203,68 @@ const EXPECTED_TOTAL = 120;
 const EXPECTED_PER_DOMAIN_FULL = 24;
 const EXPECTED_PER_DOMAIN_FREE = 10;
 
+/**
+ * O6 (Liberalism) -- HELT VALGFRI TILLEGGSSEKSJON, ikke del av ALL_QUESTIONS/
+ * FREE_QUESTIONS og teller IKKE med i de fem hovedfaktorskårene (Åpenhet
+ * forblir balansert på 24 spørsmål uansett om denne besvares).
+ *
+ * Bakgrunn: O6 er i IPIP utelukkende operasjonalisert gjennom politiske og
+ * religiøse påstander -- særlig kategori persondata etter GDPR art. 9.
+ * Prosjektet utelot fasetten helt i første versjon (Dokument 03 §7/§20.1).
+ * Etter brukerens ønske bygges den nå inn igjen som en isolert, eksplisitt
+ * samtykkebasert bonusseksjon (GDPR art. 9(2)(a) -- eget, uttrykkelig
+ * samtykke, atskilt fra det generelle samtykket til å ta testen). Vises kun
+ * etter at hele 120-testen er fullført, med eget samtykke og egen
+ * sletteknapp (se src/lib/storage.ts og src/app/test/page.tsx).
+ *
+ * STATUS: satt inn for utprøving på oppdrag fra produkteier -- endelig
+ * beslutning om å beholde funksjonen tas etter test, og bør uansett
+ * juristgodkjennes (Dokument 07) før reell lansering dersom den beholdes.
+ */
+export interface OptionalQuestion {
+  id: string;
+  facet: "O6";
+  facetName: "Liberalism";
+  textEn: string;
+  textNo: string;
+  reverse: boolean;
+}
+
+export const OPTIONAL_O6_QUESTIONS: readonly OptionalQuestion[] = [
+  {
+    id: "o6_1",
+    facet: "O6",
+    facetName: "Liberalism",
+    textEn: "Tend to vote for liberal political candidates.",
+    textNo: "Stemmer ofte på liberale/venstreorienterte politiske kandidater.",
+    reverse: false,
+  },
+  {
+    id: "o6_2",
+    facet: "O6",
+    facetName: "Liberalism",
+    textEn: "Believe that there is no absolute right or wrong.",
+    textNo: "Mener det ikke finnes en absolutt rett eller galt.",
+    reverse: false,
+  },
+  {
+    id: "o6_3",
+    facet: "O6",
+    facetName: "Liberalism",
+    textEn: "Tend to vote for conservative political candidates.",
+    textNo: "Stemmer ofte på konservative politiske kandidater.",
+    reverse: true,
+  },
+  {
+    id: "o6_4",
+    facet: "O6",
+    facetName: "Liberalism",
+    textEn: "Believe that we should be tough on crime.",
+    textNo: "Mener vi bør være strenge mot kriminalitet.",
+    reverse: true,
+  },
+] as const;
+
 export function assertQuestionSetIntegrity(): void {
   if (ALL_QUESTIONS.length !== EXPECTED_TOTAL) {
     throw new Error(`Forventet ${EXPECTED_TOTAL} spørsmål totalt, fant ${ALL_QUESTIONS.length}.`);

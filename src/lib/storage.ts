@@ -8,7 +8,7 @@
  *  - Systemet skal aldri krasje ved ugyldige lagrede data.
  */
 
-import { ALL_QUESTIONS } from "@/data/questions";
+import { ALL_QUESTIONS, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
 import { isValidAnswerValue, type AnswerMap } from "@/lib/scoring";
 
 const STORAGE_KEY = "femfaktorer.korttest.v1";
@@ -84,4 +84,66 @@ function isValidStoredPayload(value: unknown): value is StoredPayload {
     typeof v.answers === "object" &&
     v.answers !== null
   );
+}
+
+/**
+ * O6-tilleggsseksjonen (se questions.ts) lagres i EGET localStorage-felt,
+ * atskilt fra hovedtesten -- slik at samtykke og data for denne (særlige
+ * kategori-data etter GDPR art. 9) kan trekkes tilbake/slettes helt
+ * uavhengig av resten av testresultatet (art. 9(2)(a) krever nettopp dette).
+ */
+const O6_STORAGE_KEY = "femfaktorer.o6tillegg.v1";
+const O6_STORAGE_VERSION = 1;
+
+export type O6ConsentStatus = "not_asked" | "declined" | "consented";
+
+interface StoredO6Payload {
+  version: number;
+  status: O6ConsentStatus;
+  answers: AnswerMap;
+}
+
+const o6QuestionIds = new Set(OPTIONAL_O6_QUESTIONS.map((q) => q.id));
+
+export function loadO6(): { status: O6ConsentStatus; answers: AnswerMap } {
+  if (typeof window === "undefined") return { status: "not_asked", answers: {} };
+  try {
+    const raw = window.localStorage.getItem(O6_STORAGE_KEY);
+    if (!raw) return { status: "not_asked", answers: {} };
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null) return { status: "not_asked", answers: {} };
+    const v = parsed as Record<string, unknown>;
+    if (v.version !== O6_STORAGE_VERSION) return { status: "not_asked", answers: {} };
+    const status: O6ConsentStatus =
+      v.status === "consented" || v.status === "declined" ? v.status : "not_asked";
+    const answers: AnswerMap = {};
+    if (typeof v.answers === "object" && v.answers !== null) {
+      for (const [id, value] of Object.entries(v.answers as Record<string, unknown>)) {
+        if (o6QuestionIds.has(id) && isValidAnswerValue(value)) answers[id] = value;
+      }
+    }
+    return { status, answers };
+  } catch {
+    return { status: "not_asked", answers: {} };
+  }
+}
+
+export function saveO6(status: O6ConsentStatus, answers: AnswerMap): void {
+  if (typeof window === "undefined") return;
+  const payload: StoredO6Payload = { version: O6_STORAGE_VERSION, status, answers };
+  try {
+    window.localStorage.setItem(O6_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // se over
+  }
+}
+
+/** Sletter O6-samtykke og -svar UAVHENGIG av resten av testresultatet. */
+export function clearO6(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(O6_STORAGE_KEY);
+  } catch {
+    // se over
+  }
 }
