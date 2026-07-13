@@ -12,11 +12,31 @@ const DEFAULT_MODEL = "claude-haiku-4-5";
 const MAX_OUTPUT_TOKENS = 400;
 const TEMPERATURE = 0.4;
 
+interface ChatTurn {
+  role: "user" | "fem";
+  text: string;
+}
+
 interface FemRequestBody {
   factors: FactorResult[];
   /** Fasettskår (underkategorier) -- valgfritt felt, se systemPrompt.ts v2.1. */
   facets?: FacetResult[];
   message: string;
+  /**
+   * Tidligere meldinger i DENNE samtalen (uten den nye `message` over) --
+   * lagt til v2.2 slik at Spir faktisk husker egne spørsmål og kan følge dem
+   * opp (se systemPrompt.ts v2.2, Anette sin brukertest). Tidligere sendte vi
+   * KUN siste melding til Anthropic, uten historikk -- det gjorde reell
+   * dialog umulig, siden Spir ikke visste hva den selv nettopp hadde spurt om.
+   */
+  history?: ChatTurn[];
+  /**
+   * Sant kun for den aller første, systeminitierte meldingen i en samtale --
+   * klienten sender da en generisk instruks som `message`, som ALDRI vises
+   * som en "brukermelding" i grensesnittet (se spir/page.tsx). Brukes til å
+   * la Spir åpne samtalen selv, se systemPrompt.ts v2.2.
+   */
+  intro?: boolean;
   /**
    * Antall AI-utvekslinger så langt i denne økten, rapportert av klienten.
    * MERK (ærlig begrensning i v1): dette er en klientrapportert telling, ikke
@@ -27,6 +47,20 @@ interface FemRequestBody {
    * administrasjonspanelet (Dokument 09 §21.1), ikke bygget i dette utkastet.
    */
   exchangeCount: number;
+}
+
+/** Antall tidligere utvekslinger (bruker + Spir) vi tar med til Anthropic -- begrenser tokenvekst i lange samtaler. */
+const MAX_HISTORY_TURNS = 20;
+
+function isValidChatTurn(value: unknown): value is ChatTurn {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    (v.role === "user" || v.role === "fem") &&
+    typeof v.text === "string" &&
+    v.text.length > 0 &&
+    v.text.length <= 2000
+  );
 }
 
 function isValidFactorResult(value: unknown): value is FactorResult {
@@ -88,6 +122,9 @@ export async function POST(request: Request) {
   if (body.facets !== undefined && (!Array.isArray(body.facets) || !body.facets.every(isValidFacetResult))) {
     return NextResponse.json({ error: "Ugyldig fasettdata." }, { status: 400 });
   }
+  if (body.history !== undefined && (!Array.isArray(body.history) || !body.history.every(isValidChatTurn))) {
+    return NextResponse.json({ error: "Ugyldig samtalehistorikk." }, { status: 400 });
+  }
 
   // Admin-panelets nødstopp og justerbare tak (Dokument 09 §21.1) -- leses
   // ved hver forespørsel, ikke bare ved oppstart, slik at en endring i
@@ -117,7 +154,23 @@ export async function POST(request: Request) {
     );
   }
 
-  const systemPrompt = buildSpirSystemPrompt(body.factors, body.facets ?? []);
+  const systemPrompt = buildSpirSystemPrompt(body.factors, body.facets ?? [], body.exchangeCount ?? 0);
+
+  // Intro-meldingen er en systeminitiert instruks, ikke noe brukeren faktisk
+  // skrev -- se FemRequestBody.intro og spir/page.tsx. Erstatter innholdet
+  // som faktisk sendes til Anthropic, uten å røre det klienten viser i UI.
+  const currentTurnContent = body.intro
+    ? "Start samtalen. Se på hele profilen min over (hovedfaktorer og fasetter) og pek på 1-2 av de tydeligste eller mest uventede funnene -- gjerne en fasett som peker en annen vei enn resten av domenet den hører til, om det finnes en slik i profilen. Åpne med en kort, konkret refleksjon rundt det du finner mest interessant, og avslutt med ETT spørsmål som inviterer meg til å utdype eller kjenne etter."
+    : body.message;
+
+  const history = (body.history ?? []).slice(-MAX_HISTORY_TURNS);
+  const anthropicMessages = [
+    ...history.map((turn) => ({
+      role: turn.role === "user" ? ("user" as const) : ("assistant" as const),
+      content: turn.text,
+    })),
+    { role: "user" as const, content: currentTurnContent },
+  ];
 
   let anthropicRes: Response;
   try {
@@ -133,7 +186,7 @@ export async function POST(request: Request) {
         max_tokens: MAX_OUTPUT_TOKENS,
         temperature: TEMPERATURE,
         system: systemPrompt,
-        messages: [{ role: "user", content: body.message }],
+        messages: anthropicMessages,
       }),
     });
   } catch {

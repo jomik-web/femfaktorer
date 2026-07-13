@@ -9,7 +9,17 @@ import { loadAnswers } from "@/lib/storage";
 interface ChatMessage {
   role: "user" | "fem";
   text: string;
+  /**
+   * Sant for den systeminitierte "start samtalen"-instruksen som utløser
+   * Spirs åpningsreplikk (v2.2) -- filtreres bort fra det som faktisk vises
+   * i chatten, men beholdes i historikken som sendes til Anthropic, siden
+   * en samtale der må starte med en "user"-rolle.
+   */
+  hidden?: boolean;
 }
+
+/** Må matche instruksen serveren bruker for intro-meldingen, se api/spir/route.ts. */
+const INTRO_TRIGGER_TEXT = "Start samtalen.";
 
 export default function FemPage() {
   const [factors, setFactors] = useState<FactorResult[] | null>(null);
@@ -22,6 +32,9 @@ export default function FemPage() {
   const [hydrated, setHydrated] = useState(false);
 
   const [locked, setLocked] = useState(false);
+  // Sant så snart Spir har fått i oppdrag å åpne samtalen selv -- hindrer at
+  // introen sendes flere ganger (v2.2, se systemPrompt.ts og api/spir/route.ts).
+  const [introStarted, setIntroStarted] = useState(false);
 
   useEffect(() => {
     const stored = loadAnswers();
@@ -41,6 +54,47 @@ export default function FemPage() {
     }
     setHydrated(true);
   }, []);
+
+  // Lar Spir selv åpne samtalen med en refleksjon + spørsmål, i stedet for å
+  // vente passivt på at brukeren skal skrive noe først (Anette sin
+  // tilbakemelding, se systemPrompt.ts v2.2). Kjøres kun én gang, når
+  // samtykke er gitt og resultatet er klart.
+  useEffect(() => {
+    if (!consented || !factors || introStarted) return;
+    setIntroStarted(true);
+    setLoading(true);
+    setError(null);
+    fetch("/api/spir", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        factors,
+        facets,
+        message: INTRO_TRIGGER_TEXT,
+        intro: true,
+        history: [],
+        exchangeCount: 0,
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error ?? "Noe gikk galt. Prøv igjen.");
+          return;
+        }
+        // Den skjulte "user"-turen beholdes i historikken (Anthropics API
+        // krever at en samtale starter med rollen "user"), men filtreres
+        // bort fra det som faktisk vises -- se `hidden` på ChatMessage.
+        setMessages([
+          { role: "user", text: INTRO_TRIGGER_TEXT, hidden: true },
+          { role: "fem", text: data.reply },
+        ]);
+      })
+      .catch(() => {
+        setError("Fikk ikke kontakt med Spir. Sjekk nettforbindelsen og prøv igjen.");
+      })
+      .finally(() => setLoading(false));
+  }, [consented, factors, facets, introStarted]);
 
   if (!hydrated) return null;
 
@@ -97,6 +151,9 @@ export default function FemPage() {
     if (!trimmed || loading) return;
     setError(null);
     setInput("");
+    // Historikken sendes med slik at Spir faktisk husker samtalen og kan
+    // følge opp egne spørsmål (v2.2, se api/spir/route.ts).
+    const history = messages;
     const nextMessages: ChatMessage[] = [...messages, { role: "user", text: trimmed }];
     setMessages(nextMessages);
     setLoading(true);
@@ -109,7 +166,8 @@ export default function FemPage() {
           factors,
           facets,
           message: trimmed,
-          exchangeCount: messages.filter((m) => m.role === "user").length,
+          history,
+          exchangeCount: messages.filter((m) => m.role === "user" && !m.hidden).length,
         }),
       });
       const data = await res.json();
@@ -135,14 +193,16 @@ export default function FemPage() {
       </header>
 
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={m.role === "user" ? "self-end rounded-lg bg-mint px-4 py-2 dark:bg-teal/20" : "self-start rounded-lg bg-warmgray px-4 py-2 dark:bg-white/10"}
-          >
-            {m.text}
-          </div>
-        ))}
+        {messages
+          .filter((m) => !m.hidden)
+          .map((m, i) => (
+            <div
+              key={i}
+              className={m.role === "user" ? "self-end rounded-lg bg-mint px-4 py-2 dark:bg-teal/20" : "self-start rounded-lg bg-warmgray px-4 py-2 dark:bg-white/10"}
+            >
+              {m.text}
+            </div>
+          ))}
         {loading && <p className="text-sm text-ink/50 dark:text-warmgray/50">Spir skriver …</p>}
         {error && <p className="text-sm text-coral">{error}</p>}
       </div>

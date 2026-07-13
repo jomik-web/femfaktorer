@@ -120,11 +120,8 @@ export default function ResultatPage() {
           return (
             <article key={f.factor} className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
               <h2 className="font-semibold text-ink dark:text-white">{f.label}</h2>
-              <p className="text-ink/80 dark:text-warmgray/80">{copy.summary}</p>
-              <p className="text-ink/80 dark:text-warmgray/80">{copy.typicalExpressions}</p>
-              <p className="text-ink/80 dark:text-warmgray/80">{copy.resources}</p>
-              <p className="text-ink/80 dark:text-warmgray/80">{copy.challenges}</p>
-              <p className="text-ink/80 dark:text-warmgray/80">{copy.contextNote}</p>
+              <p className="text-ink/80 dark:text-warmgray/80">{copy.overview}</p>
+              <p className="text-ink/80 dark:text-warmgray/80">{copy.nuance}</p>
               <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
               {tier === "full" && (
                 <div className="mt-3 flex flex-col gap-3 border-t border-ink/10 pt-3 dark:border-white/10">
