@@ -6,6 +6,7 @@ import { ALL_QUESTIONS, FREE_QUESTIONS, OPTIONAL_O6_QUESTIONS } from "@/data/que
 import { computeTestResult, computeOptionalO6Score, type FactorResult, type ResultTier } from "@/lib/scoring";
 import { loadAnswers, clearAnswers, loadO6, clearO6 } from "@/lib/storage";
 import { FactorScale } from "@/components/FactorScale";
+import { RoughFactorIndicator } from "@/components/RoughFactorIndicator";
 import { INTERPRETATIONS, NON_DIAGNOSTIC_NOTICE, bandFor } from "@/data/interpretations";
 
 export default function ResultatPage() {
@@ -83,9 +84,13 @@ export default function ResultatPage() {
       </header>
 
       <section className="flex flex-col gap-6">
-        {factors.map((f) => (
-          <FactorScale key={f.factor} factor={f.factor} label={f.label} score={f.score} />
-        ))}
+        {factors.map((f) =>
+          tier === "free" ? (
+            <RoughFactorIndicator key={f.factor} factor={f.factor} label={f.label} score={f.score} />
+          ) : (
+            <FactorScale key={f.factor} factor={f.factor} label={f.label} score={f.score} />
+          )
+        )}
       </section>
 
       <section className="flex flex-col gap-8">
@@ -99,9 +104,7 @@ export default function ResultatPage() {
               <p className="text-ink/80 dark:text-warmgray/80">{copy.resources}</p>
               <p className="text-ink/80 dark:text-warmgray/80">{copy.challenges}</p>
               <p className="text-sm text-ink/70 dark:text-warmgray/70">{copy.contextNote}</p>
-              <p className="mt-2 text-sm italic text-ink/60 dark:text-warmgray/60">
-                {copy.reflection}
-              </p>
+              <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
             </article>
           );
         })}

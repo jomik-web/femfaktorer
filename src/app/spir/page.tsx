@@ -118,15 +118,15 @@ export default function FemPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-6 py-12">
-      <header>
+    <main className="mx-auto flex h-screen max-w-2xl flex-col px-6 py-8">
+      <header className="pb-6">
         <h1 className="text-xl font-semibold text-ink dark:text-white">Snakk med Spir</h1>
         <p className="text-sm text-ink/60 dark:text-warmgray/60">
           Spir tolker resultatet ditt -- den kan ikke endre skårene dine.
         </p>
       </header>
 
-      <div className="flex flex-1 flex-col gap-4">
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
         {messages.map((m, i) => (
           <div
             key={i}
@@ -144,7 +144,7 @@ export default function FemPage() {
           e.preventDefault();
           void sendMessage();
         }}
-        className="flex gap-3"
+        className="flex gap-3 border-t border-warmgray pt-4 pb-8 dark:border-white/10"
       >
         <label htmlFor="fem-input" className="sr-only">
           Skriv en melding til Spir
