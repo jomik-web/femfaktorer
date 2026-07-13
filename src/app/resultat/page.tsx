@@ -99,11 +99,11 @@ export default function ResultatPage() {
           return (
             <article key={f.factor} className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
               <h2 className="font-semibold text-ink dark:text-white">{f.label}</h2>
-              <p>{copy.summary}</p>
+              <p className="text-ink/80 dark:text-warmgray/80">{copy.summary}</p>
               <p className="text-ink/80 dark:text-warmgray/80">{copy.typicalExpressions}</p>
               <p className="text-ink/80 dark:text-warmgray/80">{copy.resources}</p>
               <p className="text-ink/80 dark:text-warmgray/80">{copy.challenges}</p>
-              <p className="text-sm text-ink/70 dark:text-warmgray/70">{copy.contextNote}</p>
+              <p className="text-ink/80 dark:text-warmgray/80">{copy.contextNote}</p>
               <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
             </article>
           );
