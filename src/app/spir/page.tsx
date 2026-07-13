@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ALL_QUESTIONS } from "@/data/questions";
-import { computeTestResult, type FactorResult } from "@/lib/scoring";
+import { computeTestResult, computeFacetResults, type FactorResult, type FacetResult } from "@/lib/scoring";
 import { loadAnswers } from "@/lib/storage";
 
 interface ChatMessage {
@@ -13,6 +13,7 @@ interface ChatMessage {
 
 export default function FemPage() {
   const [factors, setFactors] = useState<FactorResult[] | null>(null);
+  const [facets, setFacets] = useState<FacetResult[]>([]);
   const [consented, setConsented] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -32,8 +33,12 @@ export default function FemPage() {
       return;
     }
     const result = computeTestResult(stored.answers, ALL_QUESTIONS, "full");
-    if (result.complete && result.factors) setFactors(result.factors);
-    else setLocked(true);
+    if (result.complete && result.factors) {
+      setFactors(result.factors);
+      setFacets(computeFacetResults(stored.answers, ALL_QUESTIONS));
+    } else {
+      setLocked(true);
+    }
     setHydrated(true);
   }, []);
 
@@ -61,10 +66,12 @@ export default function FemPage() {
       <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12">
         <h1 className="text-xl font-semibold text-ink dark:text-white">Før du starter</h1>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Hvis du starter en samtale med Spir, sendes det beregnede resultatet ditt (de fem
-          faktorskårene) og det du selv skriver, til Anthropic -- leverandøren av Spir. Ikke del
-          annen personlig informasjon i meldingene dine enn det som trengs for samtalen.
-          Testsvarene dine forblir lokalt i nettleseren uansett.
+          Hvis du starter en samtale med Spir, sendes det beregnede resultatet ditt -- både de fem
+          hovedfaktorene og de om lag 29 underfasettene -- og det du selv skriver, til Anthropic --
+          leverandøren av Spir. Dette gjør at Spir kan gi mer presise svar, blant annet om karriere,
+          relasjoner og sammenhenger mellom flere trekk. Ikke del annen personlig informasjon i
+          meldingene dine enn det som trengs for samtalen. Testsvarene dine forblir lokalt i
+          nettleseren uansett.
         </p>
         <div className="flex gap-3">
           <button
@@ -100,6 +107,7 @@ export default function FemPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           factors,
+          facets,
           message: trimmed,
           exchangeCount: messages.filter((m) => m.role === "user").length,
         }),

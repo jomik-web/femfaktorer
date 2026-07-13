@@ -106,7 +106,7 @@ export type DisplayFactor =
   | "agreeableness"
   | "stability";
 
-const DOMAIN_TO_DISPLAY: Record<Domain, DisplayFactor> = {
+export const DOMAIN_TO_DISPLAY: Record<Domain, DisplayFactor> = {
   O: "openness",
   C: "conscientiousness",
   E: "extraversion",
@@ -172,6 +172,64 @@ export function computeTestResult(
   });
 
   return { complete: true, factors, tier, incompleteDomains: [] };
+}
+
+export interface FacetResult {
+  /** IPIP-fasettkode, f.eks. "N1". */
+  facet: string;
+  /** Engelsk IPIP-navn (f.eks. "Anxiety") -- se facetInterpretations.ts for norsk visningsnavn og tolkningstekst. */
+  facetName: string;
+  domain: Domain;
+  /** 0-100, allerede snudd riktig vei for visning (N-fasetter speilvendes, som for hoveddomenet). */
+  score: number;
+}
+
+/**
+ * Beregner skår per FASETT (underkategori) -- kun meningsfullt for den fulle
+ * testen (120 spørsmål, 4-5 item per fasett). Fasettvisning var opprinnelig
+ * utsatt til "fase 2" (Grunnlagsdokumentet §7.1, Dokument 03 §7/§20.1), men
+ * produkteier har nå bedt om at det vises i stortesten (v2.1).
+ *
+ * N-fasetter regnes om til samme visningsretning som hoveddomenet
+ * (Emosjonell stabilitet = 100 - nevrotisisme), slik at bånd og tekst
+ * samsvarer med hvordan hovedfaktoren allerede presenteres.
+ *
+ * En fasett som ikke er fullt besvart utelates helt fra resultatet -- aldri
+ * en gjetning (samme prinsipp som computeTestResult, jf. Dokument 09 §10.3).
+ */
+export function computeFacetResults(
+  answers: AnswerMap,
+  questionSet: readonly Question[]
+): FacetResult[] {
+  const byFacet = new Map<string, Question[]>();
+  for (const q of questionSet) {
+    const list = byFacet.get(q.facet) ?? [];
+    list.push(q);
+    byFacet.set(q.facet, list);
+  }
+
+  const results: FacetResult[] = [];
+  for (const [facet, questions] of byFacet) {
+    let sum = 0;
+    let answeredCount = 0;
+    for (const q of questions) {
+      const raw = answers[q.id];
+      if (raw === undefined) continue;
+      if (!isValidAnswerValue(raw)) {
+        throw new Error(`Ugyldig svarverdi for spørsmål ${q.id}: ${String(raw)}`);
+      }
+      sum += scoreItem(q, raw);
+      answeredCount++;
+    }
+    if (answeredCount !== questions.length) continue; // ikke fullført -- utelates, ingen gjetning
+
+    const scaled = rescaleLinear(sum, questions.length);
+    const domain = questions[0].domain;
+    const score = domain === "N" ? 100 - scaled : scaled;
+    results.push({ facet, facetName: questions[0].facetName, domain, score });
+  }
+
+  return results.sort((a, b) => a.facet.localeCompare(b.facet));
 }
 
 /**

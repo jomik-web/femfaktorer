@@ -5,6 +5,7 @@ import {
   computeDomainRawScores,
   rescaleLinear,
   computeTestResult,
+  computeFacetResults,
   type AnswerMap,
 } from "@/lib/scoring";
 
@@ -178,5 +179,40 @@ describe("computeTestResult -- full test (alle 120)", () => {
         "Åpenhet for erfaring",
       ].sort()
     );
+  });
+});
+
+describe("computeFacetResults (v2.1 -- fasettskår for stortesten)", () => {
+  it("gir 29 fasetter (O6 utelatt) når alle 120 spørsmål er besvart likt", () => {
+    const results = computeFacetResults(fillAll(ALL_QUESTIONS, 3), ALL_QUESTIONS);
+    expect(results).toHaveLength(29);
+    expect(results.some((f) => f.facet === "O6")).toBe(false);
+  });
+
+  it("utelater en fasett helt dersom den ikke er fullt besvart -- gjetter aldri", () => {
+    const answers = fillAll(ALL_QUESTIONS, 3);
+    const firstN1 = ALL_QUESTIONS.find((q) => q.facet === "N1")!;
+    delete answers[firstN1.id];
+    const results = computeFacetResults(answers, ALL_QUESTIONS);
+    expect(results.some((f) => f.facet === "N1")).toBe(false);
+    expect(results).toHaveLength(28);
+  });
+
+  it("N-fasetter speilvendes til samme retning som hoveddomenet (Emosjonell stabilitet)", () => {
+    const highN = fillAll(ALL_QUESTIONS, 5); // svarer 5 på alt, inkl. N -- høy nevrotisisme
+    const resultsHighN = computeFacetResults(highN, ALL_QUESTIONS);
+    const n1High = resultsHighN.find((f) => f.facet === "N1")!;
+    expect(n1High.score).toBe(0); // høy nevrotisisme -> lav emosjonell stabilitet
+
+    const lowN = fillAll(ALL_QUESTIONS, 1);
+    const resultsLowN = computeFacetResults(lowN, ALL_QUESTIONS);
+    const n1Low = resultsLowN.find((f) => f.facet === "N1")!;
+    expect(n1Low.score).toBe(100);
+  });
+
+  it("gir 5 O-fasetter for det fulle settet (O1-O5, O6 er strukturelt utelatt)", () => {
+    const results = computeFacetResults(fillAll(ALL_QUESTIONS, 3), ALL_QUESTIONS);
+    const oFacets = results.filter((f) => f.domain === "O").map((f) => f.facet).sort();
+    expect(oFacets).toEqual(["O1", "O2", "O3", "O4", "O5"]);
   });
 });

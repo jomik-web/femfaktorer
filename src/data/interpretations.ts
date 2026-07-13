@@ -36,6 +36,15 @@ export interface Interpretation {
   challenges: string;
   contextNote: string;
   reflection: string;
+  /**
+   * Karriererelevant tolkning -- lagt til v2.1 etter produkteiers ønske om en
+   * fyldigere rapport for stortesten (kun vist for tier "full", se
+   * resultat/page.tsx). Samme regler gjelder: aldri bastant, alltid "kan
+   * tyde på"/"ofte", aldri en fasit på hvilken jobb noen bør ha.
+   */
+  careerNote: string;
+  /** Relasjonsrelevant tolkning -- samme opphav og regler som careerNote. */
+  relationshipNote: string;
 }
 
 type Copy = Record<DisplayFactor, Record<Band, Interpretation>>;
@@ -53,6 +62,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "På jobben er du gjerne den som får ting unnagjort fremfor å utforske alternativer; i relasjoner verdsetter du ofte stabilitet høyere enn spenning.",
       reflection: "Er det områder i livet ditt der litt mer nysgjerrighet kunne åpnet en dør du ellers går forbi?",
+      careerNote:
+        "I jobbsammenheng kan dette bety at du trives best med definerte oppgaver og velprøvde metoder -- roller med tydelige rammer kan passe godt. Vil du inn i mer nyskapende roller, kan det være lurt å bevisst trene på å tåle usikkerhet i en periode.",
+      relationshipNote:
+        "I relasjoner søker du gjerne stabilitet og forutsigbarhet -- partnere og venner som setter pris på faste rutiner og et rolig tempo, matcher deg ofte godt.",
     },
     mid: {
       summary:
@@ -65,6 +78,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Privat varierer interessene dine gjerne med hvem du er sammen med, mens du i jobbsammenheng takler både rutinepregede og kreative oppgaver noenlunde likt.",
       reflection: "I hvilke situasjoner merker du at nysgjerrigheten din faktisk slår inn -- og hva er annerledes da?",
+      careerNote:
+        "Du takler trolig både strukturerte og mer utforskende arbeidsoppgaver rimelig greit, og kan derfor passe i mange typer roller -- fra faste rammer til en viss nytenkning.",
+      relationshipNote:
+        "I relasjoner beveger du deg naturlig mellom det kjente og det nye sammen med andre, og tilpasser deg gjerne partnerens behov for stabilitet eller variasjon.",
     },
     high: {
       summary:
@@ -77,6 +94,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "I relasjoner trenger du ofte partnere som tåler at du stadig vil utforske noe nytt; på jobben er det gjerne du som foreslår en annen løsning enn den vante.",
       reflection: "Hvordan bruker du nysgjerrigheten din i hverdagen -- og er det ting du skulle ønske du turte mer av?",
+      careerNote:
+        "I jobbsammenheng kan dette bety at du trives med roller som gir rom for nytenkning, utforsking eller kreativt arbeid. Sterkt rutinepregede roller kan over tid oppleves som lite stimulerende for deg.",
+      relationshipNote:
+        "I relasjoner søker du gjerne partnere som tåler, eller helst deler, din interesse for det nye og uprøvde -- trygghet handler nok mer om felles utforsking enn om fast forutsigbarhet.",
     },
   },
   conscientiousness: {
@@ -90,6 +111,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Hjemme kan andre oppleve deg som avslappet der de selv ville planlagt, mens du på jobb nok trives best med korte, fleksible oppgaver fremfor lange løp med faste milepæler.",
       reflection: "Er det noen bestemte områder der litt mer forhåndsplanlegging ville gjort hverdagen lettere for deg?",
+      careerNote:
+        "Roller med stor grad av frihet og variasjon passer ofte bedre enn stillinger som krever tett, langsiktig oppfølging av detaljer -- ekstern struktur (sjekklister, faste rutiner fra andre) kan være god støtte der presisjon er avgjørende.",
+      relationshipNote:
+        "Andre kan oppleve deg som avslappet og fleksibel å være sammen med, men også som mindre forutsigbar når det gjelder avtaler -- tydelig kommunikasjon om hva du faktisk kan love, er nok ekstra viktig i nære relasjoner.",
     },
     mid: {
       summary: "Struktur ser ut til å komme og gå etter behov hos deg -- verken fast rutine eller mangel på den dominerer.",
@@ -101,6 +126,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "I team er du fleksibel nok til å jobbe godt med både svært strukturerte og svært frie kolleger; privat varierer rutinene dine gjerne med hva som skjer i livet akkurat nå.",
       reflection: "Når merker du at planlegging faktisk hjelper deg -- og når føles den bare som en ekstra byrde?",
+      careerNote:
+        "Du takler trolig både strukturerte oppgaver og mer frie arbeidsformer -- fleksibilitet i hvor mye system du legger på en oppgave kan være en styrke i roller som varierer mye fra dag til dag.",
+      relationshipNote:
+        "Du tilpasser nok graden av planlegging etter hva situasjonen og relasjonen krever, uten at det ene alltid dominerer.",
     },
     high: {
       summary: "Grundighet og sans for detaljer peker seg ut som tydelige trekk ved deg -- pålitelighet ser ut til å komme naturlig.",
@@ -113,6 +142,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Andre stoler nok gjerne på deg med ansvar på jobben; privat setter du innimellom strengere krav til deg selv enn situasjonen egentlig ber om.",
       reflection: "Er det situasjoner der behovet ditt for orden og kontroll gjør noe vanskeligere enn det egentlig trenger å være?",
+      careerNote:
+        "Roller som krever nøyaktighet, pålitelighet og evne til å fullføre over tid passer ofte godt. Vær oppmerksom på at høye krav til deg selv også kan gjøre det vanskeligere å delegere eller akseptere «godt nok».",
+      relationshipNote:
+        "Andre stoler nok gjerne på at du følger opp det du sier -- en styrke i nære relasjoner. Samtidig kan egne høye standarder noen ganger smitte over på forventninger til partner eller venner.",
     },
   },
   extraversion: {
@@ -127,6 +160,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Sosialt foretrekker du ofte et lite, fast vennenettverk fremfor mange bekjentskaper; på jobb presterer du nok best med færre avbrytelser og mer skjermet tid.",
       reflection: "Hvordan balanserer du behovet ditt for ro opp mot situasjoner der du faktisk må være sosial?",
+      careerNote:
+        "Roller med mer selvstendig arbeid, dybdefokus og færre avbrytelser passer ofte godt -- åpne kontorlandskap eller jobber med mye uforutsigbar sosial kontakt kan tappe mer energi enn de gir.",
+      relationshipNote:
+        "Du trives nok best med noen få nære relasjoner fremfor et stort nettverk, og setter pris på partnere som respekterer behovet ditt for egen tid.",
     },
     mid: {
       summary: "Sosialt selskap og egen tid virker å dele plassen ganske jevnt i livet ditt, uten at det ene klart dominerer.",
@@ -138,6 +175,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Energien din varierer nok en del fra dag til dag privat, mens du på jobb fungerer godt både i team og med selvstendig arbeid.",
       reflection: "Hva kjennetegner dagene der du kjenner at du har fått nok av begge deler -- sosialt og ro?",
+      careerNote:
+        "Du fungerer trolig godt både i team og med selvstendig arbeid, og kan derfor tilpasse deg ulike arbeidsmiljøer uten at det ene tapper deg mer enn det andre.",
+      relationshipNote:
+        "Sosial energi varierer nok fra dag til dag for deg, og du finner selv en rimelig balanse mellom samvær og egen tid.",
     },
     high: {
       summary: "Andre mennesker ser ut til å være en klar energikilde for deg, og du finner deg ofte midt i det som skjer.",
@@ -149,6 +190,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Privat trenger du nok jevnlig sosial kontakt for å kjenne deg på topp; på jobben blir du gjerne en naturlig pådriver i møter og team.",
       reflection: "Gir du deg selv nok rom for ro, eller søker du sosial energi også når kroppen egentlig trenger en pause?",
+      careerNote:
+        "Roller med mye menneskelig kontakt -- salg, ledelse, formidling -- gir deg ofte energi fremfor å tappe deg. Rene, stillegående kontoroppgaver over lang tid kan derimot kjennes mer krevende å holde ut i.",
+      relationshipNote:
+        "Du trenger nok jevnlig sosial kontakt for å kjenne deg på topp, og trives godt med partnere og venner som deler eller i alle fall tåler et høyt sosialt tempo.",
     },
   },
   agreeableness: {
@@ -162,6 +207,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Beslutninger andre ikke våger å stille spørsmål ved, er gjerne noe du utfordrer på jobben; i relasjoner trives du best med partnere som tåler direkte uenighet.",
       reflection: "Er det relasjoner der litt mer imøtekommenhet kunne styrket samarbeidet, uten at du gir opp det som er viktig for deg?",
+      careerNote:
+        "Roller som krever tøffe forhandlinger, tydelige beslutninger eller å stå alene i uenighet kan passe godt -- vær oppmerksom på at team med mye samarbeid kan dra nytte av at du bevisst løfter frem andres perspektiv.",
+      relationshipNote:
+        "Du setter nok grenser tydelig, noe som kan være en styrke -- men nære relasjoner kan noen ganger trenge at du bevisst viser fram at du bryr deg, ikke bare at du har rett.",
     },
     mid: {
       summary: "Egne og andres behov ser ut til å telle omtrent likt for deg, avhengig av situasjonen du står i.",
@@ -172,6 +221,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "På jobb tilpasser du gjerne samarbeidsstilen din etter hvem du jobber med; privat gir du nok mer i noen relasjoner enn andre, avhengig av hva de gir tilbake.",
       reflection: "Når merker du at du gir mest av deg selv -- og når holder du mest igjen?",
+      careerNote:
+        "Du tilpasser nok samarbeidsstilen din etter hvem du jobber med, og fungerer derfor rimelig godt i de fleste team -- verken for ettergivende eller for konfronterende.",
+      relationshipNote:
+        "Du gir og tar nok omtrent i lik grad i relasjoner, avhengig av situasjonen -- en balansert stil som de fleste rundt deg trolig opplever som rimelig.",
     },
     high: {
       summary: "Andres behov later til å oppta en stor plass hos deg, og du finner ofte glede i å hjelpe.",
@@ -183,6 +236,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Privat bruker du nok mye energi på å unngå at noen blir skuffet; på jobb tar du kanskje på deg mer enn du burde for å hjelpe andre.",
       reflection: "Er det situasjoner der omtanken din for andre går tydelig på bekostning av dine egne behov?",
+      careerNote:
+        "Du er nok en verdsatt samarbeidspartner i team, men risikerer å ta på deg mer enn du burde for å hjelpe andre -- bevisst grensesetting på jobb kan være ekstra viktig for deg.",
+      relationshipNote:
+        "Andre lener seg nok gjerne på deg som en varm og støttende person å ha rundt seg -- pass på at det ikke går på bekostning av dine egne behov i det lange løp.",
     },
   },
   stability: {
@@ -196,6 +253,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Mer forutsigbarhet i relasjoner hjelper deg nok å kjenne deg trygg; på jobb kjennes press og tidsfrister tyngre enn de kanskje ser ut for andre.",
       reflection: "Hva pleier å hjelpe deg mest når bekymringer eller uro tar overhånd?",
+      careerNote:
+        "Høyt tempo, stramme tidsfrister og mye uforutsigbarhet i jobben kan kjennes tyngre for deg enn for mange andre -- roller med noe mer forutsigbarhet og støtte fra kolleger eller leder kan gjøre stor forskjell.",
+      relationshipNote:
+        "Forutsigbarhet og tydelig kommunikasjon fra partner og venner hjelper deg nok å kjenne deg trygg -- vær åpen om hva som skaper uro for deg, slik at de rundt deg kan møte det.",
     },
     mid: {
       summary: "Livets opp- og nedturer later til å håndteres med en ganske jevn linje hos deg.",
@@ -207,6 +268,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Du er som regel den rolige i konflikter privat, uten at det betyr at ingenting berører deg -- og du tåler nok et visst press på jobben uten at det går utover deg.",
       reflection: "Hvilke situasjoner er det som best tester roen din -- og hva skjer i deg da?",
+      careerNote:
+        "Du tåler nok et visst arbeidspress uten at det går nevneverdig utover deg, men flere krevende ting samtidig kan likevel kjennes tyngre -- faste rutiner på jobb kan være en nyttig støtte i travle perioder.",
+      relationshipNote:
+        "Du er som regel den nokså rolige i relasjonelle opp- og nedturer, uten at det betyr at ingenting berører deg.",
     },
     high: {
       summary: "Stress og motgang ser ut til å prelle noe lettere av deg enn hos mange andre, selv når mye skjer samtidig.",
@@ -218,6 +283,10 @@ export const INTERPRETATIONS: Copy = {
       contextNote:
         "Folk rundt deg må privat noen ganger si tydelig ifra før du fanger opp at noe er galt; på jobb er du gjerne den som holder hodet kaldt når andre stresser.",
       reflection: "Er det signaler fra deg selv eller andre du noen ganger overser fordi du naturlig tar ting med ro?",
+      careerNote:
+        "Du takler nok press og uforutsigbarhet bedre enn mange andre, noe som kan gjøre deg til en verdifull ressurs i krevende eller krisepregede roller -- vær oppmerksom på at det samme trekket kan gjøre deg mindre lydhør for tidlige varselsignaler.",
+      relationshipNote:
+        "Du er nok gjerne den stødige i relasjonen når ting er vanskelige -- pass på at partner eller venner som reagerer sterkere enn deg, ikke opplever at bekymringene deres blir avfeid.",
     },
   },
 };

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { FactorResult } from "@/lib/scoring";
+import type { FactorResult, FacetResult } from "@/lib/scoring";
 import { buildSpirSystemPrompt } from "@/lib/spir/systemPrompt";
 import { validateSpirResponse, SPIR_FALLBACK_MESSAGE } from "@/lib/spir/responseValidator";
 import { readStore } from "@/lib/admin/store";
@@ -14,6 +14,8 @@ const TEMPERATURE = 0.4;
 
 interface FemRequestBody {
   factors: FactorResult[];
+  /** Fasettskår (underkategorier) -- valgfritt felt, se systemPrompt.ts v2.1. */
+  facets?: FacetResult[];
   message: string;
   /**
    * Antall AI-utvekslinger så langt i denne økten, rapportert av klienten.
@@ -33,6 +35,19 @@ function isValidFactorResult(value: unknown): value is FactorResult {
   return (
     typeof v.factor === "string" &&
     typeof v.label === "string" &&
+    typeof v.score === "number" &&
+    v.score >= 0 &&
+    v.score <= 100
+  );
+}
+
+function isValidFacetResult(value: unknown): value is FacetResult {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.facet === "string" &&
+    typeof v.facetName === "string" &&
+    typeof v.domain === "string" &&
     typeof v.score === "number" &&
     v.score >= 0 &&
     v.score <= 100
@@ -68,6 +83,11 @@ export async function POST(request: Request) {
   if (body.message.length > 2000) {
     return NextResponse.json({ error: "Meldingen er for lang." }, { status: 400 });
   }
+  // Fasetter er valgfritt -- eldre klientkode kan mangle dem. Er feltet
+  // likevel med, må hvert element være gyldig (samme "aldri en stille gjetning"-prinsipp).
+  if (body.facets !== undefined && (!Array.isArray(body.facets) || !body.facets.every(isValidFacetResult))) {
+    return NextResponse.json({ error: "Ugyldig fasettdata." }, { status: 400 });
+  }
 
   // Admin-panelets nødstopp og justerbare tak (Dokument 09 §21.1) -- leses
   // ved hver forespørsel, ikke bare ved oppstart, slik at en endring i
@@ -97,7 +117,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const systemPrompt = buildSpirSystemPrompt(body.factors);
+  const systemPrompt = buildSpirSystemPrompt(body.factors, body.facets ?? []);
 
   let anthropicRes: Response;
   try {
