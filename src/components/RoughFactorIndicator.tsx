@@ -34,7 +34,10 @@ interface RoughFactorIndicatorProps {
  */
 export function RoughFactorIndicator({ factor, label, score }: RoughFactorIndicatorProps) {
   const zoneIndex = zoneIndexFor(score);
-  const zoneLabel = ZONE_LABELS[zoneIndex];
+  // zoneIndexFor() klemmer alltid til [0, 4], så indekseringen er alltid
+  // gyldig i praksis -- fallbacken er kun for å tilfredsstille TypeScripts
+  // strenge indekssjekk (noUncheckedIndexedAccess), ikke fordi den kan skje.
+  const zoneLabel = ZONE_LABELS[zoneIndex] ?? "Middels";
 
   return (
     <div className="flex flex-col gap-1.5">

@@ -101,7 +101,8 @@ describe("computeDomainRawScores", () => {
   });
 
   it("kaster feil ved ugyldig svarverdi (f.eks. 0 eller 6) i stedet for å stille inn et standardsvar", () => {
-    const answers: AnswerMap = { [ALL_QUESTIONS[0].id]: 0 as never };
+    const firstQuestion = ALL_QUESTIONS[0]!;
+    const answers: AnswerMap = { [firstQuestion.id]: 0 as never };
     expect(() => computeDomainRawScores(answers, ALL_QUESTIONS)).toThrow();
   });
 });

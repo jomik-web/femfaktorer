@@ -223,10 +223,15 @@ export function computeFacetResults(
     }
     if (answeredCount !== questions.length) continue; // ikke fullført -- utelates, ingen gjetning
 
+    // questions er alltid ikke-tom her (byFacet fylles kun via push over) --
+    // eksplisitt sjekk holder likevel TypeScripts noUncheckedIndexedAccess fornøyd.
+    const first = questions[0];
+    if (!first) continue;
+
     const scaled = rescaleLinear(sum, questions.length);
-    const domain = questions[0].domain;
+    const domain = first.domain;
     const score = domain === "N" ? 100 - scaled : scaled;
-    results.push({ facet, facetName: questions[0].facetName, domain, score });
+    results.push({ facet, facetName: first.facetName, domain, score });
   }
 
   return results.sort((a, b) => a.facet.localeCompare(b.facet));
