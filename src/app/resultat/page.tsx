@@ -65,11 +65,13 @@ export default function ResultatPage() {
         {factors.map((f) => {
           const copy = INTERPRETATIONS[f.factor][bandFor(f.score)];
           return (
-            <article key={f.factor} className="flex flex-col gap-2 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
+            <article key={f.factor} className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
               <h2 className="font-semibold text-ink dark:text-white">{f.label}</h2>
               <p>{copy.summary}</p>
+              <p className="text-ink/80 dark:text-warmgray/80">{copy.typicalExpressions}</p>
               <p className="text-ink/80 dark:text-warmgray/80">{copy.resources}</p>
               <p className="text-ink/80 dark:text-warmgray/80">{copy.challenges}</p>
+              <p className="text-sm text-ink/70 dark:text-warmgray/70">{copy.contextNote}</p>
               <p className="mt-2 text-sm italic text-ink/60 dark:text-warmgray/60">
                 {copy.reflection}
               </p>
@@ -81,14 +83,14 @@ export default function ResultatPage() {
       <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5">
         <h2 className="font-semibold text-ink dark:text-white">Vil du utforske resultatet videre?</h2>
         <p className="text-sm text-ink/70 dark:text-warmgray/70">
-          FEM kan hjelpe deg å reflektere videre rundt resultatet ditt. Resultatet ditt sendes da
-          til Anthropic (leverandøren av FEM) -- kun når du aktivt starter samtalen.
+          Spir kan hjelpe deg å reflektere videre rundt resultatet ditt. Resultatet ditt sendes da
+          til Anthropic (leverandøren av Spir) -- kun når du aktivt starter samtalen.
         </p>
         <Link
-          href="/fem"
+          href="/spir"
           className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white"
         >
-          Snakk med FEM
+          Snakk med Spir
         </Link>
       </section>
 

@@ -1,19 +1,19 @@
 import type { FactorResult } from "@/lib/scoring";
 
 /**
- * Systemprompt for FEM. Kilde for reglene: Dokument 05 (AI-arkitektur og
+ * Systemprompt for Spir. Kilde for reglene: Dokument 05 (AI-arkitektur og
  * kunnskapsmodell), Dokument 09 §9, Grunnlagsdokumentet §9.2.
  *
- * FEM mottar et FERDIG BEREGNET resultatobjekt -- kan tolke og forklare
+ * Spir mottar et FERDIG BEREGNET resultatobjekt -- kan tolke og forklare
  * skårer, men ALDRI endre dem (§9-regelen "AI er rådgivende og aldri
  * autoritativ for data").
  */
-export function buildFemSystemPrompt(factors: FactorResult[]): string {
+export function buildSpirSystemPrompt(factors: FactorResult[]): string {
   const factorLines = factors
     .map((f) => `- ${f.label}: ${f.score}/100`)
     .join("\n");
 
-  return `Du er FEM, en AI-veileder i den norske tjenesten FemFaktorer. Du hjelper brukeren å reflektere over sitt eget personlighetsresultat fra en test basert på femfaktormodellen (Big Five).
+  return `Du er Spir, en AI-veileder i den norske tjenesten FemFaktorer. Du hjelper brukeren å reflektere over sitt eget personlighetsresultat fra en test basert på femfaktormodellen (Big Five).
 
 BRUKERENS RESULTAT (ferdig beregnet -- du skal aldri endre disse tallene):
 ${factorLines}

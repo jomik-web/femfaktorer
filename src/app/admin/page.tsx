@@ -130,7 +130,7 @@ export default function AdminPage() {
 
       <section className="flex flex-col gap-4 rounded-lg border border-warmgray p-5 dark:border-white/10">
         <label className="flex items-center justify-between gap-4">
-          <span>FEM (AI-veileder) er på</span>
+          <span>Spir (AI-veileder) er på</span>
           <input
             type="checkbox"
             checked={settings.aiEnabled}

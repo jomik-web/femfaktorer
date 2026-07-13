@@ -32,7 +32,7 @@ export default function FemPage() {
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-ink/70 dark:text-warmgray/70">
-          Du må fullføre testen før du kan snakke med FEM.
+          Du må fullføre testen før du kan snakke med Spir.
         </p>
         <Link href="/test" className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white">
           Gå til testen
@@ -48,8 +48,8 @@ export default function FemPage() {
       <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12">
         <h1 className="text-xl font-semibold text-ink dark:text-white">Før du starter</h1>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Hvis du starter en samtale med FEM, sendes det beregnede resultatet ditt (de fem
-          faktorskårene) og det du selv skriver, til Anthropic -- leverandøren av FEM. Ikke del
+          Hvis du starter en samtale med Spir, sendes det beregnede resultatet ditt (de fem
+          faktorskårene) og det du selv skriver, til Anthropic -- leverandøren av Spir. Ikke del
           annen personlig informasjon i meldingene dine enn det som trengs for samtalen.
           Testsvarene dine forblir lokalt i nettleseren uansett.
         </p>
@@ -59,7 +59,7 @@ export default function FemPage() {
             onClick={() => setConsented(true)}
             className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white"
           >
-            Ja, start samtale med FEM
+            Ja, start samtale med Spir
           </button>
           <Link
             href="/resultat"
@@ -82,7 +82,7 @@ export default function FemPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/fem", {
+      const res = await fetch("/api/spir", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -98,7 +98,7 @@ export default function FemPage() {
       }
       setMessages([...nextMessages, { role: "fem", text: data.reply }]);
     } catch {
-      setError("Fikk ikke kontakt med FEM. Sjekk nettforbindelsen og prøv igjen.");
+      setError("Fikk ikke kontakt med Spir. Sjekk nettforbindelsen og prøv igjen.");
     } finally {
       setLoading(false);
     }
@@ -107,9 +107,9 @@ export default function FemPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-6 py-12">
       <header>
-        <h1 className="text-xl font-semibold text-ink dark:text-white">Snakk med FEM</h1>
+        <h1 className="text-xl font-semibold text-ink dark:text-white">Snakk med Spir</h1>
         <p className="text-sm text-ink/60 dark:text-warmgray/60">
-          FEM tolker resultatet ditt -- den kan ikke endre skårene dine.
+          Spir tolker resultatet ditt -- den kan ikke endre skårene dine.
         </p>
       </header>
 
@@ -122,7 +122,7 @@ export default function FemPage() {
             {m.text}
           </div>
         ))}
-        {loading && <p className="text-sm text-ink/50 dark:text-warmgray/50">FEM skriver …</p>}
+        {loading && <p className="text-sm text-ink/50 dark:text-warmgray/50">Spir skriver …</p>}
         {error && <p className="text-sm text-coral">{error}</p>}
       </div>
 
@@ -134,13 +134,13 @@ export default function FemPage() {
         className="flex gap-3"
       >
         <label htmlFor="fem-input" className="sr-only">
-          Skriv en melding til FEM
+          Skriv en melding til Spir
         </label>
         <input
           id="fem-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Spør FEM om resultatet ditt …"
+          placeholder="Spør Spir om resultatet ditt …"
           className="flex-1 rounded-lg border border-warmgray px-4 py-2 dark:border-white/20 dark:bg-transparent"
         />
         <button

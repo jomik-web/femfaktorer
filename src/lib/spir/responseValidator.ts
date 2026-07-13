@@ -1,11 +1,11 @@
 /**
  * Response Validator (Dokument 05/09, besluttet v1.5): teknisk håndheving av
- * tonekravet, IKKE bare en instruks i systemprompt. Skanner FEM sine svar for
+ * tonekravet, IKKE bare en instruks i systemprompt. Skanner Spir sine svar for
  * absolutte ord ("alltid", "aldri", "beviser" m.fl.) før visning til bruker.
  *
  * Dette er en enkel, konservativ ordlisteskanner for v1 -- den fanger ikke
  * alle måter å formulere en bastant påstand på, og bør utvides etter hvert
- * som ekte FEM-svar samles inn (se Dokument 08, kontinuerlig forbedring).
+ * som ekte Spir-svar samles inn (se Dokument 08, kontinuerlig forbedring).
  */
 
 const ABSOLUTE_PATTERNS: RegExp[] = [
@@ -23,7 +23,7 @@ export interface ValidationResult {
   flaggedTerms: string[];
 }
 
-export function validateFemResponse(text: string): ValidationResult {
+export function validateSpirResponse(text: string): ValidationResult {
   const flagged: string[] = [];
   for (const pattern of ABSOLUTE_PATTERNS) {
     const match = text.match(pattern);
@@ -33,5 +33,5 @@ export function validateFemResponse(text: string): ValidationResult {
 }
 
 /** Nøktern, ikke-skyldplasserende fallback dersom valideringen feiler eller AI-leverandøren feiler. */
-export const FEM_FALLBACK_MESSAGE =
+export const SPIR_FALLBACK_MESSAGE =
   "Jeg klarte ikke å formulere et svar jeg er trygg på akkurat nå. Kan du prøve å spørre på en litt annen måte, eller prøve igjen om litt?";
