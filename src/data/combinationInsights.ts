@@ -19,9 +19,14 @@
  * "kan tyde på"/"ofte", vis både ressurser og utfordringer der det passer.
  */
 
-import type { DisplayFactor, FactorResult } from "@/lib/scoring";
+import type { Domain } from "@/data/questions";
+import { FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
+import type { DisplayFactor, FactorResult, FacetResult } from "@/lib/scoring";
 
 type ExtremeBand = "low" | "high";
+
+/** Visningsrekkefølge for domener -- samme rekkefølge som hovedfaktorene faktisk vises i (se scoring.ts computeDomainRawScores). */
+export const DOMAIN_DISPLAY_ORDER: Domain[] = ["N", "E", "O", "A", "C"];
 
 export interface CombinationInsight {
   id: string;
@@ -163,4 +168,224 @@ export function matchCombinationInsights(
   return COMBINATION_INSIGHTS.filter(
     (c) => extremeByFactor.get(c.factorA) === c.bandA && extremeByFactor.get(c.factorB) === c.bandB
   );
+}
+
+/**
+ * Samme som matchCombinationInsights, men gruppert etter hvilket hoveddomene
+ * hver kombinasjon skal vises under -- se plasseringsregelen i filhodet til
+ * FACET_COMBINATION_INSIGHTS under (samme regel gjelder her: vises under det
+ * domenet som kommer SIST i visningsrekkefølgen av de to involverte).
+ */
+export function matchCombinationInsightsByDomain(
+  factors: FactorResult[],
+  bandFor: (score: number) => "low" | "mid" | "high",
+  displayToDomain: Record<DisplayFactor, Domain>
+): Map<Domain, CombinationInsight[]> {
+  const byDomain = new Map<Domain, CombinationInsight[]>();
+  for (const combo of matchCombinationInsights(factors, bandFor)) {
+    const domainA = displayToDomain[combo.factorA];
+    const domainB = displayToDomain[combo.factorB];
+    const placementDomain =
+      DOMAIN_DISPLAY_ORDER.indexOf(domainA) > DOMAIN_DISPLAY_ORDER.indexOf(domainB) ? domainA : domainB;
+    const list = byDomain.get(placementDomain) ?? [];
+    list.push(combo);
+    byDomain.set(placementDomain, list);
+  }
+  return byDomain;
+}
+
+/**
+ * Kuraterte tolkninger av kombinasjoner mellom to FASETTER (underkategorier)
+ * -- lagt til v2.3 etter produkteiers ønske ("spennende samspill mellom
+ * flere underkategorier"). Samme avgrensning som COMBINATION_INSIGHTS over:
+ * dette er et KURATERT utvalg, ikke en uttømmende liste (29 fasetter gir
+ * astronomisk mange mulige par) -- valgt fordi de er kjente, tydelig
+ * beskrivbare mønstre. Spir kan gå videre og dekke par som ikke er kuratert
+ * her (den har hele fasettprofilen tilgjengelig, se systemPrompt.ts).
+ *
+ * Plassering i rapporten (se resultat/page.tsx):
+ *  - Er begge fasettene i SAMME hoveddomene, vises kommentaren til slutt i
+ *    det domenets fasettliste.
+ *  - Er fasettene fra ULIKE hoveddomener, vises kommentaren under det
+ *    domenet som kommer SIST i visningsrekkefølgen
+ *    (N, E, O, A, C -- se DOMAIN_DISPLAY_ORDER).
+ */
+export interface FacetCombinationInsight {
+  id: string;
+  facetA: string;
+  bandA: ExtremeBand;
+  facetB: string;
+  bandB: ExtremeBand;
+  title: string;
+  text: string;
+}
+
+export const FACET_COMBINATION_INSIGHTS: FacetCombinationInsight[] = [
+  {
+    id: "n5-low-n6-low",
+    facetA: "N5",
+    bandA: "low",
+    facetB: "N6",
+    bandB: "low",
+    title: "Impulskontroll og sårbarhet under press peker begge mot den mer reaktive enden",
+    text: "Denne kombinasjonen kan bety at sterke ønsker eller fristelser lettere tar styringen samtidig som du kjenner deg mer overveldet når flere krav kommer på én gang. De to forsterker gjerne hverandre i pressede situasjoner. Faste, forhåndsbestemte rutiner for nettopp slike øyeblikk -- planlagt på forhånd, ikke i stunden -- kan være til god hjelp.",
+  },
+  {
+    id: "c1-high-c5-low",
+    facetA: "C1",
+    bandA: "high",
+    facetB: "C5",
+    bandB: "low",
+    title: "Høy mestringstro, men lavere selvdisiplin",
+    text: "Denne kombinasjonen kan bety at du stoler på at du KAN løse oppgaven, samtidig som det er krevende å faktisk komme i gang eller holde ut til den er ferdig. Troen på egen evne er en ressurs -- utfordringen ligger mer i oppstart og utholdenhet enn i tvil om resultatet. Korte, konkrete første steg kan gjøre terskelen for å begynne lavere.",
+  },
+  {
+    id: "e3-high-e1-low",
+    facetA: "E3",
+    bandA: "high",
+    facetB: "E1",
+    bandB: "low",
+    title: "Høy selvhevdelse, men mindre varme",
+    text: "Denne kombinasjonen kan gi en tydelig, pådrivende stil uten at det samme følelsesmessige nærværet nødvendigvis følger med. Andre kan oppfatte deg som besluttsom og retningsgivende, men også som noe mer distansert enn du selv opplever deg. Et bevisst signal om at du bryr deg -- ikke bare hva du mener -- kan bygge bro mellom de to.",
+  },
+  {
+    id: "o1-high-o5-high",
+    facetA: "O1",
+    bandA: "high",
+    facetB: "O5",
+    bandB: "high",
+    title: "Sterk fantasi og sterk intellektuell nysgjerrighet",
+    text: "Denne kombinasjonen gir ofte en uvanlig produktiv blanding: forestillingsevne til å se det som ikke finnes ennå, og en analytisk interesse for å forstå det grundig. Idéarbeid og komplekse problemstillinger kan derfor kjennes spesielt givende. Å sette av tid til å faktisk lande ideene, ikke bare utforske dem videre, kan være noe å være bevisst på.",
+  },
+  {
+    id: "a1-low-a2-high",
+    facetA: "A1",
+    bandA: "low",
+    facetB: "A2",
+    bandB: "high",
+    title: "Lavere tillit, men høy rettframhet",
+    text: "Denne kombinasjonen kan bety at du er varsom med å stole på andres intensjoner, samtidig som du selv er åpen og direkte om dine egne. Det gir en ærlig, forutsigbar stil, men kan også skape en viss asymmetri i relasjoner -- du gir mer åpenhet enn du selv umiddelbart forventer tilbake.",
+  },
+  {
+    id: "c2-high-c6-low",
+    facetA: "C2",
+    bandA: "high",
+    facetB: "C6",
+    bandB: "low",
+    title: "Høy orden, men lavere overveielse",
+    text: "Denne kombinasjonen kan bety at du liker struktur og system i det du allerede har foran deg, men handler raskere og mer spontant enn du planlegger for. Systemene dine er gjerne solide -- selve beslutningene kan noen ganger tas litt fortere enn konsekvensene er tenkt helt gjennom.",
+  },
+  {
+    id: "n6-low-c1-high",
+    facetA: "N6",
+    bandA: "low",
+    facetB: "C1",
+    bandB: "high",
+    title: "Sårbarhet under press og høy mestringstro",
+    text: "Denne kombinasjonen kan virke motstridende: du stoler på egen evne til å løse oppgaver, men merker samtidig at kapasiteten strekker seg tynnere når flere krav kommer samtidig. Selvtilliten er ofte reell og velfundert -- det som svikter under høyt press er mer kapasitet der og da enn selve troen på egen dyktighet.",
+  },
+  {
+    id: "e5-high-n1-low",
+    facetA: "E5",
+    bandA: "high",
+    facetB: "N1",
+    bandB: "high",
+    title: "Høy spenningssøking og høy emosjonell stabilitet på bekymring-fasetten",
+    text: "Denne kombinasjonen kan bety at du søker fart, risiko og sterke opplevelser uten at bekymring bremser deg i særlig grad. Det kan gjøre deg til en som går løs på nye og usikre situasjoner uten å nøle -- verdt å være bevisst på er at den samme lave bekymringsterskelen også kan gjøre reell risiko vanskeligere å fange opp i tide.",
+  },
+  {
+    id: "a6-high-n1-low",
+    facetA: "A6",
+    bandA: "high",
+    facetB: "N1",
+    bandB: "low",
+    title: "Høy medfølelse og lavere emosjonell stabilitet på bekymring-fasetten",
+    text: "Denne kombinasjonen kan bety at du berøres lett av andres smerte, samtidig som du selv bekymrer deg relativt mye. De to kan forsterke hverandre -- andres vanskelige situasjoner kan feste seg hos deg lenger enn du skulle ønske. Bevisste grenser for hvor mye du tar innover deg, kan være til hjelp uten at det går på bekostning av omsorgen din.",
+  },
+  {
+    id: "o5-high-c5-low",
+    facetA: "O5",
+    bandA: "high",
+    facetB: "C5",
+    bandB: "low",
+    title: "Høy intellektuell nysgjerrighet, men lavere selvdisiplin",
+    text: "Denne kombinasjonen kan bety at nye ideer og problemstillinger stadig fanger interessen din, samtidig som det er krevende å holde fast ved én av dem til den faktisk er fullført. Bredden i interessene er en styrke -- noe struktur rundt hva som faktisk skal fullføres, kan hjelpe deg å høste mer av den.",
+  },
+  {
+    id: "c4-high-n1-low",
+    facetA: "C4",
+    bandA: "high",
+    facetB: "N1",
+    bandB: "low",
+    title: "Høy prestasjonsstreben og lavere emosjonell stabilitet på bekymring-fasetten",
+    text: "Denne kombinasjonen kan bety at høye mål kombineres med en tendens til å bekymre deg for om du når dem. Ambisjonene driver deg gjerne fremover, men kan også gjøre at ting sjelden føles «godt nok». Å bevisst anerkjenne det du faktisk har oppnådd underveis, ikke bare målet lenger frem, kan dempe noe av presset.",
+  },
+  {
+    id: "e3-high-a4-low",
+    facetA: "E3",
+    bandA: "high",
+    facetB: "A4",
+    bandB: "low",
+    title: "Høy selvhevdelse og lavere ettergivenhet",
+    text: "Denne kombinasjonen kan gi en tydelig, konfronterende stil i uenighet -- du tar plass og gir deg ikke lett. Det kan være en klar styrke i forhandlinger eller beslutninger som må tas raskt, men tett samarbeid kan noen ganger dra nytte av at du bevisst går inn for kompromiss selv når du er sikker i din sak.",
+  },
+  {
+    id: "o4-high-n1-low",
+    facetA: "O4",
+    bandA: "high",
+    facetB: "N1",
+    bandB: "low",
+    title: "Høy eventyrlyst og lavere emosjonell stabilitet på bekymring-fasetten",
+    text: "Denne kombinasjonen kan bety at du oppsøker nye erfaringer, steder og arbeidsmåter uten at bekymring holder deg tilbake. Det åpner ofte dører andre nøler ved -- verdt å ha i bakhodet er at det samme gjør det lettere å undervurdere reell risiko ved det ukjente.",
+  },
+  {
+    id: "a3-high-c1-low",
+    facetA: "A3",
+    bandA: "high",
+    facetB: "C1",
+    bandB: "low",
+    title: "Høy hjelpsomhet, men lavere mestringstro",
+    text: "Denne kombinasjonen kan bety at du sier ja til å hjelpe andre samtidig som du selv tviler på om du strekker til. Viljen til å bidra er tydelig -- risikoen er å ta på deg mer enn du egentlig har tro på at du kan levere, noe som kan gjøre belastningen tyngre enn den trenger å være.",
+  },
+];
+
+/**
+ * Finner alle kuraterte FASETT-kombinasjoner som treffer brukerens faktiske
+ * profil, og grupperer dem etter hvilket hoveddomene de skal vises under
+ * (se filhode om plasseringsregelen).
+ */
+export function matchFacetCombinationInsights(
+  facets: FacetResult[],
+  bandFor: (score: number) => "low" | "mid" | "high"
+): Map<Domain, FacetCombinationInsight[]> {
+  const extremeByFacet = new Map<string, ExtremeBand>();
+  for (const f of facets) {
+    const band = bandFor(f.score);
+    if (band === "low" || band === "high") extremeByFacet.set(f.facet, band);
+  }
+
+  const byDomain = new Map<Domain, FacetCombinationInsight[]>();
+  for (const combo of FACET_COMBINATION_INSIGHTS) {
+    if (extremeByFacet.get(combo.facetA) !== combo.bandA) continue;
+    if (extremeByFacet.get(combo.facetB) !== combo.bandB) continue;
+
+    const domainA = FACET_INTERPRETATIONS[combo.facetA]?.domain;
+    const domainB = FACET_INTERPRETATIONS[combo.facetB]?.domain;
+    if (!domainA || !domainB) continue; // ukjent fasettkode -- ignorer defensivt
+
+    // Samme domene -> vises der. Ulike domener -> vises under det som
+    // kommer SIST i visningsrekkefølgen (se filhode).
+    const placementDomain =
+      domainA === domainB
+        ? domainA
+        : DOMAIN_DISPLAY_ORDER.indexOf(domainA) > DOMAIN_DISPLAY_ORDER.indexOf(domainB)
+          ? domainA
+          : domainB;
+
+    const list = byDomain.get(placementDomain) ?? [];
+    list.push(combo);
+    byDomain.set(placementDomain, list);
+  }
+
+  return byDomain;
 }

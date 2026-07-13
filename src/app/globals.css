@@ -29,3 +29,25 @@
     }
   }
 }
+
+/*
+ * PDF/utskrift av resultatsiden (v2.3, produkteiers ønske om "pdf med
+ * resultatene på den fulle testen"). Ingen ny avhengighet -- bruker nettleserens
+ * innebygde "Skriv ut -> Lagre som PDF". Tvinger lyst fargeskjema uavhengig av
+ * systeminnstilling for mørk modus (darkMode: "media" i tailwind.config.ts),
+ * siden `dark:`-varianter ellers kan slå inn under utskrift på en enhet som
+ * står i mørk modus, og gi hvit tekst på hvitt papir.
+ */
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0d3340 !important;
+  }
+
+  /* Unngå at en fasettboks eller kombinasjonsboks kappes midt over et sideskift. */
+  section,
+  article {
+    break-inside: avoid;
+  }
+}

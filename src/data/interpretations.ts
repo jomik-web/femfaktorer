@@ -26,7 +26,7 @@
  * reell lansering.
  */
 
-import type { DisplayFactor } from "@/lib/scoring";
+import type { DisplayFactor, FactorResult } from "@/lib/scoring";
 
 export type Band = "low" | "mid" | "high";
 
@@ -238,3 +238,55 @@ export const INTERPRETATIONS: Copy = {
 
 export const NON_DIAGNOSTIC_NOTICE =
   "Dette er ikke en diagnose eller en fasit på hvem du er. Resultatet viser tendenser på et gitt tidspunkt, tolket i lys av offentlig tilgjengelig forskning på femfaktormodellen -- ikke en klinisk vurdering.";
+
+export interface ClosingSynthesis {
+  career: string;
+  relationships: string;
+  personalDevelopment: string;
+}
+
+const CLOSING_FALLBACK: ClosingSynthesis = {
+  career:
+    "Profilen din er nokså jevn på tvers av de fem faktorene, uten noen sterkt fremtredende retning -- det gir gjerne fleksibilitet til å fungere godt i mange ulike typer roller, uten at én bestemt arbeidsform peker seg klart ut.",
+  relationships:
+    "Uten noen sterkt fremtredende faktor er det vanskelig å peke på ett bestemt relasjonsmønster hos deg -- du beveger deg trolig naturlig mellom flere ulike måter å møte andre på, avhengig av hvem du er sammen med og situasjonen du står i.",
+  personalDevelopment:
+    "Det kan være verdt å utforske alle fem faktorene noe likt videre, siden ingen av dem peker seg klart ut som mest fremtredende akkurat nå. Profilen din beskriver uansett tendenser på et gitt tidspunkt, ikke et endelig tak for hvem du kan bli.",
+};
+
+/**
+ * Setter sammen en avsluttende oppsummering om jobb, relasjoner og personlig
+ * utvikling -- lagt til v2.3 etter produkteiers ønske ("helt til slutt bør
+ * det stå noe tekstlig om hva resultatet kan ha å si for jobb, relasjoner og
+ * personlig utvikling"). Bygges av de 1-2 mest FREMTREDENDE faktorene (størst
+ * avstand fra midtpunktet 50) sitt allerede skrevne careerNote/
+ * relationshipNote/reflection -- ikke ny, uavhengig fritekst -- slik at
+ * innholdet forblir forankret i faktisk gjennomgått og godkjent tekst.
+ */
+export function buildClosingSynthesis(factors: FactorResult[]): ClosingSynthesis {
+  const sorted = [...factors].sort((a, b) => Math.abs(b.score - 50) - Math.abs(a.score - 50));
+  const primary = sorted[0];
+  if (!primary) return CLOSING_FALLBACK;
+
+  const primaryBand = bandFor(primary.score);
+  if (primaryBand === "mid") return CLOSING_FALLBACK; // ingen faktor er tydelig nok til en meningsfull oppsummering
+
+  const primaryCopy = INTERPRETATIONS[primary.factor][primaryBand];
+
+  const secondary = sorted[1];
+  const secondaryBand = secondary ? bandFor(secondary.score) : "mid";
+  const secondaryCopy = secondary && secondaryBand !== "mid" ? INTERPRETATIONS[secondary.factor][secondaryBand] : null;
+
+  const closingLine =
+    "Ingen deler av profilen din er faste eller uforanderlige -- de beskriver tendenser nå, ikke et endelig tak for hvem du kan bli.";
+
+  return {
+    career: secondaryCopy ? `${primaryCopy.careerNote} ${secondaryCopy.careerNote}` : primaryCopy.careerNote,
+    relationships: secondaryCopy
+      ? `${primaryCopy.relationshipNote} ${secondaryCopy.relationshipNote}`
+      : primaryCopy.relationshipNote,
+    personalDevelopment: secondaryCopy
+      ? `${primaryCopy.reflection} ${secondaryCopy.reflection} ${closingLine}`
+      : `${primaryCopy.reflection} ${closingLine}`,
+  };
+}
