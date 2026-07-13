@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ALL_QUESTIONS, FREE_QUESTIONS, OPTIONAL_O6_QUESTIONS, type Domain } from "@/data/questions";
 import {
@@ -13,7 +13,14 @@ import {
   type ResultTier,
   type DisplayFactor,
 } from "@/lib/scoring";
-import { loadAnswers, clearAnswers, loadO6, clearO6 } from "@/lib/storage";
+import {
+  loadAnswers,
+  clearAnswers,
+  loadO6,
+  clearO6,
+  loadRestoredAccountResult,
+  clearRestoredAccountResult,
+} from "@/lib/storage";
 import { FactorScale } from "@/components/FactorScale";
 import { RoughFactorIndicator } from "@/components/RoughFactorIndicator";
 import { INTERPRETATIONS, NON_DIAGNOSTIC_NOTICE, bandFor, buildClosingSynthesis } from "@/data/interpretations";
@@ -40,6 +47,19 @@ export default function ResultatPage() {
   // produkteiers ønske om å dele opp rapporten i én side per hovedkategori
   // i stedet for alt på én lang side).
   const [activeFactor, setActiveFactor] = useState<DisplayFactor | null>(null);
+  // Sant når resultatet vises fra kontoen (etter innlogging på en enhet uten
+  // lokale svar) i stedet for fra denne enhetens egne lagrede testsvar --
+  // v2.4, se lib/storage.ts og /logg-inn.
+  const [isRestored, setIsRestored] = useState(false);
+  const [accountChecked, setAccountChecked] = useState(false);
+  const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [saveStep, setSaveStep] = useState<"closed" | "email" | "code">("closed");
+  const [saveEmail, setSaveEmail] = useState("");
+  const [saveCode, setSaveCode] = useState("");
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveInfo, setSaveInfo] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = loadAnswers();
@@ -49,6 +69,7 @@ export default function ResultatPage() {
     const questionSet = stored.continuedToFull ? ALL_QUESTIONS : FREE_QUESTIONS;
     const resultTier: ResultTier = stored.continuedToFull ? "full" : "free";
     const result = computeTestResult(stored.answers, questionSet, resultTier);
+
     if (result.complete && result.factors) {
       setFactors(result.factors);
       setTier(result.tier ?? resultTier);
@@ -57,16 +78,31 @@ export default function ResultatPage() {
       if (resultTier === "full") {
         setFacets(computeFacetResults(stored.answers, questionSet));
       }
-    } else {
-      setIncomplete(true);
+
+      // O6-tilleggsseksjonen (helt valgfri, se questions.ts) -- vises KUN
+      // dersom brukeren aktivt har samtykket og fullført den, og ALDRI
+      // blandet inn i de fem hovedfaktorene over.
+      const storedO6 = loadO6();
+      setO6Score(computeOptionalO6Score(storedO6.answers, OPTIONAL_O6_QUESTIONS));
+      setHydrated(true);
+      return;
     }
 
-    // O6-tilleggsseksjonen (helt valgfri, se questions.ts) -- vises KUN
-    // dersom brukeren aktivt har samtykket og fullført den, og ALDRI blandet
-    // inn i de fem hovedfaktorene over.
-    const storedO6 = loadO6();
-    setO6Score(computeOptionalO6Score(storedO6.answers, OPTIONAL_O6_QUESTIONS));
+    // Ingen fullført test lokalt -- prøv et resultat hentet fra kontoen
+    // (v2.4). Lokale svar går ALLTID foran et hentet resultat dersom begge
+    // finnes, slik at en fersk test aldri overskygges av gammel kontodata.
+    const restored = loadRestoredAccountResult();
+    if (restored) {
+      setFactors(restored.factors);
+      setFacets(restored.facets);
+      setTier("full");
+      setO6Score(restored.o6Score);
+      setIsRestored(true);
+      setHydrated(true);
+      return;
+    }
 
+    setIncomplete(true);
     setHydrated(true);
   }, []);
 
@@ -74,6 +110,26 @@ export default function ResultatPage() {
   useEffect(() => {
     if (factors && !activeFactor) setActiveFactor(factors[0]?.factor ?? null);
   }, [factors, activeFactor]);
+
+  // Sjekk innloggingsstatus -- kun relevant (og kun spurt om) for fulltesten,
+  // se produkteiers krav om at korttesten ikke skal tilby lagring.
+  useEffect(() => {
+    if (tier !== "full") return;
+    let cancelled = false;
+    fetch("/api/account/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        setLoggedInEmail(data.loggedIn ? (data.email ?? null) : null);
+        setAccountChecked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setAccountChecked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tier]);
 
   if (!hydrated) return null;
 
@@ -93,15 +149,109 @@ export default function ResultatPage() {
     );
   }
 
-  function handleDelete() {
+  async function handleDelete() {
+    // Er man innlogget, slett den lagrede kontodataen også -- "slett mine
+    // data" skal bety alt, ikke bare det som ligger lokalt (v2.4).
+    if (loggedInEmail) {
+      try {
+        await fetch("/api/account/delete", { method: "POST" });
+        await fetch("/api/account/logout", { method: "POST" });
+      } catch {
+        // Fortsetter uansett med lokal sletting under.
+      }
+    }
     clearAnswers();
     clearO6();
+    clearRestoredAccountResult();
     window.location.href = "/";
   }
 
   function handleDeleteO6() {
     clearO6();
     setO6Score(null);
+  }
+
+  async function requestSaveCode(e: FormEvent) {
+    e.preventDefault();
+    setSaveError(null);
+    setSaveInfo(null);
+    setSaveLoading(true);
+    try {
+      const res = await fetch("/api/account/request-code", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: saveEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSaveError(data.error ?? "Noe gikk galt. Prøv igjen.");
+        return;
+      }
+      setSaveInfo(`Vi har sendt en kode til ${saveEmail}.`);
+      setSaveStep("code");
+    } catch {
+      setSaveError("Fikk ikke kontakt med tjenesten. Sjekk nettforbindelsen og prøv igjen.");
+    } finally {
+      setSaveLoading(false);
+    }
+  }
+
+  async function persistCurrentResult() {
+    setSaveLoading(true);
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/account/save-result", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ factors, facets, o6Score }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSaveError(data.error ?? "Klarte ikke å lagre resultatet.");
+        return;
+      }
+      setSavedAt(data.savedAt);
+      setSaveInfo("Resultatet ditt er lagret.");
+    } catch {
+      setSaveError("Fikk ikke kontakt med tjenesten. Sjekk nettforbindelsen og prøv igjen.");
+    } finally {
+      setSaveLoading(false);
+    }
+  }
+
+  async function verifyAndSave(e: FormEvent) {
+    e.preventDefault();
+    setSaveError(null);
+    setSaveLoading(true);
+    try {
+      const res = await fetch("/api/account/verify-code", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: saveEmail, code: saveCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSaveError(data.error ?? "Feil kode. Prøv igjen.");
+        return;
+      }
+      setLoggedInEmail(data.email ?? saveEmail);
+      setSaveStep("closed");
+      await persistCurrentResult();
+    } catch {
+      setSaveError("Fikk ikke kontakt med tjenesten. Sjekk nettforbindelsen og prøv igjen.");
+    } finally {
+      setSaveLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/account/logout", { method: "POST" });
+    } catch {
+      // se over -- fjerner den lokale innloggingsvisningen uansett
+    }
+    setLoggedInEmail(null);
+    setSaveInfo(null);
   }
 
   // Kombinasjonsfunn (både hovedfaktor- og fasettnivå) gruppert etter hvilket
@@ -322,6 +472,117 @@ export default function ResultatPage() {
         </section>
       )}
 
+      {tier === "full" && accountChecked && (
+        <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+          <h2 className="font-semibold text-ink dark:text-white">Lagre resultatet ditt</h2>
+          {isRestored && (
+            <p className="text-sm text-ink/60 dark:text-warmgray/60">
+              Dette resultatet er hentet fra kontoen din.
+            </p>
+          )}
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
+            Vil du slippe å ta testen på nytt for å se resultatet igjen -- på denne eller en annen
+            enhet -- kan du lagre det knyttet til e-postadressen din. Vi lagrer da bare de ferdig
+            beregnede skårene dine (fem hovedfaktorer og fasetter), ALDRI de 120 svarene du ga.
+            Innlogging skjer med en engangskode sendt på e-post, ikke passord, og du kan slette det
+            lagrede resultatet når som helst -- her, eller ved å logge inn på nytt.
+          </p>
+
+          {loggedInEmail ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-ink/70 dark:text-warmgray/70">
+                Innlogget som {loggedInEmail}
+                {savedAt ? ` -- sist lagret ${new Date(savedAt).toLocaleDateString("no-NO")}.` : "."}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => void persistCurrentResult()}
+                  disabled={saveLoading}
+                  className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white disabled:opacity-50"
+                >
+                  {saveLoading ? "Lagrer …" : "Lagre / oppdater resultatet"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleLogout()}
+                  className="self-start text-sm text-ink/60 underline underline-offset-2 dark:text-warmgray/60"
+                >
+                  Logg ut
+                </button>
+              </div>
+            </div>
+          ) : saveStep === "closed" ? (
+            <button
+              type="button"
+              onClick={() => setSaveStep("email")}
+              className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white"
+            >
+              Lagre resultatet mitt
+            </button>
+          ) : saveStep === "email" ? (
+            <form onSubmit={requestSaveCode} className="flex flex-col gap-2">
+              <label htmlFor="save-email" className="text-sm font-medium text-ink dark:text-white">
+                E-postadresse
+              </label>
+              <input
+                id="save-email"
+                type="email"
+                required
+                value={saveEmail}
+                onChange={(e) => setSaveEmail(e.target.value)}
+                placeholder="navn@eksempel.no"
+                className="rounded-lg border border-warmgray px-4 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={saveLoading}
+                  className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white disabled:opacity-50"
+                >
+                  {saveLoading ? "Sender kode …" : "Send meg en kode"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSaveStep("closed")}
+                  className="text-sm text-ink/60 underline underline-offset-2 dark:text-warmgray/60"
+                >
+                  Avbryt
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={verifyAndSave} className="flex flex-col gap-2">
+              {saveInfo && <p className="text-sm text-ink/70 dark:text-warmgray/70">{saveInfo}</p>}
+              <label htmlFor="save-code" className="text-sm font-medium text-ink dark:text-white">
+                6-sifret kode
+              </label>
+              <input
+                id="save-code"
+                type="text"
+                inputMode="numeric"
+                pattern="\d{6}"
+                maxLength={6}
+                required
+                value={saveCode}
+                onChange={(e) => setSaveCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="123456"
+                className="rounded-lg border border-warmgray px-4 py-2 tracking-[0.3em] dark:border-white/20 dark:bg-transparent"
+              />
+              <button
+                type="submit"
+                disabled={saveLoading}
+                className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white disabled:opacity-50"
+              >
+                {saveLoading ? "Bekrefter …" : "Bekreft og lagre"}
+              </button>
+            </form>
+          )}
+
+          {saveError && <p className="text-sm text-coral">{saveError}</p>}
+        </section>
+      )}
+
       {tier === "free" ? (
         <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
           <h2 className="font-semibold text-ink dark:text-white">
@@ -358,9 +619,11 @@ export default function ResultatPage() {
 
       <footer className="flex flex-col items-start gap-2 border-t border-warmgray pt-6 text-sm dark:border-white/10 print:hidden">
         <p className="text-ink/60 dark:text-warmgray/60">
-          Svarene dine er lagret bare i denne nettleseren, ikke hos FemFaktorer.
+          {loggedInEmail
+            ? "Svarene dine ligger i denne nettleseren, og et beregnet resultat er lagret på kontoen din."
+            : "Svarene dine er lagret bare i denne nettleseren, ikke hos FemFaktorer."}
         </p>
-        <button type="button" onClick={handleDelete} className="text-coral underline underline-offset-2">
+        <button type="button" onClick={() => void handleDelete()} className="text-coral underline underline-offset-2">
           Slett mine data
         </button>
       </footer>

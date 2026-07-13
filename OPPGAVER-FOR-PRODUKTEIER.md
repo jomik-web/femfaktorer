@@ -7,6 +7,16 @@ Sist oppdatert: 13.07.2026
 - [ ] **Anthropic-konto**: opprett konto på console.anthropic.com. Ikke nødvendig å legge inn betalingskort med én gang, men jeg trenger en API-nøkkel for å teste FEM. Lim aldri nøkkelen inn i chatten — legg den i en `.env.local`-fil i denne mappen (jeg lager en mal `.env.example` du kan kopiere), så leser jeg den derfra.
 - [ ] **Netlify-konto**: opprett gratis konto på netlify.com. Trengs når vi er klare til å vise deg en testversjon i nettleseren uten at du må installere noe selv.
 
+## Nytt (v2.4) -- kontofunksjon: lagre fullversjon-resultat med e-postinnlogging
+
+Bygget etter ditt ønske om å slippe å ta testen på nytt hver gang, og kunne lagre resultatet for senere. Løsningen bruker Netlify Blobs (innebygd i Netlify -- krever normalt ingen egen oppsett fra deg) og Resend (e-postutsending av innloggingskoder). Følgende trengs fra deg før dette virker i praksis:
+
+- [ ] **Resend-konto**: opprett gratis konto på resend.com. Gå til "API Keys" og lag en nøkkel -- legg den i `.env.local` som `RESEND_API_KEY` (aldri i chatten).
+- [ ] **Avsenderadresse**: sett `RESEND_FROM_ADDRESS` i `.env.local`, f.eks. `FemFaktorer <innlogging@femfaktorer.no>`.
+- [ ] **VIKTIG begrensning inntil videre**: uten et domene VERIFISERT i Resend (under "Domains" i Resend-dashbordet, krever noen DNS-oppføringer hos domeneleverandøren din) kan e-post med innloggingskode kun sendes til e-postadressen som selve Resend-kontoen din er registrert med. Det betyr at DU kan teste funksjonen fullt ut nå, men andre brukere kan ikke logge inn før et domene er verifisert. Dette er en god del av oppgaven "vurder domenenavn" lenger ned i denne lista.
+- [ ] **Egen hemmelig nøkkel**: sett `ACCOUNT_OTP_PEPPER` i `.env.local` til en tilfeldig lang tekststreng (jeg kan generere en for deg om du vil, si ifra).
+- [ ] Netlify Blobs krever normalt INGEN egen oppsett fra deg -- det er automatisk tilgjengelig for alle Netlify-nettsteder. Kun om noe ikke fungerer som forventet i produksjon, kan `NETLIFY_BLOBS_SITE_ID`/`NETLIFY_BLOBS_TOKEN` settes manuelt (se `.env.example`).
+
 ## Bør startes nå (lang ledetid, blokkerer ikke koding)
 
 - [ ] **Registrer enkeltpersonforetak** (Altinn/Brønnøysundregistrene) — bør være i gang før dere signerer betalte avtaler med Netlify/Anthropic, og før behandlingsansvarlig navngis endelig i personvernteksten.

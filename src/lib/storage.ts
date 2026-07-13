@@ -9,7 +9,8 @@
  */
 
 import { ALL_QUESTIONS, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
-import { isValidAnswerValue, type AnswerMap } from "@/lib/scoring";
+import { isValidAnswerValue, type AnswerMap, type FactorResult, type FacetResult } from "@/lib/scoring";
+import { isValidFactorResult, isValidFacetResult } from "@/lib/account/validate";
 
 const STORAGE_KEY = "femfaktorer.korttest.v1";
 // Bump denne ved enhver endring i spørsmålssett eller svarformat.
@@ -143,6 +144,63 @@ export function clearO6(): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(O6_STORAGE_KEY);
+  } catch {
+    // se over
+  }
+}
+
+/**
+ * Resultat HENTET FRA KONTOEN (v2.4, se lib/account/*.ts og /logg-inn) --
+ * brukt når noen logger inn på en ny enhet/nettleser og henter fram et
+ * tidligere lagret fullversjon-resultat. Dette er BEVISST atskilt fra
+ * `femfaktorer.korttest.v1` (som inneholder rå svar): kontoen lagrer kun
+ * FERDIG BEREGNEDE skårer (se lib/account/blobs.ts), så det finnes ingen rå
+ * svar å legge inn i det vanlige svarkartet. resultat/page.tsx sjekker denne
+ * lagringen FØRST, og bruker den direkte uten å gå via computeTestResult().
+ */
+const RESTORED_STORAGE_KEY = "femfaktorer.hentetresultat.v1";
+const RESTORED_STORAGE_VERSION = 1;
+
+export interface RestoredAccountResult {
+  factors: FactorResult[];
+  facets: FacetResult[];
+  o6Score: number | null;
+  savedAt: string;
+}
+
+export function saveRestoredAccountResult(result: RestoredAccountResult): void {
+  if (typeof window === "undefined") return;
+  const payload = { version: RESTORED_STORAGE_VERSION, ...result };
+  try {
+    window.localStorage.setItem(RESTORED_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // se over
+  }
+}
+
+export function loadRestoredAccountResult(): RestoredAccountResult | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(RESTORED_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const v = parsed as Record<string, unknown>;
+    if (v.version !== RESTORED_STORAGE_VERSION) return null;
+    if (!Array.isArray(v.factors) || !v.factors.every(isValidFactorResult)) return null;
+    if (!Array.isArray(v.facets) || !v.facets.every(isValidFacetResult)) return null;
+    if (typeof v.savedAt !== "string") return null;
+    const o6Score = typeof v.o6Score === "number" ? v.o6Score : null;
+    return { factors: v.factors, facets: v.facets, o6Score, savedAt: v.savedAt };
+  } catch {
+    return null;
+  }
+}
+
+export function clearRestoredAccountResult(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(RESTORED_STORAGE_KEY);
   } catch {
     // se over
   }

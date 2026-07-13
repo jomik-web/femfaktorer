@@ -8,6 +8,8 @@ const LINKS = [
   { href: "/om-femfaktormodellen", label: "Om femfaktormodellen" },
   { href: "/metode-og-kilder", label: "Metode og kilder" },
   { href: "/hjelp", label: "Hjelp" },
+  // Lagret fullversjon-resultat (v2.4) -- gjelder kun fulltesten, se resultat/page.tsx.
+  { href: "/logg-inn", label: "Logg inn" },
 ];
 
 /**
