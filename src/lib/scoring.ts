@@ -1,5 +1,5 @@
 /**
- * Skåringsmotor for korttesten. Autoritativ kilde for reglene: Dokument 03
+ * Skåringsmotor for testen. Autoritativ kilde for reglene: Dokument 03
  * (Teststruktur, skåring og resultatformidling, v1.1) §9-§12.
  *
  * Grunnregler som IKKE skal brytes (se §9.3, Dokument 09 §10.3):
@@ -9,21 +9,24 @@
  *
  * Om 0-100-skalaen (besluttet v1.7, se Grunnlagsdokumentet §7 og Dokument 03 §10.4):
  * dette er EN REN LINEÆR OMREGNING av råskår, IKKE en normbasert persentil.
- * Riktig normdata finnes ikke ennå for akkurat dette 6-spørsmål-per-faktor-utvalget
- * (se Dokument 06 §9 for hvilket datasett som skal brukes når normer bygges).
- * Tekst i grensesnittet skal derfor ALDRI hevde sammenligning med andre brukere.
+ * Riktig normdata finnes ikke ennå (se Dokument 06 §9 for hvilket datasett som
+ * skal brukes når normer bygges). Tekst i grensesnittet skal derfor ALDRI
+ * hevde sammenligning med andre brukere.
+ *
+ * TO-TRINNS TEST (v2.0, se Grunnlagsdokumentet og Dokument 03 §7/§20):
+ * spørsmålssettet har nå to gyldige "fullførings-punkter" -- de første 50
+ * spørsmålene (foreløpig resultat) og alle 120 (presist resultat). Antall
+ * spørsmål per domene er derfor IKKE lenger en fast konstant -- det regnes ut
+ * fra hvilket spørsmålssett (`questionSet`) som faktisk ble brukt, slik at
+ * samme skåringslogikk fungerer korrekt for begge trinn.
  */
 
-import { QUESTIONS, type Domain, type Question } from "@/data/questions";
+import type { Domain, Question } from "@/data/questions";
 
 export type AnswerValue = 1 | 2 | 3 | 4 | 5;
 
 /** Svar nøkles på spørsmålets stabile id (se questions.ts). */
 export type AnswerMap = Partial<Record<string, AnswerValue>>;
-
-const MIN_RAW_PER_DOMAIN = 6; // 6 spørsmål x min. svar 1
-const MAX_RAW_PER_DOMAIN = 30; // 6 spørsmål x maks. svar 5
-const QUESTIONS_PER_DOMAIN = 6;
 
 export function isValidAnswerValue(value: unknown): value is AnswerValue {
   return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 5;
@@ -38,17 +41,23 @@ export interface DomainRawResult {
   domain: Domain;
   raw: number;
   answeredCount: number;
+  /** Antall spørsmål i DETTE domenet i det gjeldende spørsmålssettet. */
+  expectedCount: number;
   complete: boolean;
 }
 
 /**
- * Beregner råskår per domene. Et domene er `complete: false` hvis ikke alle
- * 6 spørsmål i domenet er besvart -- da er `raw` udefinert (NaN) med vilje,
- * slik at feil bruk ikke gir et stille galt tall.
+ * Beregner råskår per domene for et gitt spørsmålssett (enten `FREE_QUESTIONS`
+ * eller `ALL_QUESTIONS`, se questions.ts). Et domene er `complete: false` hvis
+ * ikke alle spørsmål i domenet -- for DETTE settet -- er besvart. Da er `raw`
+ * udefinert (NaN) med vilje, slik at feil bruk ikke gir et stille galt tall.
  */
-export function computeDomainRawScores(answers: AnswerMap): Record<Domain, DomainRawResult> {
+export function computeDomainRawScores(
+  answers: AnswerMap,
+  questionSet: readonly Question[]
+): Record<Domain, DomainRawResult> {
   const byDomain: Record<Domain, Question[]> = { N: [], E: [], O: [], A: [], C: [] };
-  for (const q of QUESTIONS) byDomain[q.domain].push(q);
+  for (const q of questionSet) byDomain[q.domain].push(q);
 
   const result = {} as Record<Domain, DomainRawResult>;
   for (const domain of Object.keys(byDomain) as Domain[]) {
@@ -64,11 +73,13 @@ export function computeDomainRawScores(answers: AnswerMap): Record<Domain, Domai
       sum += scoreItem(q, raw);
       answeredCount++;
     }
-    const complete = answeredCount === QUESTIONS_PER_DOMAIN;
+    const expectedCount = questions.length;
+    const complete = answeredCount === expectedCount;
     result[domain] = {
       domain,
       raw: complete ? sum : NaN,
       answeredCount,
+      expectedCount,
       complete,
     };
   }
@@ -77,10 +88,14 @@ export function computeDomainRawScores(answers: AnswerMap): Record<Domain, Domai
 
 /**
  * Ren lineær omregning råskår -> 0-100. IKKE en persentil (se filhode).
+ * `itemCount` er antall spørsmål som faktisk inngår i domenet for dette
+ * spørsmålssettet -- min. mulig råskår er `itemCount x 1`, maks er `itemCount x 5`.
  * Klemmes til [0, 100] som en forsvarssperre mot avrundingsfeil i ytterpunktene.
  */
-export function rescaleLinear(raw: number): number {
-  const scaled = ((raw - MIN_RAW_PER_DOMAIN) / (MAX_RAW_PER_DOMAIN - MIN_RAW_PER_DOMAIN)) * 100;
+export function rescaleLinear(raw: number, itemCount: number): number {
+  const min = itemCount * 1;
+  const max = itemCount * 5;
+  const scaled = ((raw - min) / (max - min)) * 100;
   return Math.min(100, Math.max(0, Math.round(scaled)));
 }
 
@@ -114,22 +129,31 @@ export interface FactorResult {
   score: number;
 }
 
+export type ResultTier = "free" | "full";
+
 export interface TestResult {
   complete: boolean;
   /** Populert bare når complete === true. */
   factors?: FactorResult[];
+  /** "free" = basert på de første 50 (foreløpig), "full" = alle 120 (presist). */
+  tier?: ResultTier;
   /** Domener som mangler minst ett svar -- brukes til å styre "hopp til ubesvart". */
   incompleteDomains: Domain[];
 }
 
 /**
- * Hovedfunksjon: tar rå svarkart og gir et ferdig resultatobjekt, eller
- * `complete: false` dersom testen ikke kan beregnes ennå. Kaster ALDRI en
- * gjetning -- ufullstendig data gir eksplisitt `complete: false`, aldri et
- * stille default-resultat (jf. Dokument 09 §10.3).
+ * Hovedfunksjon: tar rå svarkart og et spørsmålssett (FREE_QUESTIONS eller
+ * ALL_QUESTIONS, se questions.ts), og gir et ferdig resultatobjekt -- eller
+ * `complete: false` dersom testen ikke kan beregnes ennå for DETTE settet.
+ * Kaster ALDRI en gjetning -- ufullstendig data gir eksplisitt
+ * `complete: false`, aldri et stille default-resultat (jf. Dokument 09 §10.3).
  */
-export function computeTestResult(answers: AnswerMap): TestResult {
-  const domainScores = computeDomainRawScores(answers);
+export function computeTestResult(
+  answers: AnswerMap,
+  questionSet: readonly Question[],
+  tier: ResultTier
+): TestResult {
+  const domainScores = computeDomainRawScores(answers, questionSet);
   const incompleteDomains = (Object.values(domainScores) as DomainRawResult[])
     .filter((d) => !d.complete)
     .map((d) => d.domain);
@@ -139,13 +163,13 @@ export function computeTestResult(answers: AnswerMap): TestResult {
   }
 
   const factors: FactorResult[] = (Object.keys(domainScores) as Domain[]).map((domain) => {
-    const { raw } = domainScores[domain];
-    const scaled = rescaleLinear(raw);
+    const { raw, expectedCount } = domainScores[domain];
+    const scaled = rescaleLinear(raw, expectedCount);
     const displayFactor = DOMAIN_TO_DISPLAY[domain];
     // Emosjonell stabilitet = 100 - nevrotisisme-skår (Dokument 03 §12.1, Dokument 06).
     const score = domain === "N" ? 100 - scaled : scaled;
     return { factor: displayFactor, label: DISPLAY_FACTOR_LABELS_NO[displayFactor], score };
   });
 
-  return { complete: true, factors, incompleteDomains: [] };
+  return { complete: true, factors, tier, incompleteDomains: [] };
 }

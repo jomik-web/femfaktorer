@@ -8,51 +8,56 @@
  *  - Systemet skal aldri krasje ved ugyldige lagrede data.
  */
 
-import { QUESTIONS } from "@/data/questions";
+import { ALL_QUESTIONS } from "@/data/questions";
 import { isValidAnswerValue, type AnswerMap } from "@/lib/scoring";
 
 const STORAGE_KEY = "femfaktorer.korttest.v1";
 // Bump denne ved enhver endring i spørsmålssett eller svarformat.
-const STORAGE_VERSION = 1;
+// v2 (120-spørsmål-utvidelsen): et lagret svar er nå gyldig så lenge
+// spørsmål-iden finnes i det GJELDENDE spørsmålssettet -- ikke bare hvis
+// hele det lagrede settet er identisk med dagens. Dette gjør at en bruker
+// som har stoppet ved 50 av 120 spørsmål ikke mister svarene sine bare fordi
+// det lagrede settet er en delmengde av alle spørsmålene.
+const STORAGE_VERSION = 2;
 
 interface StoredPayload {
   version: number;
-  questionIds: string[];
   answers: AnswerMap;
+  /** Satt når brukeren aktivt har valgt å fortsette forbi de første 50. */
+  continuedToFull?: boolean;
   updatedAt: string;
 }
 
-const currentQuestionIds = QUESTIONS.map((q) => q.id);
+const currentQuestionIds = new Set(ALL_QUESTIONS.map((q) => q.id));
 
-export function loadAnswers(): AnswerMap {
-  if (typeof window === "undefined") return {};
+export function loadAnswers(): { answers: AnswerMap; continuedToFull: boolean } {
+  if (typeof window === "undefined") return { answers: {}, continuedToFull: false };
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
+    if (!raw) return { answers: {}, continuedToFull: false };
     const parsed: unknown = JSON.parse(raw);
-    if (!isValidStoredPayload(parsed)) return {};
-    if (parsed.version !== STORAGE_VERSION) return {};
-    if (!sameQuestionSet(parsed.questionIds)) return {};
+    if (!isValidStoredPayload(parsed)) return { answers: {}, continuedToFull: false };
+    if (parsed.version !== STORAGE_VERSION) return { answers: {}, continuedToFull: false };
 
     const cleaned: AnswerMap = {};
     for (const [id, value] of Object.entries(parsed.answers)) {
-      if (currentQuestionIds.includes(id) && isValidAnswerValue(value)) {
+      if (currentQuestionIds.has(id) && isValidAnswerValue(value)) {
         cleaned[id] = value;
       }
     }
-    return cleaned;
+    return { answers: cleaned, continuedToFull: parsed.continuedToFull === true };
   } catch {
     // Ugyldig/korrupt JSON -- behandles som tom, ikke en krasj.
-    return {};
+    return { answers: {}, continuedToFull: false };
   }
 }
 
-export function saveAnswers(answers: AnswerMap): void {
+export function saveAnswers(answers: AnswerMap, continuedToFull: boolean): void {
   if (typeof window === "undefined") return;
   const payload: StoredPayload = {
     version: STORAGE_VERSION,
-    questionIds: currentQuestionIds,
     answers,
+    continuedToFull,
     updatedAt: new Date().toISOString(),
   };
   try {
@@ -76,15 +81,7 @@ function isValidStoredPayload(value: unknown): value is StoredPayload {
   const v = value as Record<string, unknown>;
   return (
     typeof v.version === "number" &&
-    Array.isArray(v.questionIds) &&
     typeof v.answers === "object" &&
     v.answers !== null
   );
-}
-
-function sameQuestionSet(ids: string[]): boolean {
-  if (ids.length !== currentQuestionIds.length) return false;
-  const a = [...ids].sort();
-  const b = [...currentQuestionIds].sort();
-  return a.every((id, i) => id === b[i]);
 }

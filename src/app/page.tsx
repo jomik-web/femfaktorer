@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { QUESTIONS } from "@/data/questions";
+import { FREE_QUESTIONS } from "@/data/questions";
 
 export default function ForsidePage() {
-  const minutes = Math.ceil(QUESTIONS.length * 0.15); // grovt anslag, ~9 sek/spørsmål
+  // Forsiden viser gratis-inngangen (de første 50) -- ikke hele 120-settet,
+  // som er noe man eventuelt fortsetter til etter det foreløpige resultatet.
+  const minutes = Math.ceil(FREE_QUESTIONS.length * 0.15); // grovt anslag, ~9 sek/spørsmål
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 px-6 py-16 text-center">
@@ -12,7 +14,7 @@ export default function ForsidePage() {
         offentlig tilgjengelig forskning på femfaktormodellen (Big Five).
       </p>
       <p className="text-sm text-ink/60 dark:text-warmgray/60">
-        {QUESTIONS.length} spørsmål &middot; ca. {minutes} minutter &middot; helt anonymt
+        {FREE_QUESTIONS.length} gratis spørsmål &middot; ca. {minutes} minutter &middot; helt anonymt
       </p>
       <Link
         href="/test"

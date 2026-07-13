@@ -2,46 +2,110 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { QUESTIONS } from "@/data/questions";
+import { ALL_QUESTIONS, FREE_QUESTIONS, FREE_TIER_LENGTH } from "@/data/questions";
 import type { AnswerValue } from "@/lib/scoring";
-import { computeTestResult, type AnswerMap } from "@/lib/scoring";
+import { computeTestResult, type AnswerMap, type ResultTier } from "@/lib/scoring";
 import { loadAnswers, saveAnswers } from "@/lib/storage";
 import { AnswerScale } from "@/components/AnswerScale";
 import { ProgressBar } from "@/components/ProgressBar";
 
+/**
+ * To-trinns testflyt (se Grunnlagsdokumentet, beslutning om 120-spørsmål-
+ * utvidelse): de første 50 spørsmålene gir et foreløpig resultat for de fem
+ * hovedfaktorene. Ved spørsmål 50 stopper vi og spør -- på en smakfull, ikke
+ * pushy måte (jf. Dokument 04 KORTRESULTAT-005/008) -- om brukeren vil
+ * fortsette til alle 120 for et mer presist resultat og tilgang til Spir.
+ */
 export default function TestPage() {
   const router = useRouter();
   const [answers, setAnswers] = useState<AnswerMap>({});
+  const [continuedToFull, setContinuedToFull] = useState(false);
   const [index, setIndex] = useState(0);
+  const [showCheckpoint, setShowCheckpoint] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+
+  const activeQuestions = continuedToFull ? ALL_QUESTIONS : FREE_QUESTIONS;
 
   // Last lagrede svar ved oppstart (autolagring, Dokument 09 §10.3).
   useEffect(() => {
     const stored = loadAnswers();
-    setAnswers(stored);
-    const firstUnanswered = QUESTIONS.findIndex((q) => stored[q.id] === undefined);
-    setIndex(firstUnanswered === -1 ? 0 : firstUnanswered);
+    setAnswers(stored.answers);
+    setContinuedToFull(stored.continuedToFull);
+    const list = stored.continuedToFull ? ALL_QUESTIONS : FREE_QUESTIONS;
+    const firstUnanswered = list.findIndex((q) => stored.answers[q.id] === undefined);
+    if (firstUnanswered === -1) {
+      setShowCheckpoint(!stored.continuedToFull);
+    } else {
+      setIndex(firstUnanswered);
+    }
     setHydrated(true);
   }, []);
 
-  const question = QUESTIONS[index];
-  const total = QUESTIONS.length;
+  const question = activeQuestions[index];
+  const total = activeQuestions.length;
 
   const firstUnansweredIndex = useMemo(
-    () => QUESTIONS.findIndex((q) => answers[q.id] === undefined),
-    [answers]
+    () => activeQuestions.findIndex((q) => answers[q.id] === undefined),
+    [answers, activeQuestions]
   );
 
-  if (!hydrated || !question) return null;
+  if (!hydrated) return null;
+
+  if (showCheckpoint) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
+          Du har svart på de første {FREE_TIER_LENGTH} spørsmålene
+        </h1>
+        <p className="text-ink/80 dark:text-warmgray/80">
+          Vil du se hva som ligger bak hovedtrekkene? Ved å fortsette til alle 120 spørsmål får du
+          et mer presist resultat, og du låser opp muligheten til å snakke videre med Spir om det.
+        </p>
+        <p className="text-sm text-ink/60 dark:text-warmgray/60">
+          Resultatet ditt er ikke ufullstendig som beskrivelse av deg fordi du velger å stoppe her
+          -- de resterende spørsmålene gir bare en mer detaljert måling.
+        </p>
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              setContinuedToFull(true);
+              saveAnswers(answers, true);
+              setShowCheckpoint(false);
+              const nextIndex = ALL_QUESTIONS.findIndex((q) => answers[q.id] === undefined);
+              setIndex(nextIndex === -1 ? 0 : nextIndex);
+            }}
+            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
+          >
+            Fortsett til alle 120
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/resultat")}
+            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
+          >
+            Behold det foreløpige resultatet
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (!question) return null;
 
   function handleAnswer(value: AnswerValue) {
     const next: AnswerMap = { ...answers, [question!.id]: value };
     setAnswers(next);
-    saveAnswers(next);
+    saveAnswers(next, continuedToFull);
 
-    const result = computeTestResult(next);
+    const tier: ResultTier = continuedToFull ? "full" : "free";
+    const result = computeTestResult(next, activeQuestions, tier);
     if (result.complete) {
-      router.push("/resultat");
+      if (tier === "free") {
+        setShowCheckpoint(true);
+      } else {
+        router.push("/resultat");
+      }
       return;
     }
 
@@ -50,7 +114,7 @@ export default function TestPage() {
     if (index < total - 1) {
       setIndex(index + 1);
     } else {
-      const firstGap = QUESTIONS.findIndex((q) => next[q.id] === undefined);
+      const firstGap = activeQuestions.findIndex((q) => next[q.id] === undefined);
       if (firstGap !== -1) setIndex(firstGap);
     }
   }

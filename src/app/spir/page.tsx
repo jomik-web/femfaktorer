@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ALL_QUESTIONS } from "@/data/questions";
 import { computeTestResult, type FactorResult } from "@/lib/scoring";
 import { loadAnswers } from "@/lib/storage";
 
@@ -19,20 +20,32 @@ export default function FemPage() {
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
+  const [locked, setLocked] = useState(false);
+
   useEffect(() => {
-    const answers = loadAnswers();
-    const result = computeTestResult(answers);
+    const stored = loadAnswers();
+    // Spir krever alle 120 spørsmål besvart (Grunnlagsdokumentet, beslutning
+    // om 120-utvidelsen) -- et foreløpig 50-resultat er ikke nok.
+    if (!stored.continuedToFull) {
+      setLocked(true);
+      setHydrated(true);
+      return;
+    }
+    const result = computeTestResult(stored.answers, ALL_QUESTIONS, "full");
     if (result.complete && result.factors) setFactors(result.factors);
+    else setLocked(true);
     setHydrated(true);
   }, []);
 
   if (!hydrated) return null;
 
-  if (!factors) {
+  if (locked || !factors) {
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
+        <h1 className="text-xl font-semibold text-ink dark:text-white">Spir er ikke låst opp ennå</h1>
         <p className="text-ink/70 dark:text-warmgray/70">
-          Du må fullføre testen før du kan snakke med Spir.
+          Spir er en del av den fulle testen. Fullfør alle 120 spørsmål for å låse opp muligheten
+          til å snakke med Spir om resultatet ditt.
         </p>
         <Link href="/test" className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white">
           Gå til testen

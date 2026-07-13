@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { QUESTIONS } from "@/data/questions";
+import { ALL_QUESTIONS, FREE_QUESTIONS, assertQuestionSetIntegrity } from "@/data/questions";
 import {
   scoreItem,
   computeDomainRawScores,
@@ -8,124 +8,166 @@ import {
   type AnswerMap,
 } from "@/lib/scoring";
 
-function fillDomain(answers: AnswerMap, domain: string, value: 1 | 2 | 3 | 4 | 5) {
-  for (const q of QUESTIONS) {
+function fillDomain(
+  answers: AnswerMap,
+  questionSet: typeof ALL_QUESTIONS,
+  domain: string,
+  value: 1 | 2 | 3 | 4 | 5
+) {
+  for (const q of questionSet) {
     if (q.domain === domain) answers[q.id] = value;
   }
 }
 
-function fillAll(value: 1 | 2 | 3 | 4 | 5): AnswerMap {
+function fillAll(questionSet: typeof ALL_QUESTIONS, value: 1 | 2 | 3 | 4 | 5): AnswerMap {
   const answers: AnswerMap = {};
-  for (const q of QUESTIONS) answers[q.id] = value;
+  for (const q of questionSet) answers[q.id] = value;
   return answers;
 }
 
-describe("questions.ts", () => {
-  it("har nøyaktig 30 spørsmål, 6 per domene", () => {
+describe("questions.ts (120-spørsmål-utvidelsen)", () => {
+  it("har nøyaktig 120 spørsmål, 24 per domene", () => {
     const counts: Record<string, number> = {};
-    for (const q of QUESTIONS) counts[q.domain] = (counts[q.domain] ?? 0) + 1;
-    expect(QUESTIONS.length).toBe(30);
-    expect(Object.values(counts)).toEqual([6, 6, 6, 6, 6]);
+    for (const q of ALL_QUESTIONS) counts[q.domain] = (counts[q.domain] ?? 0) + 1;
+    expect(ALL_QUESTIONS.length).toBe(120);
+    expect(Object.values(counts).sort()).toEqual([24, 24, 24, 24, 24]);
   });
 
-  it("har unike id-er", () => {
-    const ids = new Set(QUESTIONS.map((q) => q.id));
-    expect(ids.size).toBe(QUESTIONS.length);
+  it("de første 50 (FREE_QUESTIONS) har nøyaktig 10 per domene", () => {
+    const counts: Record<string, number> = {};
+    for (const q of FREE_QUESTIONS) counts[q.domain] = (counts[q.domain] ?? 0) + 1;
+    expect(FREE_QUESTIONS.length).toBe(50);
+    expect(Object.values(counts).sort()).toEqual([10, 10, 10, 10, 10]);
+  });
+
+  it("har unike id-er og unike order-verdier", () => {
+    const ids = new Set(ALL_QUESTIONS.map((q) => q.id));
+    const orders = new Set(ALL_QUESTIONS.map((q) => q.order));
+    expect(ids.size).toBe(ALL_QUESTIONS.length);
+    expect(orders.size).toBe(ALL_QUESTIONS.length);
+  });
+
+  it("inneholder ingen O6-item (Liberalism er utelatt av personvernhensyn)", () => {
+    expect(ALL_QUESTIONS.some((q) => q.facet === "O6")).toBe(false);
+  });
+
+  it("assertQuestionSetIntegrity() kaster ikke feil for gjeldende datasett", () => {
+    expect(() => assertQuestionSetIntegrity()).not.toThrow();
   });
 });
 
 describe("scoreItem (reversert skåring, Dokument 03 §9.2)", () => {
   it("returnerer rå verdi uendret for ikke-reverserte item", () => {
-    const q = QUESTIONS[0];
-    expect(q.reverse).toBe(false);
+    const q = ALL_QUESTIONS.find((x) => !x.reverse)!;
     expect(scoreItem(q, 4)).toBe(4);
   });
 
   it("reverserer korrekt (6 - svar) dersom et item er markert reverse", () => {
-    const reversedQuestion = { ...QUESTIONS[0], reverse: true };
-    expect(scoreItem(reversedQuestion, 1)).toBe(5);
-    expect(scoreItem(reversedQuestion, 5)).toBe(1);
-    expect(scoreItem(reversedQuestion, 3)).toBe(3);
+    const q = ALL_QUESTIONS.find((x) => x.reverse)!;
+    expect(scoreItem(q, 1)).toBe(5);
+    expect(scoreItem(q, 5)).toBe(1);
+    expect(scoreItem(q, 3)).toBe(3);
   });
 });
 
 describe("computeDomainRawScores", () => {
-  it("markerer et domene som ufullstendig dersom ikke alle 6 er besvart", () => {
+  it("markerer et domene som ufullstendig dersom ikke alle spørsmål i settet er besvart", () => {
     const answers: AnswerMap = {};
-    fillDomain(answers, "N", 3);
-    // Fjern ett svar i N-domenet igjen
-    const firstN = QUESTIONS.find((q) => q.domain === "N")!;
+    fillDomain(answers, FREE_QUESTIONS, "N", 3);
+    const firstN = FREE_QUESTIONS.find((q) => q.domain === "N")!;
     delete answers[firstN.id];
 
-    const result = computeDomainRawScores(answers);
+    const result = computeDomainRawScores(answers, FREE_QUESTIONS);
     expect(result.N.complete).toBe(false);
-    expect(result.N.answeredCount).toBe(5);
+    expect(result.N.answeredCount).toBe(9); // 10 - 1
+    expect(result.N.expectedCount).toBe(10);
   });
 
-  it("gir riktig råskår-sum for et fullstendig domene", () => {
+  it("gir riktig råskår-sum for et fullstendig domene (gratis-settet, 10 spørsmål)", () => {
     const answers: AnswerMap = {};
-    fillDomain(answers, "E", 4);
-    const result = computeDomainRawScores(answers);
+    fillDomain(answers, FREE_QUESTIONS, "E", 4);
+    const result = computeDomainRawScores(answers, FREE_QUESTIONS);
     expect(result.E.complete).toBe(true);
-    expect(result.E.raw).toBe(24); // 6 spørsmål x 4
+    expect(result.E.raw).toBe(40); // 10 spørsmål x 4
+  });
+
+  it("gir riktig råskår-sum for et fullstendig domene (hele settet, 24 spørsmål)", () => {
+    const answers: AnswerMap = {};
+    fillDomain(answers, ALL_QUESTIONS, "E", 4);
+    const result = computeDomainRawScores(answers, ALL_QUESTIONS);
+    expect(result.E.complete).toBe(true);
+    expect(result.E.raw).toBe(96); // 24 spørsmål x 4
   });
 
   it("kaster feil ved ugyldig svarverdi (f.eks. 0 eller 6) i stedet for å stille inn et standardsvar", () => {
-    const answers: AnswerMap = { [QUESTIONS[0].id]: 0 as never };
-    expect(() => computeDomainRawScores(answers)).toThrow();
+    const answers: AnswerMap = { [ALL_QUESTIONS[0].id]: 0 as never };
+    expect(() => computeDomainRawScores(answers, ALL_QUESTIONS)).toThrow();
   });
 });
 
 describe("rescaleLinear (lineær 0-100-omregning, besluttet v1.7 -- IKKE en persentil)", () => {
-  it("gir 0 for minimum råskår (6)", () => {
-    expect(rescaleLinear(6)).toBe(0);
+  it("gir 0 for minimum råskår, 100 for maksimum, 50 for midtpunktet -- for 10 spørsmål", () => {
+    expect(rescaleLinear(10, 10)).toBe(0);
+    expect(rescaleLinear(50, 10)).toBe(100);
+    expect(rescaleLinear(30, 10)).toBe(50);
   });
-  it("gir 100 for maksimum råskår (30)", () => {
-    expect(rescaleLinear(30)).toBe(100);
+
+  it("gir samme oppførsel for 24 spørsmål (hele testen)", () => {
+    expect(rescaleLinear(24, 24)).toBe(0);
+    expect(rescaleLinear(120, 24)).toBe(100);
+    expect(rescaleLinear(72, 24)).toBe(50);
   });
-  it("gir 50 for midtpunktet (18)", () => {
-    expect(rescaleLinear(18)).toBe(50);
-  });
+
   it("klemmer verdier utenfor forventet område til [0, 100]", () => {
-    expect(rescaleLinear(0)).toBe(0);
-    expect(rescaleLinear(100)).toBe(100);
+    expect(rescaleLinear(0, 10)).toBe(0);
+    expect(rescaleLinear(1000, 10)).toBe(100);
   });
 });
 
-describe("computeTestResult", () => {
+describe("computeTestResult -- gratis-tier (de første 50)", () => {
   it("gir complete: false og lister ufullstendige domener når testen ikke er ferdig", () => {
-    const result = computeTestResult({});
+    const result = computeTestResult({}, FREE_QUESTIONS, "free");
     expect(result.complete).toBe(false);
     expect(result.incompleteDomains.sort()).toEqual(["A", "C", "E", "N", "O"]);
   });
 
-  it("beregner alle fem faktorer når testen er fullført med nøytrale svar (3)", () => {
-    const result = computeTestResult(fillAll(3));
+  it("beregner alle fem faktorer og setter tier: 'free' når de første 50 er fullført", () => {
+    const result = computeTestResult(fillAll(FREE_QUESTIONS, 3), FREE_QUESTIONS, "free");
     expect(result.complete).toBe(true);
+    expect(result.tier).toBe("free");
     expect(result.factors).toHaveLength(5);
+    for (const f of result.factors!) {
+      expect(f.score).toBe(50);
+    }
+  });
+});
+
+describe("computeTestResult -- full test (alle 120)", () => {
+  it("beregner alle fem faktorer og setter tier: 'full' når alle 120 er fullført", () => {
+    const result = computeTestResult(fillAll(ALL_QUESTIONS, 3), ALL_QUESTIONS, "full");
+    expect(result.complete).toBe(true);
+    expect(result.tier).toBe("full");
     for (const f of result.factors!) {
       expect(f.score).toBe(50);
     }
   });
 
   it("emosjonell stabilitet er INVERTERT nevrotisisme (Dokument 03 §12.1)", () => {
-    // Alle N-spørsmål besvart med 5 ("helt enig i bekymring/sinne/etc.")
-    // skal gi en LAV emosjonell stabilitet-skår, ikke høy.
-    const answers = fillAll(3);
-    fillDomain(answers, "N", 5);
-    const result = computeTestResult(answers);
+    const answers = fillAll(ALL_QUESTIONS, 3);
+    fillDomain(answers, ALL_QUESTIONS, "N", 5);
+    const result = computeTestResult(answers, ALL_QUESTIONS, "full");
     const stability = result.factors!.find((f) => f.factor === "stability")!;
     expect(stability.score).toBe(0);
 
-    const answersCalm = fillAll(3);
-    fillDomain(answersCalm, "N", 1);
-    const resultCalm = computeTestResult(answersCalm);
+    const answersCalm = fillAll(ALL_QUESTIONS, 3);
+    fillDomain(answersCalm, ALL_QUESTIONS, "N", 1);
+    const resultCalm = computeTestResult(answersCalm, ALL_QUESTIONS, "full");
     const stabilityCalm = resultCalm.factors!.find((f) => f.factor === "stability")!;
     expect(stabilityCalm.score).toBe(100);
   });
 
   it("bruker faste norske faktornavn (Dokument 01 §2.1)", () => {
-    const result = computeTestResult(fillAll(3));
+    const result = computeTestResult(fillAll(ALL_QUESTIONS, 3), ALL_QUESTIONS, "full");
     const labels = result.factors!.map((f) => f.label).sort();
     expect(labels).toEqual(
       [
