@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,7 +13,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "FemFaktorer -- forstå personligheten din",
   description:
-    "En norsk personlighetstest basert på offentlig tilgjengelig forskning på femfaktormodellen (Big Five). Ingen kategorier, ingen diagnoser -- bare nyanser.",
+    "Bli litt klokere på hvem du egentlig er. En norsk personlighetstest basert på offentlig tilgjengelig forskning på femfaktormodellen (Big Five).",
 };
 
 export default function RootLayout({
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className="min-h-screen font-sans antialiased">
         <SiteNav />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
