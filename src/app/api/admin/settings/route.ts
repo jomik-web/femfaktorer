@@ -19,26 +19,32 @@ export async function GET() {
   return NextResponse.json(store.settings);
 }
 
-const BOOLEAN_KEYS: (keyof AdminSettings)[] = ["aiEnabled", "maintenanceMode"];
-const STRING_KEYS: (keyof AdminSettings)[] = ["maintenanceMessage", "aiModel"];
-const NUMBER_KEYS: (keyof AdminSettings)[] = ["aiMaxQuestionsPerSession", "aiGlobalQuestionCap"];
-
+/**
+ * MERK: dette var opprinnelig skrevet som en generisk løkke over nøkler
+ * (BOOLEAN_KEYS/STRING_KEYS/NUMBER_KEYS), men TypeScript kan ikke bevise at
+ * en verdi hentet dynamisk via `body[key]` faktisk matcher typen til den
+ * SAMME `key` når den skrives til `next[key]` -- typen kollapser til `never`
+ * ved skriving (kjent TS-begrensning for objekter med ulike felttyper).
+ * Løsningen er eksplisitte, per-felt sjekker -- mer kode, men fullt
+ * typesikkert og lettere å lese.
+ */
 export async function POST(request: Request) {
   if (!(await requireSession())) {
     return NextResponse.json({ error: "Ikke innlogget." }, { status: 401 });
   }
-  const body = await request.json();
+  const body = (await request.json()) as Record<string, unknown>;
   const store = await readStore();
-  const next = { ...store.settings };
+  const next: AdminSettings = { ...store.settings };
 
-  for (const key of BOOLEAN_KEYS) {
-    if (typeof body[key] === "boolean") next[key] = body[key];
+  if (typeof body.aiEnabled === "boolean") next.aiEnabled = body.aiEnabled;
+  if (typeof body.maintenanceMode === "boolean") next.maintenanceMode = body.maintenanceMode;
+  if (typeof body.maintenanceMessage === "string") next.maintenanceMessage = body.maintenanceMessage;
+  if (typeof body.aiModel === "string") next.aiModel = body.aiModel;
+  if (typeof body.aiMaxQuestionsPerSession === "number" && body.aiMaxQuestionsPerSession >= 0) {
+    next.aiMaxQuestionsPerSession = body.aiMaxQuestionsPerSession;
   }
-  for (const key of STRING_KEYS) {
-    if (typeof body[key] === "string") next[key] = body[key];
-  }
-  for (const key of NUMBER_KEYS) {
-    if (typeof body[key] === "number" && body[key] >= 0) next[key] = body[key];
+  if (typeof body.aiGlobalQuestionCap === "number" && body.aiGlobalQuestionCap >= 0) {
+    next.aiGlobalQuestionCap = body.aiGlobalQuestionCap;
   }
 
   await writeStore({ ...store, settings: next });
