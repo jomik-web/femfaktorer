@@ -31,6 +31,7 @@ import {
   type CombinationInsight,
   type FacetCombinationInsight,
 } from "@/data/combinationInsights";
+import { computeAccountResultExpiry } from "@/lib/account/types";
 
 const DISPLAY_TO_DOMAIN: Record<DisplayFactor, Domain> = Object.fromEntries(
   (Object.entries(DOMAIN_TO_DISPLAY) as [Domain, DisplayFactor][]).map(([domain, display]) => [display, domain])
@@ -488,6 +489,13 @@ export default function ResultatPage() {
             med en engangskode sendt på e-post, ikke passord, og du kan slette det lagrede
             resultatet når som helst -- her, eller ved å logge inn på nytt.
           </p>
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
+            Resultatet lagres i 12 måneder fra siste lagring. I løpet av den perioden kan du logge
+            inn så mange ganger du vil, se resultatet, ta testen på nytt for å oppdatere det, og
+            snakke med Spir. Vi sender deg en e-postpåminnelse cirka en måned før 12-månedersfristen.
+            Vil du bevare resultatet lenger enn det, må du enten laste det ned som PDF før fristen,
+            eller lagre på nytt for å starte en ny 12-månedersperiode.
+          </p>
 
           {loggedInEmail ? (
             <div className="flex flex-col gap-2">
@@ -495,6 +503,13 @@ export default function ResultatPage() {
                 Innlogget som {loggedInEmail}
                 {savedAt ? ` -- sist lagret ${new Date(savedAt).toLocaleDateString("no-NO")}.` : "."}
               </p>
+              {savedAt && (
+                <p className="text-sm text-ink/60 dark:text-warmgray/60">
+                  Slettes automatisk {computeAccountResultExpiry(savedAt).toLocaleDateString("no-NO")}{" "}
+                  med mindre du lagrer på nytt før den datoen. Vi sender deg en påminnelse på e-post
+                  omtrent en måned før.
+                </p>
+              )}
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"

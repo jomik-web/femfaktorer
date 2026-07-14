@@ -152,12 +152,19 @@ export default function PersonvernPage() {
             sendes via e-posttjenesten Resend.
           </li>
           <li>
-            -- Dataene lagres i Netlify Blobs (en del av hostingplattformen vår) og ligger der til
-            du selv sletter dem -- det finnes ingen automatisk utløpsdato per nå.
+            -- Dataene lagres i Netlify Blobs (en del av hostingplattformen vår) i inntil 12
+            måneder fra siste lagring, og slettes deretter automatisk. Vi sender deg en
+            e-postpåminnelse cirka 30 dager før dette skjer. Logger du inn og lagrer på nytt før
+            fristen, starter en ny 12-månedersperiode.
           </li>
           <li>
-            -- Du kan slette det lagrede resultatet når som helst, enten fra resultatsiden eller
-            ved å logge inn på nytt og velge sletting der.
+            -- Vil du bevare resultatet lenger enn 12 måneder uten å logge inn på nytt, må du laste
+            det ned som PDF fra resultatsiden før fristen -- vi kan ikke gjenopprette et slettet
+            resultat.
+          </li>
+          <li>
+            -- Du kan også slette det lagrede resultatet manuelt når som helst, enten fra
+            resultatsiden eller ved å logge inn på nytt og velge sletting der.
           </li>
           <li>
             -- Innloggingsøkten din holdes ved like med en informasjonskapsel (cookie) -- se eget
@@ -341,9 +348,8 @@ export default function PersonvernPage() {
             nettleserdata for siden. Ingen automatisk utløpsdato.
           </li>
           <li>
-            -- Lagret kontoresultat (Netlify Blobs): til du sletter det selv. Det finnes per i dag
-            ingen automatisk sletting ved inaktivitet, men dette vurderes som en fremtidig
-            forbedring i tråd med prinsippet om lagringsbegrensning.
+            -- Lagret kontoresultat (Netlify Blobs): i inntil 12 måneder fra siste lagring, deretter
+            automatisk sletting. Du varsles på e-post cirka 30 dager før dette skjer.
           </li>
           <li>
             -- Innhold sendt til Spir (Anthropic): slettes automatisk hos Anthropic etter kort tid

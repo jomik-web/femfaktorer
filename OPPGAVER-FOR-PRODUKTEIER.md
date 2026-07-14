@@ -29,8 +29,14 @@ Ny, fullstendig personvernside (`/personvern`) er publisert, sammen med en enkel
 
 - [ ] **Databehandleravtaler (DPA)**: aksepter/signer DPA aktivt (ikke bare klikk gjennom) hos Netlify, Resend og Anthropic. Alle tre tilbyr dette som en del av sine kommersielle vilkår — se lenker i `/personvern`.
 - [ ] **Personvernkonsekvensvurdering (DPIA)**: bør gjennomføres før bred, offentlig lansering, siden testresultater (og særlig tilleggsseksjonen om politiske/verdimessige holdninger) regnes som sensitiv/særlig kategori informasjon.
-- [ ] **Vurder automatisk lagringsbegrensning** for lagrede kontoresultater (Netlify Blobs) — i dag slettes disse kun manuelt av brukeren selv, ingen utløpsdato. Bør vurderes som del av juristgjennomgangen.
 - [ ] **Fyll inn organisasjonsnummer** på `/personvern` så snart enkeltpersonforetaket er registrert (se oppgaven over).
+
+## Nytt (v2.7) -- automatisk sletting av lagrede kontoresultater (12 måneder)
+
+Lagrede kontoresultater slettes nå automatisk 12 måneder etter siste lagring, med e-postpåminnelse cirka 30 dager før. Dette kjøres av en egen planlagt («scheduled») Netlify-funksjon (`netlify/functions/account-retention.mts`) som går automatisk hver natt — krever ingen manuell kjøring fra deg.
+
+- [ ] **Samme domenebegrensning som innloggingskoder gjelder påminnelses-e-posten**: uten et verifisert domene i Resend sendes påminnelsen kun til e-postadressen registrert på selve Resend-kontoen din. Løses av samme oppgave som over ("vurder domenenavn" / domeneverifisering i Resend).
+- [ ] **Ingen handling kreves for at slettefunksjonen skal virke** — den bruker samme miljøvariabler som allerede er satt opp (`RESEND_API_KEY`, `RESEND_FROM_ADDRESS`, `NEXT_PUBLIC_SITE_URL`). Sjekk gjerne etter første par ukers drift at planlagt kjøring faktisk skjer (Netlify → Functions-fanen → `account-retention` → kjøringslogg).
 
 ## Kan vente
 
