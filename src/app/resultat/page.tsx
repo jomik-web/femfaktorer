@@ -31,6 +31,7 @@ import {
   type FacetCombinationInsight,
 } from "@/data/combinationInsights";
 import { computeAccountResultExpiry } from "@/lib/account/types";
+import { buildFacetDrivenOverview } from "@/data/domainComposition";
 
 const DISPLAY_TO_DOMAIN: Record<DisplayFactor, Domain> = Object.fromEntries(
   (Object.entries(DOMAIN_TO_DISPLAY) as [Domain, DisplayFactor][]).map(([domain, display]) => [display, domain])
@@ -346,6 +347,7 @@ export default function ResultatPage() {
               const facetsForDomain = order
                 .map((code) => facets.find((fa) => fa.facet === code))
                 .filter((fa): fa is FacetResult => fa !== undefined);
+              const facetDrivenOverview = buildFacetDrivenOverview(f.factor, domain, f.score, facetsForDomain);
               const domainCombos: CombinationInsight[] = domainCombosByDomain.get(domain) ?? [];
               const facetCombos: FacetCombinationInsight[] = facetCombosByDomain.get(domain) ?? [];
               const hasCombos = domainCombos.length > 0 || facetCombos.length > 0;
@@ -362,7 +364,7 @@ export default function ResultatPage() {
                   </div>
 
                   <article className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
-                    <p className="text-ink/80 dark:text-warmgray/80">{copy.overview}</p>
+                    <p className="text-ink/80 dark:text-warmgray/80">{facetDrivenOverview}</p>
                     <p className="text-ink/80 dark:text-warmgray/80">{copy.nuance}</p>
                     <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
                     <div className="mt-3 flex flex-col gap-3 border-t border-ink/10 pt-3 dark:border-white/10">
