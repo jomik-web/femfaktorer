@@ -191,6 +191,71 @@ export const ALL_QUESTIONS: readonly Question[] = [
   { id: "c6_4", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Act without thinking.", textNo: "Handler uten å tenke.", reverse: true, order: 120 },
 ] as const;
 
+/**
+ * UTVIDET SPØRSMÅLSSETT (v2.10, tredje testtrapp -- "utvidet versjon") --
+ * UNDER OVERSETTELSE, IKKE FERDIG. Kilde: samme kanoniske IPIP-liste som
+ * resten av spørsmålene (ipip.ori.org/newNEOFacetsKey.htm, hentet og
+ * kryssjekket 14.07.2026 -- alle 120 eksisterende spørsmål stemte nøyaktig
+ * med denne kilden). Hver fasett har 10 spørsmål totalt der; de 6 (eller 5
+ * for O1/O2/O3/O5, som allerede har 5 pga. O6-kompensasjon) som IKKE finnes
+ * i ALL_QUESTIONS legges til her, domene for domene, til produkteier har
+ * sett gjennom hver oversettelse. O6 holdes fortsatt utenfor (se
+ * OPTIONAL_O6_QUESTIONS under). Målet er 29 fasetter x 10 = 290 spørsmål
+ * totalt (ALL_QUESTIONS + dette settet), IKKE 300 -- se beslutning
+ * 14.07.2026: å fylle Åpenhet-domenet opp til 60 ville krevd en mindre
+ * verifiserbar IPIP-kilde, og ble bevisst valgt bort.
+ *
+ * STATUS PER DOMENE: N (Emosjonell stabilitet) -- utkast klart for gjennomsyn.
+ * E, O, A, C -- ikke påbegynt.
+ *
+ * IKKE tatt i bruk noe sted ennå (ingen tier-logikk, sjekkpunkt-flyt,
+ * scoring- eller UI-endring bygget på dette settet). Kobles inn når alle
+ * fem domener er oversatt og godkjent.
+ */
+export const EXTENDED_QUESTIONS_N: readonly Question[] = [
+  { id: "n1_5", facet: "N1", facetName: "Anxiety", domain: "N", textEn: "Get caught up in my problems.", textNo: "Blir lett oppslukt av egne problemer.", reverse: false, order: 121 },
+  { id: "n1_6", facet: "N1", facetName: "Anxiety", domain: "N", textEn: "Am not easily bothered by things.", textNo: "Lar meg ikke lett stresse av ting.", reverse: true, order: 122 },
+  { id: "n1_7", facet: "N1", facetName: "Anxiety", domain: "N", textEn: "Am relaxed most of the time.", textNo: "Er avslappet det meste av tiden.", reverse: true, order: 123 },
+  { id: "n1_8", facet: "N1", facetName: "Anxiety", domain: "N", textEn: "Am not easily disturbed by events.", textNo: "Lar meg ikke lett forstyrre av det som skjer.", reverse: true, order: 124 },
+  { id: "n1_9", facet: "N1", facetName: "Anxiety", domain: "N", textEn: "Don't worry about things that have already happened.", textNo: "Bekymrer meg ikke for ting som allerede har skjedd.", reverse: true, order: 125 },
+  { id: "n1_10", facet: "N1", facetName: "Anxiety", domain: "N", textEn: "Adapt easily to new situations.", textNo: "Tilpasser meg lett nye situasjoner.", reverse: true, order: 126 },
+
+  { id: "n2_5", facet: "N2", facetName: "Anger", domain: "N", textEn: "Get upset easily.", textNo: "Blir lett opprørt.", reverse: false, order: 127 },
+  { id: "n2_6", facet: "N2", facetName: "Anger", domain: "N", textEn: "Am often in a bad mood.", textNo: "Er ofte i dårlig humør.", reverse: false, order: 128 },
+  { id: "n2_7", facet: "N2", facetName: "Anger", domain: "N", textEn: "Rarely get irritated.", textNo: "Blir sjelden irritert.", reverse: true, order: 129 },
+  { id: "n2_8", facet: "N2", facetName: "Anger", domain: "N", textEn: "Seldom get mad.", textNo: "Blir sjelden sint.", reverse: true, order: 130 },
+  { id: "n2_9", facet: "N2", facetName: "Anger", domain: "N", textEn: "Keep my cool.", textNo: "Holder hodet kaldt.", reverse: true, order: 131 },
+  { id: "n2_10", facet: "N2", facetName: "Anger", domain: "N", textEn: "Rarely complain.", textNo: "Klager sjelden.", reverse: true, order: 132 },
+
+  { id: "n3_5", facet: "N3", facetName: "Depression", domain: "N", textEn: "Have a low opinion of myself.", textNo: "Har en dårlig oppfatning av meg selv.", reverse: false, order: 133 },
+  { id: "n3_6", facet: "N3", facetName: "Depression", domain: "N", textEn: "Have frequent mood swings.", textNo: "Har hyppige humørsvingninger.", reverse: false, order: 134 },
+  { id: "n3_7", facet: "N3", facetName: "Depression", domain: "N", textEn: "Feel desperate.", textNo: "Føler meg fortvilet.", reverse: false, order: 135 },
+  { id: "n3_8", facet: "N3", facetName: "Depression", domain: "N", textEn: "Feel that my life lacks direction.", textNo: "Føler at livet mitt mangler retning.", reverse: false, order: 136 },
+  { id: "n3_9", facet: "N3", facetName: "Depression", domain: "N", textEn: "Seldom feel blue.", textNo: "Føler meg sjelden nedfor.", reverse: true, order: 137 },
+  { id: "n3_10", facet: "N3", facetName: "Depression", domain: "N", textEn: "Am very pleased with myself.", textNo: "Er godt fornøyd med meg selv.", reverse: true, order: 138 },
+
+  { id: "n4_5", facet: "N4", facetName: "Self-Consciousness", domain: "N", textEn: "Am easily intimidated.", textNo: "Lar meg lett skremme.", reverse: false, order: 139 },
+  { id: "n4_6", facet: "N4", facetName: "Self-Consciousness", domain: "N", textEn: "Am afraid that I will do the wrong thing.", textNo: "Er redd for å gjøre det gale.", reverse: false, order: 140 },
+  { id: "n4_7", facet: "N4", facetName: "Self-Consciousness", domain: "N", textEn: "Stumble over my words.", textNo: "Snubler i ordene mine.", reverse: false, order: 141 },
+  { id: "n4_8", facet: "N4", facetName: "Self-Consciousness", domain: "N", textEn: "Am not embarrassed easily.", textNo: "Blir ikke lett flau.", reverse: true, order: 142 },
+  { id: "n4_9", facet: "N4", facetName: "Self-Consciousness", domain: "N", textEn: "Am comfortable in unfamiliar situations.", textNo: "Er komfortabel i ukjente situasjoner.", reverse: true, order: 143 },
+  { id: "n4_10", facet: "N4", facetName: "Self-Consciousness", domain: "N", textEn: "Am able to stand up for myself.", textNo: "Klarer å stå opp for meg selv.", reverse: true, order: 144 },
+
+  { id: "n5_5", facet: "N5", facetName: "Immoderation", domain: "N", textEn: "Often eat too much.", textNo: "Spiser ofte for mye.", reverse: false, order: 145 },
+  { id: "n5_6", facet: "N5", facetName: "Immoderation", domain: "N", textEn: "Don't know why I do some of the things I do.", textNo: "Skjønner ikke alltid hvorfor jeg gjør enkelte ting.", reverse: false, order: 146 },
+  { id: "n5_7", facet: "N5", facetName: "Immoderation", domain: "N", textEn: "Do things I later regret.", textNo: "Gjør ting jeg angrer på senere.", reverse: false, order: 147 },
+  { id: "n5_8", facet: "N5", facetName: "Immoderation", domain: "N", textEn: "Love to eat.", textNo: "Elsker å spise.", reverse: false, order: 148 },
+  { id: "n5_9", facet: "N5", facetName: "Immoderation", domain: "N", textEn: "Never spend more than I can afford.", textNo: "Bruker aldri mer penger enn jeg har råd til.", reverse: true, order: 149 },
+  { id: "n5_10", facet: "N5", facetName: "Immoderation", domain: "N", textEn: "Never splurge.", textNo: "Unner meg aldri overdrevent luksus.", reverse: true, order: 150 },
+
+  { id: "n6_5", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Can't make up my mind.", textNo: "Klarer ikke å bestemme meg.", reverse: false, order: 151 },
+  { id: "n6_6", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Get overwhelmed by emotions.", textNo: "Blir overveldet av følelser.", reverse: false, order: 152 },
+  { id: "n6_7", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Can handle complex problems.", textNo: "Takler kompliserte problemer godt.", reverse: true, order: 153 },
+  { id: "n6_8", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Know how to cope.", textNo: "Vet hvordan jeg skal takle ting.", reverse: true, order: 154 },
+  { id: "n6_9", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Readily overcome setbacks.", textNo: "Kommer lett over tilbakeslag.", reverse: true, order: 155 },
+  { id: "n6_10", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Am calm even in tense situations.", textNo: "Er rolig selv i anspente situasjoner.", reverse: true, order: 156 },
+] as const;
+
 /** De første 50 (order 1-50) -- det gratis, foreløpige resultatet. */
 export const FREE_QUESTIONS: readonly Question[] = ALL_QUESTIONS.filter(
   (q) => q.order <= FREE_TIER_LENGTH
