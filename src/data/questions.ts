@@ -217,9 +217,9 @@ const EXPECTED_PER_DOMAIN_FREE = 10;
  * etter at hele 120-testen er fullført, med eget samtykke og egen
  * sletteknapp (se src/lib/storage.ts og src/app/test/page.tsx).
  *
- * STATUS: satt inn for utprøving på oppdrag fra produkteier -- endelig
- * beslutning om å beholde funksjonen tas etter test, og bør uansett
- * juristgodkjennes (Dokument 07) før reell lansering dersom den beholdes.
+ * STATUS: produkteier har besluttet (14.07.2026) at funksjonen beholdes
+ * permanent. Bør fortsatt juristgodkjennes (Dokument 07) før reell,
+ * offentlig lansering, som resten av personvernrelaterte funksjoner.
  */
 export interface OptionalQuestion {
   id: string;

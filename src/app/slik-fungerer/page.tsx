@@ -140,10 +140,12 @@ export default function OmFemfaktorerPage() {
           <h3 className="font-semibold text-ink dark:text-white">Hvordan resultatet beregnes</h3>
           <p className="text-ink/80 dark:text-warmgray/80">
             I denne tidlige versjonen regnes svarene dine om til en skala fra 0 til 100 ved en
-            enkel, lineær omregning -- ikke ved sammenligning med en dokumentert normgruppe. Det
-            betyr at resultatet viser hvor du ligger på skalaen, men ikke nøyaktig hvor stor andel
-            av befolkningen som skårer likt eller ulikt. Vi planlegger å innføre et dokumentert
-            normgrunnlag i en senere versjon.
+            enkel, lineær omregning -- ikke ved sammenligning med en dokumentert normgruppe. Vi
+            viser derfor resultatet som et nivåbånd (f.eks. "Svært tydelig høy"), ikke som et
+            eksakt tall -- et eksakt tall ville gitt et falskt inntrykk av presisjon vi ikke har
+            grunnlag for ennå. Fullfører du hele testen, bidrar de ferdig beregnede skårene dine
+            -- helt anonymt -- til å bygge et ekte normgrunnlag over tid (se personvernsiden), som
+            etter hvert kan gjøre resultatet mer presist.
           </p>
         </div>
         <div className="flex flex-col gap-3">

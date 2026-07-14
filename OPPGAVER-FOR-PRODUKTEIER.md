@@ -1,6 +1,10 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 13.07.2026
+Sist oppdatert: 14.07.2026
+
+## Prisbeslutning (v2.8, notert 14.07.2026 -- ingen kode involvert ennå)
+
+Når betalingsløsning bygges (fortsatt utenfor omfang, se Dokument 07 §9): 120- og 300-spørsmålsversjonen skal koste det samme. Kun testlengde/presisjon skiller dem, ikke pris.
 
 ## Trengs snart (blokkerer at jeg kan begynne for fullt)
 

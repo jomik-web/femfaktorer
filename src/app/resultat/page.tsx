@@ -21,7 +21,6 @@ import {
   loadRestoredAccountResult,
   clearRestoredAccountResult,
 } from "@/lib/storage";
-import { FactorScale } from "@/components/FactorScale";
 import { RoughFactorIndicator } from "@/components/RoughFactorIndicator";
 import { INTERPRETATIONS, NON_DIAGNOSTIC_NOTICE, bandFor, buildClosingSynthesis } from "@/data/interpretations";
 import { FACET_INTERPRETATIONS, FACET_ORDER_BY_DOMAIN, facetInterpretationFor } from "@/data/facetInterpretations";
@@ -359,7 +358,7 @@ export default function ResultatPage() {
                 >
                   <div className="flex flex-col gap-3">
                     <h2 className="text-3xl font-bold text-ink dark:text-white sm:text-4xl">{f.label}</h2>
-                    <FactorScale factor={f.factor} label={f.label} score={f.score} />
+                    <RoughFactorIndicator factor={f.factor} label={f.label} score={f.score} />
                   </div>
 
                   <article className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
@@ -387,7 +386,7 @@ export default function ResultatPage() {
                           const band = bandFor(fa.score);
                           return (
                             <div key={fa.facet} className="flex flex-col gap-1.5">
-                              <FactorScale factor={f.factor} label={meta?.label ?? fa.facet} score={fa.score} />
+                              <RoughFactorIndicator factor={f.factor} label={meta?.label ?? fa.facet} score={fa.score} />
                               <p className="text-sm text-ink/70 dark:text-warmgray/70">
                                 {facetInterpretationFor(fa.facet, band)}
                               </p>

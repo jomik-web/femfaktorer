@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ALL_QUESTIONS, FREE_QUESTIONS, FREE_TIER_LENGTH, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
-import type { AnswerValue } from "@/lib/scoring";
-import { computeTestResult, type AnswerMap, type ResultTier } from "@/lib/scoring";
+import type { AnswerValue, FactorResult, FacetResult } from "@/lib/scoring";
+import { computeTestResult, computeFacetResults, type AnswerMap, type ResultTier } from "@/lib/scoring";
 import {
   loadAnswers,
   saveAnswers,
@@ -26,10 +26,28 @@ import { ProgressBar } from "@/components/ProgressBar";
  * fortsette til alle 120 for et mer presist resultat og tilgang til Spir.
  *
  * Etter fullført 120-test tilbys en HELT VALGFRI bonusseksjon (O6, se
- * questions.ts) med eget, uttrykkelig samtykke (GDPR art. 9(2)(a)) -- satt
- * inn for utprøving på brukerens oppdrag, endelig beslutning om å beholde
- * tas etter test.
+ * questions.ts) med eget, uttrykkelig samtykke (GDPR art. 9(2)(a)).
+ * Produkteier har besluttet (14.07.2026) at funksjonen beholdes permanent.
  */
+
+/**
+ * Sender de FERDIG BEREGNEDE skårene (ikke svarene) til det anonyme,
+ * aggregerte normtelling-endepunktet -- v2.8, se
+ * src/app/api/stats/submit-norm/route.ts og personvernsiden. Kalles KUN når
+ * hele 120-testen er fullført. Bevisst "fire-and-forget": venter ikke på
+ * svaret, blokkerer aldri navigasjonen, og feiler helt stille -- dette er
+ * usynlig infrastruktur, ikke noe brukeren skal merke eller kunne se feile.
+ */
+function submitAnonymousNormStats(factors: FactorResult[], facets: FacetResult[]): void {
+  void fetch("/api/stats/submit-norm", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ factors, facets }),
+  }).catch(() => {
+    // Stille -- se doc-kommentar over.
+  });
+}
+
 export default function TestPage() {
   const router = useRouter();
   const [answers, setAnswers] = useState<AnswerMap>({});
@@ -159,9 +177,9 @@ export default function TestPage() {
           En helt valgfri tilleggsseksjon
         </h1>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Vi tester ut fire ekstra spørsmål om en sjette side ved åpenhet for erfaring, som handler
-          om politiske og verdimessige holdninger. Disse påvirker IKKE hovedresultatet ditt over --
-          de vises eventuelt som et helt eget, atskilt tillegg.
+          Vi tilbyr fire ekstra spørsmål om en sjette side ved åpenhet for erfaring, som handler om
+          politiske og verdimessige holdninger. Disse påvirker IKKE hovedresultatet ditt over -- de
+          vises eventuelt som et helt eget, atskilt tillegg.
         </p>
         <p className="text-sm text-ink/60 dark:text-warmgray/60">
           Dette er informasjon om politisk oppfatning, en særlig kategori persondata. Du kan når som
@@ -282,6 +300,7 @@ export default function TestPage() {
       if (tier === "free") {
         setShowCheckpoint(true);
       } else {
+        submitAnonymousNormStats(result.factors ?? [], computeFacetResults(next, ALL_QUESTIONS));
         goToO6OrResult(o6Status, o6Answers);
       }
       return;

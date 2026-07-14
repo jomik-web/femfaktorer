@@ -18,6 +18,7 @@ const SECTIONS = [
   { id: "kort-oppsummert", label: "Kort oppsummert" },
   { id: "behandlingsansvarlig", label: "Hvem er behandlingsansvarlig" },
   { id: "testsvar", label: "Testsvarene dine" },
+  { id: "normtall", label: "Anonym normtall-statistikk" },
   { id: "tilleggsseksjon", label: "Den valgfrie tilleggsseksjonen" },
   { id: "konto", label: "Hvis du lagrer resultatet ditt" },
   { id: "cookies", label: "Informasjonskapsler (cookies)" },
@@ -63,8 +64,10 @@ export default function PersonvernPage() {
         <ul className="flex flex-col gap-2 text-ink/80 dark:text-warmgray/80">
           <li>-- Du trenger ingen konto for å ta testen.</li>
           <li>
-            -- Svarene dine forlater aldri nettleseren din, med mindre du selv aktivt velger å
-            snakke med Spir eller lagre resultatet på en konto.
+            -- De 120 svarene dine i seg selv forlater aldri nettleseren din. Fullfører du hele
+            testen, sendes kun de ferdig beregnede skårene -- helt anonymt -- til en samlet
+            statistikk (se eget avsnitt), i tillegg til det du selv aktivt velger å dele med Spir
+            eller ved å lagre resultatet på en konto.
           </li>
           <li>-- Vi setter ingen sporings- eller annonsekapsler.</li>
           <li>-- Du kan slette alt du har lagret, når som helst, selv.</li>
@@ -92,7 +95,9 @@ export default function PersonvernPage() {
         <p className="text-ink/80 dark:text-warmgray/80">
           Svarene du gir i testen -- både korttesten (50 spørsmål) og fullversjonen (120 spørsmål)
           -- lagres utelukkende lokalt i nettleseren din (såkalt <em>localStorage</em>). De sendes
-          aldri til FemFaktorer sine servere som en del av selve testgjennomføringen.
+          aldri til FemFaktorer sine servere som en del av selve testgjennomføringen. Fullfører du
+          hele testen, sendes de FERDIG BEREGNEDE skårene dine -- helt anonymt -- til et samlet
+          statistikkgrunnlag; se eget avsnitt rett under.
         </p>
         <ul className="flex flex-col gap-2 text-ink/80 dark:text-warmgray/80">
           <li>
@@ -106,6 +111,35 @@ export default function PersonvernPage() {
           <li>
             -- Sletting er permanent. FemFaktorer har ingen kopi å gjenopprette fra, med mindre du
             aktivt har lagret resultatet på en konto (se eget avsnitt under).
+          </li>
+        </ul>
+      </section>
+
+      <section id="normtall" className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold text-ink dark:text-white">
+          Anonym normtall-statistikk
+        </h2>
+        <p className="text-ink/80 dark:text-warmgray/80">
+          FemFaktorer viser i dag resultatet som nivåbånd (f.eks. "Svært tydelig høy"), ikke som et
+          eksakt tall -- blant annet fordi vi ennå ikke har et dokumentert normgrunnlag å sammenligne
+          med (se metode-og-kilder-siden). For å kunne bygge et slikt normgrunnlag over tid, sender
+          nettleseren din -- KUN når du fullfører hele 120-spørsmålstesten -- de ferdig beregnede
+          skårene dine til en løpende, samlet statistikk.
+        </p>
+        <ul className="flex flex-col gap-2 text-ink/80 dark:text-warmgray/80">
+          <li>
+            -- Dette er reelt anonymt: det som lagres er kun løpende tellertall (hvor mange som har
+            fått hver skår, per hovedfaktor og fasett) -- aldri en egen post med DIN skåreprofil,
+            og aldri koblet til e-post, IP-adresse eller noen annen identifiserende opplysning.
+          </li>
+          <li>
+            -- Fordi dette er anonymt, faller det utenfor personvernregelverket (det er ikke
+            personopplysninger), og krever ikke eget samtykke -- men vi mener det hører hjemme her
+            for full åpenhet om hva som faktisk sendes fra nettleseren din.
+          </li>
+          <li>
+            -- Gjelder kun fullversjonen (120 spørsmål). Korttesten (50 spørsmål) sender ingenting
+            til dette statistikkgrunnlaget.
           </li>
         </ul>
       </section>

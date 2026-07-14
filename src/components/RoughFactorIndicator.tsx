@@ -22,15 +22,21 @@ interface RoughFactorIndicatorProps {
 }
 
 /**
- * Grov, sonebasert indikator for det FORELØPIGE (50-spørsmåls) resultatet.
- * Besluttet etter produkteiers tilbakemelding: et eksakt tall gir et falskt
- * inntrykk av presisjon når mange spørsmål gjenstår for full måling.
+ * Grov, sonebasert indikator -- viser ALDRI et eksakt tall, kun hvilken av 5
+ * like brede soner (à 20 poeng) skåren havner i. HELE sonen fylles med farge,
+ * ingen eksakt punktplassering innenfor den.
  *
- * v2 (ny tilbakemelding): en smal markør plassert midt i en sone så likevel
- * ut til å antyde en presis posisjon. Nå deles skalaen i 5 like brede soner
- * (à 20 poeng), og HELE sonen brukeren havner i fylles med farge -- ingen
- * eksakt punktplassering innenfor sonen. Det presise 120-resultatet bruker
- * fortsatt FactorScale med tall og eksakt posisjon, se den komponenten.
+ * Opprinnelig bygget kun for det FORELØPIGE (50-spørsmåls) resultatet, etter
+ * produkteiers tilbakemelding om at et eksakt tall gir et falskt inntrykk av
+ * presisjon når mange spørsmål gjenstår for full måling.
+ *
+ * v3 (designgjennomgang, se personvern-/metodesiden): samme resonnement
+ * gjelder nå det fulle resultatet også -- hver fasett bygger på bare 4
+ * spørsmål og har ikke et reelt normgrunnlag ennå (kun lineær skalering), så
+ * et eksakt tall som "94/100" gir et falskt presisjonsinntrykk der også.
+ * Komponenten erstatter derfor FactorScale (som viste eksakt tall og
+ * posisjon) overalt, ikke bare i det foreløpige resultatet -- FactorScale er
+ * fjernet.
  */
 export function RoughFactorIndicator({ factor, label, score }: RoughFactorIndicatorProps) {
   const zoneIndex = zoneIndexFor(score);
@@ -50,7 +56,7 @@ export function RoughFactorIndicator({ factor, label, score }: RoughFactorIndica
       <div
         className="flex gap-1"
         role="img"
-        aria-label={`${label}: foreløpig anslag -- ${zoneLabel.toLowerCase()} -- grovt estimat, ikke et eksakt tall`}
+        aria-label={`${label}: ${zoneLabel.toLowerCase()} -- grovt nivå, ikke et eksakt tall`}
       >
         {ZONE_LABELS.map((_, i) => (
           <div
