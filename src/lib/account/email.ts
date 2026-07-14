@@ -51,7 +51,18 @@ export async function sendLoginCodeEmail(email: string, code: string): Promise<S
     });
 
     if (!res.ok) {
-      return { ok: false, error: `E-posten ble ikke sendt (leverandørstatus ${res.status}).` };
+      // Ta med Resends eget feilbudskap (JSON-felt "message") når det finnes --
+      // statuskoden alene (f.eks. 403) skjuler om årsaken er manglende
+      // domeneverifisering, ugyldig API-nøkkel eller mottaker-begrensning,
+      // som alle gir samme HTTP-status. Se https://resend.com/docs/api-reference/errors.
+      let detail = "";
+      try {
+        const body = (await res.json()) as { message?: string; name?: string };
+        if (body?.message) detail = ` -- ${body.message}`;
+      } catch {
+        // Ikke JSON eller tomt svar -- fortsett uten detalj.
+      }
+      return { ok: false, error: `E-posten ble ikke sendt (leverandørstatus ${res.status}${detail}).` };
     }
     return { ok: true };
   } catch {
