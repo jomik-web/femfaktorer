@@ -205,12 +205,15 @@ export const ALL_QUESTIONS: readonly Question[] = [
  * 14.07.2026: å fylle Åpenhet-domenet opp til 60 ville krevd en mindre
  * verifiserbar IPIP-kilde, og ble bevisst valgt bort.
  *
- * STATUS PER DOMENE: N (Emosjonell stabilitet) -- utkast klart for gjennomsyn.
- * E, O, A, C -- ikke påbegynt.
+ * STATUS PER DOMENE: alle fem domener (N, E, O, A, C) -- utkast klart,
+ * kryssjekket mot IPIP-kilden og oversatt 14.07.2026. Til sammen 170 nye
+ * spørsmål (36+36+26+36+36), som sammen med de 120 eksisterende gir 290.
  *
  * IKKE tatt i bruk noe sted ennå (ingen tier-logikk, sjekkpunkt-flyt,
- * scoring- eller UI-endring bygget på dette settet). Kobles inn når alle
- * fem domener er oversatt og godkjent.
+ * scoring- eller UI-endring bygget på dette settet). Selve
+ * tier-integrasjonen (koble inn i testflyten, sjekkpunkt etter 120 spørsmål,
+ * resultatvisning, kontolagring, Spir, PDF-eksport) er et eget, større
+ * steg som ikke er igangsatt -- avklares med produkteier før oppstart.
  */
 export const EXTENDED_QUESTIONS_N: readonly Question[] = [
   { id: "n1_5", facet: "N1", facetName: "Anxiety", domain: "N", textEn: "Get caught up in my problems.", textNo: "Blir lett oppslukt av egne problemer.", reverse: false, order: 121 },
@@ -254,6 +257,171 @@ export const EXTENDED_QUESTIONS_N: readonly Question[] = [
   { id: "n6_8", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Know how to cope.", textNo: "Vet hvordan jeg skal takle ting.", reverse: true, order: 154 },
   { id: "n6_9", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Readily overcome setbacks.", textNo: "Kommer lett over tilbakeslag.", reverse: true, order: 155 },
   { id: "n6_10", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Am calm even in tense situations.", textNo: "Er rolig selv i anspente situasjoner.", reverse: true, order: 156 },
+] as const;
+
+export const EXTENDED_QUESTIONS_E: readonly Question[] = [
+  { id: "e1_5", facet: "E1", facetName: "Friendliness", domain: "E", textEn: "Warm up quickly to others.", textNo: "Åpner meg raskt for nye mennesker.", reverse: false, order: 157 },
+  { id: "e1_6", facet: "E1", facetName: "Friendliness", domain: "E", textEn: "Act comfortably with others.", textNo: "Opptrer avslappet sammen med andre.", reverse: false, order: 158 },
+  { id: "e1_7", facet: "E1", facetName: "Friendliness", domain: "E", textEn: "Cheer people up.", textNo: "Får andre i bedre humør.", reverse: false, order: 159 },
+  { id: "e1_8", facet: "E1", facetName: "Friendliness", domain: "E", textEn: "Am hard to get to know.", textNo: "Er vanskelig å bli kjent med.", reverse: true, order: 160 },
+  { id: "e1_9", facet: "E1", facetName: "Friendliness", domain: "E", textEn: "Often feel uncomfortable around others.", textNo: "Føler meg ofte utilpass sammen med andre.", reverse: true, order: 161 },
+  { id: "e1_10", facet: "E1", facetName: "Friendliness", domain: "E", textEn: "Am not really interested in others.", textNo: "Er egentlig ikke så interessert i andre.", reverse: true, order: 162 },
+
+  { id: "e2_5", facet: "E2", facetName: "Gregariousness", domain: "E", textEn: "Enjoy being part of a group.", textNo: "Trives med å være del av en gruppe.", reverse: false, order: 163 },
+  { id: "e2_6", facet: "E2", facetName: "Gregariousness", domain: "E", textEn: "Involve others in what I am doing.", textNo: "Involverer gjerne andre i det jeg holder på med.", reverse: false, order: 164 },
+  { id: "e2_7", facet: "E2", facetName: "Gregariousness", domain: "E", textEn: "Love surprise parties.", textNo: "Elsker overraskelsesfester.", reverse: false, order: 165 },
+  { id: "e2_8", facet: "E2", facetName: "Gregariousness", domain: "E", textEn: "Want to be left alone.", textNo: "Vil helst være i fred.", reverse: true, order: 166 },
+  { id: "e2_9", facet: "E2", facetName: "Gregariousness", domain: "E", textEn: "Don't like crowded events.", textNo: "Liker ikke folkemengder.", reverse: true, order: 167 },
+  { id: "e2_10", facet: "E2", facetName: "Gregariousness", domain: "E", textEn: "Seek quiet.", textNo: "Søker ro.", reverse: true, order: 168 },
+
+  { id: "e3_5", facet: "E3", facetName: "Assertiveness", domain: "E", textEn: "Can talk others into doing things.", textNo: "Klarer å overtale andre til å gjøre ting.", reverse: false, order: 169 },
+  { id: "e3_6", facet: "E3", facetName: "Assertiveness", domain: "E", textEn: "Seek to influence others.", textNo: "Søker å påvirke andre.", reverse: false, order: 170 },
+  { id: "e3_7", facet: "E3", facetName: "Assertiveness", domain: "E", textEn: "Keep in the background.", textNo: "Holder meg gjerne i bakgrunnen.", reverse: true, order: 171 },
+  { id: "e3_8", facet: "E3", facetName: "Assertiveness", domain: "E", textEn: "Have little to say.", textNo: "Har lite å si.", reverse: true, order: 172 },
+  { id: "e3_9", facet: "E3", facetName: "Assertiveness", domain: "E", textEn: "Don't like to draw attention to myself.", textNo: "Liker ikke å trekke oppmerksomhet mot meg selv.", reverse: true, order: 173 },
+  { id: "e3_10", facet: "E3", facetName: "Assertiveness", domain: "E", textEn: "Hold back my opinions.", textNo: "Holder tilbake egne meninger.", reverse: true, order: 174 },
+
+  { id: "e4_5", facet: "E4", facetName: "Activity Level", domain: "E", textEn: "Can manage many things at the same time.", textNo: "Klarer å håndtere mange ting samtidig.", reverse: false, order: 175 },
+  { id: "e4_6", facet: "E4", facetName: "Activity Level", domain: "E", textEn: "React quickly.", textNo: "Reagerer raskt.", reverse: false, order: 176 },
+  { id: "e4_7", facet: "E4", facetName: "Activity Level", domain: "E", textEn: "Like to take my time.", textNo: "Liker å ta meg god tid.", reverse: true, order: 177 },
+  { id: "e4_8", facet: "E4", facetName: "Activity Level", domain: "E", textEn: "Like a leisurely lifestyle.", textNo: "Trives med et rolig levesett.", reverse: true, order: 178 },
+  { id: "e4_9", facet: "E4", facetName: "Activity Level", domain: "E", textEn: "Let things proceed at their own pace.", textNo: "Lar ting ta den tiden de trenger.", reverse: true, order: 179 },
+  { id: "e4_10", facet: "E4", facetName: "Activity Level", domain: "E", textEn: "React slowly.", textNo: "Reagerer sakte.", reverse: true, order: 180 },
+
+  { id: "e5_5", facet: "E5", facetName: "Excitement-Seeking", domain: "E", textEn: "Love action.", textNo: "Elsker spenning og action.", reverse: false, order: 181 },
+  { id: "e5_6", facet: "E5", facetName: "Excitement-Seeking", domain: "E", textEn: "Enjoy being part of a loud crowd.", textNo: "Trives i høylytte folkemengder.", reverse: false, order: 182 },
+  { id: "e5_7", facet: "E5", facetName: "Excitement-Seeking", domain: "E", textEn: "Am willing to try anything once.", textNo: "Er villig til å prøve hva som helst én gang.", reverse: false, order: 183 },
+  { id: "e5_8", facet: "E5", facetName: "Excitement-Seeking", domain: "E", textEn: "Seek danger.", textNo: "Søker fare.", reverse: false, order: 184 },
+  { id: "e5_9", facet: "E5", facetName: "Excitement-Seeking", domain: "E", textEn: "Would never go hang gliding or bungee jumping.", textNo: "Ville aldri prøvd hanggliding eller strikkhopp.", reverse: true, order: 185 },
+  { id: "e5_10", facet: "E5", facetName: "Excitement-Seeking", domain: "E", textEn: "Dislike loud music.", textNo: "Liker ikke høy musikk.", reverse: true, order: 186 },
+
+  { id: "e6_5", facet: "E6", facetName: "Cheerfulness", domain: "E", textEn: "Express childlike joy.", textNo: "Uttrykker barnlig glede.", reverse: false, order: 187 },
+  { id: "e6_6", facet: "E6", facetName: "Cheerfulness", domain: "E", textEn: "Laugh my way through life.", textNo: "Ler meg gjennom livet.", reverse: false, order: 188 },
+  { id: "e6_7", facet: "E6", facetName: "Cheerfulness", domain: "E", textEn: "Laugh aloud.", textNo: "Ler høyt.", reverse: false, order: 189 },
+  { id: "e6_8", facet: "E6", facetName: "Cheerfulness", domain: "E", textEn: "Amuse my friends.", textNo: "Underholder gjerne vennene mine.", reverse: false, order: 190 },
+  { id: "e6_9", facet: "E6", facetName: "Cheerfulness", domain: "E", textEn: "Am not easily amused.", textNo: "Blir ikke lett underholdt.", reverse: true, order: 191 },
+  { id: "e6_10", facet: "E6", facetName: "Cheerfulness", domain: "E", textEn: "Seldom joke around.", textNo: "Tuller sjelden.", reverse: true, order: 192 },
+] as const;
+
+export const EXTENDED_QUESTIONS_O: readonly Question[] = [
+  { id: "o1_6", facet: "O1", facetName: "Imagination", domain: "O", textEn: "Indulge in my fantasies.", textNo: "Dveler gjerne ved egne fantasier.", reverse: false, order: 193 },
+  { id: "o1_7", facet: "O1", facetName: "Imagination", domain: "O", textEn: "Seldom daydream.", textNo: "Dagdrømmer sjelden.", reverse: true, order: 194 },
+  { id: "o1_8", facet: "O1", facetName: "Imagination", domain: "O", textEn: "Do not have a good imagination.", textNo: "Har ikke en spesielt god fantasi.", reverse: true, order: 195 },
+  { id: "o1_9", facet: "O1", facetName: "Imagination", domain: "O", textEn: "Seldom get lost in thought.", textNo: "Blir sjelden oppslukt av egne tanker.", reverse: true, order: 196 },
+  { id: "o1_10", facet: "O1", facetName: "Imagination", domain: "O", textEn: "Have difficulty imagining things.", textNo: "Har vanskelig for å forestille meg ting.", reverse: true, order: 197 },
+
+  { id: "o2_6", facet: "O2", facetName: "Artistic Interests", domain: "O", textEn: "Like music.", textNo: "Liker musikk.", reverse: false, order: 198 },
+  { id: "o2_7", facet: "O2", facetName: "Artistic Interests", domain: "O", textEn: "Love flowers.", textNo: "Elsker blomster.", reverse: false, order: 199 },
+  { id: "o2_8", facet: "O2", facetName: "Artistic Interests", domain: "O", textEn: "Do not like art.", textNo: "Liker ikke kunst.", reverse: true, order: 200 },
+  { id: "o2_9", facet: "O2", facetName: "Artistic Interests", domain: "O", textEn: "Do not like concerts.", textNo: "Liker ikke konserter.", reverse: true, order: 201 },
+  { id: "o2_10", facet: "O2", facetName: "Artistic Interests", domain: "O", textEn: "Do not enjoy watching dance performances.", textNo: "Liker ikke å se danseforestillinger.", reverse: true, order: 202 },
+
+  { id: "o3_6", facet: "O3", facetName: "Emotionality", domain: "O", textEn: "Am passionate about causes.", textNo: "Engasjerer meg sterkt i saker jeg bryr meg om.", reverse: false, order: 203 },
+  { id: "o3_7", facet: "O3", facetName: "Emotionality", domain: "O", textEn: "Enjoy examining myself and my life.", textNo: "Liker å utforske meg selv og livet mitt.", reverse: false, order: 204 },
+  { id: "o3_8", facet: "O3", facetName: "Emotionality", domain: "O", textEn: "Seldom get emotional.", textNo: "Blir sjelden følelsesladet.", reverse: true, order: 205 },
+  { id: "o3_9", facet: "O3", facetName: "Emotionality", domain: "O", textEn: "Am not easily affected by my emotions.", textNo: "Lar meg ikke lett påvirke av egne følelser.", reverse: true, order: 206 },
+  { id: "o3_10", facet: "O3", facetName: "Emotionality", domain: "O", textEn: "Experience very few emotional highs and lows.", textNo: "Har svært få følelsesmessige opp- og nedturer.", reverse: true, order: 207 },
+
+  { id: "o4_5", facet: "O4", facetName: "Adventurousness", domain: "O", textEn: "Like to visit new places.", textNo: "Liker å besøke nye steder.", reverse: false, order: 208 },
+  { id: "o4_6", facet: "O4", facetName: "Adventurousness", domain: "O", textEn: "Am interested in many things.", textNo: "Er interessert i mange ting.", reverse: false, order: 209 },
+  { id: "o4_7", facet: "O4", facetName: "Adventurousness", domain: "O", textEn: "Like to begin new things.", textNo: "Liker å starte på nye ting.", reverse: false, order: 210 },
+  { id: "o4_8", facet: "O4", facetName: "Adventurousness", domain: "O", textEn: "Don't like the idea of change.", textNo: "Liker ikke tanken på forandring.", reverse: true, order: 211 },
+  { id: "o4_9", facet: "O4", facetName: "Adventurousness", domain: "O", textEn: "Am a creature of habit.", textNo: "Er et vanemenneske.", reverse: true, order: 212 },
+  { id: "o4_10", facet: "O4", facetName: "Adventurousness", domain: "O", textEn: "Dislike new foods.", textNo: "Liker ikke ny mat.", reverse: true, order: 213 },
+
+  { id: "o5_6", facet: "O5", facetName: "Intellect", domain: "O", textEn: "Like to solve complex problems.", textNo: "Liker å løse kompliserte problemer.", reverse: false, order: 214 },
+  { id: "o5_7", facet: "O5", facetName: "Intellect", domain: "O", textEn: "Have a rich vocabulary.", textNo: "Har et rikt ordforråd.", reverse: false, order: 215 },
+  { id: "o5_8", facet: "O5", facetName: "Intellect", domain: "O", textEn: "Can handle a lot of information.", textNo: "Klarer å håndtere mye informasjon.", reverse: false, order: 216 },
+  { id: "o5_9", facet: "O5", facetName: "Intellect", domain: "O", textEn: "Am not interested in abstract ideas.", textNo: "Er ikke interessert i abstrakte ideer.", reverse: true, order: 217 },
+  { id: "o5_10", facet: "O5", facetName: "Intellect", domain: "O", textEn: "Avoid difficult reading material.", textNo: "Unngår krevende lesestoff.", reverse: true, order: 218 },
+] as const;
+
+export const EXTENDED_QUESTIONS_A: readonly Question[] = [
+  { id: "a1_5", facet: "A1", facetName: "Trust", domain: "A", textEn: "Believe that people are basically moral.", textNo: "Tror folk grunnleggende sett er moralske.", reverse: false, order: 219 },
+  { id: "a1_6", facet: "A1", facetName: "Trust", domain: "A", textEn: "Believe in human goodness.", textNo: "Tror på det gode i mennesket.", reverse: false, order: 220 },
+  { id: "a1_7", facet: "A1", facetName: "Trust", domain: "A", textEn: "Think that all will be well.", textNo: "Tror som regel at alt ordner seg.", reverse: false, order: 221 },
+  { id: "a1_8", facet: "A1", facetName: "Trust", domain: "A", textEn: "Suspect hidden motives in others.", textNo: "Mistenker ofte andre for skjulte motiver.", reverse: true, order: 222 },
+  { id: "a1_9", facet: "A1", facetName: "Trust", domain: "A", textEn: "Am wary of others.", textNo: "Er på vakt overfor andre.", reverse: true, order: 223 },
+  { id: "a1_10", facet: "A1", facetName: "Trust", domain: "A", textEn: "Believe that people are essentially evil.", textNo: "Tror grunnleggende sett at folk er onde.", reverse: true, order: 224 },
+
+  { id: "a2_5", facet: "A2", facetName: "Morality", domain: "A", textEn: "Would never cheat on my taxes.", textNo: "Ville aldri jukset med skatten.", reverse: false, order: 225 },
+  { id: "a2_6", facet: "A2", facetName: "Morality", domain: "A", textEn: "Stick to the rules.", textNo: "Holder meg til reglene.", reverse: false, order: 226 },
+  { id: "a2_7", facet: "A2", facetName: "Morality", domain: "A", textEn: "Use flattery to get ahead.", textNo: "Bruker smiger for å komme meg frem.", reverse: true, order: 227 },
+  { id: "a2_8", facet: "A2", facetName: "Morality", domain: "A", textEn: "Know how to get around the rules.", textNo: "Vet hvordan jeg kan omgå reglene.", reverse: true, order: 228 },
+  { id: "a2_9", facet: "A2", facetName: "Morality", domain: "A", textEn: "Put people under pressure.", textNo: "Legger press på andre.", reverse: true, order: 229 },
+  { id: "a2_10", facet: "A2", facetName: "Morality", domain: "A", textEn: "Pretend to be concerned for others.", textNo: "Later som jeg bryr meg om andre.", reverse: true, order: 230 },
+
+  { id: "a3_5", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Make people feel welcome.", textNo: "Får andre til å føle seg velkomne.", reverse: false, order: 231 },
+  { id: "a3_6", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Anticipate the needs of others.", textNo: "Ser andres behov før de sier ifra.", reverse: false, order: 232 },
+  { id: "a3_7", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Have a good word for everyone.", textNo: "Har et godt ord å si om alle.", reverse: false, order: 233 },
+  { id: "a3_8", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Look down on others.", textNo: "Ser ned på andre.", reverse: true, order: 234 },
+  { id: "a3_9", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Make people feel uncomfortable.", textNo: "Får andre til å føle seg utilpass.", reverse: true, order: 235 },
+  { id: "a3_10", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Turn my back on others.", textNo: "Snur ryggen til andre.", reverse: true, order: 236 },
+
+  { id: "a4_5", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Am easy to satisfy.", textNo: "Er lett å tilfredsstille.", reverse: false, order: 237 },
+  { id: "a4_6", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Can't stand confrontations.", textNo: "Tåler ikke konfrontasjoner.", reverse: false, order: 238 },
+  { id: "a4_7", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Hate to seem pushy.", textNo: "Hater å virke pågående.", reverse: false, order: 239 },
+  { id: "a4_8", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Have a sharp tongue.", textNo: "Har en skarp tunge.", reverse: true, order: 240 },
+  { id: "a4_9", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Contradict others.", textNo: "Motsier andre.", reverse: true, order: 241 },
+  { id: "a4_10", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Hold a grudge.", textNo: "Bærer nag.", reverse: true, order: 242 },
+
+  { id: "a5_5", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Dislike being the center of attention.", textNo: "Liker ikke å være midtpunktet.", reverse: false, order: 243 },
+  { id: "a5_6", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Dislike talking about myself.", textNo: "Liker ikke å snakke om meg selv.", reverse: false, order: 244 },
+  { id: "a5_7", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Consider myself an average person.", textNo: "Anser meg selv som ganske gjennomsnittlig.", reverse: false, order: 245 },
+  { id: "a5_8", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Seldom toot my own horn.", textNo: "Skryter sjelden av meg selv.", reverse: false, order: 246 },
+  { id: "a5_9", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Know the answers to many questions.", textNo: "Vet svaret på mange spørsmål.", reverse: true, order: 247 },
+  { id: "a5_10", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Make myself the center of attention.", textNo: "Gjør meg selv til midtpunktet.", reverse: true, order: 248 },
+
+  { id: "a6_5", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Value cooperation over competition.", textNo: "Verdsetter samarbeid høyere enn konkurranse.", reverse: false, order: 249 },
+  { id: "a6_6", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Suffer from others' sorrows.", textNo: "Kjenner andres sorger på kroppen.", reverse: false, order: 250 },
+  { id: "a6_7", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Tend to dislike soft-hearted people.", textNo: "Liker som regel ikke bløthjertede mennesker.", reverse: true, order: 251 },
+  { id: "a6_8", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Believe in an eye for an eye.", textNo: "Tror på øye for øye.", reverse: true, order: 252 },
+  { id: "a6_9", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Believe people should fend for themselves.", textNo: "Mener folk bør klare seg selv.", reverse: true, order: 253 },
+  { id: "a6_10", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Can't stand weak people.", textNo: "Tåler ikke svake mennesker.", reverse: true, order: 254 },
+] as const;
+
+export const EXTENDED_QUESTIONS_C: readonly Question[] = [
+  { id: "c1_5", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Am sure of my ground.", textNo: "Er trygg i det jeg gjør.", reverse: false, order: 255 },
+  { id: "c1_6", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Come up with good solutions.", textNo: "Kommer opp med gode løsninger.", reverse: false, order: 256 },
+  { id: "c1_7", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Misjudge situations.", textNo: "Feilvurderer situasjoner.", reverse: true, order: 257 },
+  { id: "c1_8", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Don't understand things.", textNo: "Forstår ikke alltid ting.", reverse: true, order: 258 },
+  { id: "c1_9", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Have little to contribute.", textNo: "Har lite å bidra med.", reverse: true, order: 259 },
+  { id: "c1_10", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Don't see the consequences of things.", textNo: "Ser ikke alltid konsekvensene av ting.", reverse: true, order: 260 },
+
+  { id: "c2_5", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Like order.", textNo: "Liker orden.", reverse: false, order: 261 },
+  { id: "c2_6", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Want everything to be \"just right.\"", textNo: "Vil at alt skal være akkurat riktig.", reverse: false, order: 262 },
+  { id: "c2_7", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Love order and regularity.", textNo: "Elsker orden og faste rutiner.", reverse: false, order: 263 },
+  { id: "c2_8", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Do things according to a plan.", textNo: "Gjør ting etter en plan.", reverse: false, order: 264 },
+  { id: "c2_9", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Am not bothered by messy people.", textNo: "Bryr meg ikke om rotete mennesker.", reverse: true, order: 265 },
+  { id: "c2_10", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Am not bothered by disorder.", textNo: "Bryr meg ikke om uorden.", reverse: true, order: 266 },
+
+  { id: "c3_5", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Try to follow the rules.", textNo: "Prøver å følge reglene.", reverse: false, order: 267 },
+  { id: "c3_6", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Pay my bills on time.", textNo: "Betaler regningene i tide.", reverse: false, order: 268 },
+  { id: "c3_7", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Listen to my conscience.", textNo: "Følger samvittigheten min.", reverse: false, order: 269 },
+  { id: "c3_8", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Get others to do my duties.", textNo: "Får andre til å gjøre pliktene mine.", reverse: true, order: 270 },
+  { id: "c3_9", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Do the opposite of what is asked.", textNo: "Gjør det motsatte av det som blir bedt om.", reverse: true, order: 271 },
+  { id: "c3_10", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Misrepresent the facts.", textNo: "Fremstiller fakta feil.", reverse: true, order: 272 },
+
+  { id: "c4_5", facet: "C4", facetName: "Achievement-Striving", domain: "C", textEn: "Go straight for the goal.", textNo: "Går rett på målet.", reverse: false, order: 273 },
+  { id: "c4_6", facet: "C4", facetName: "Achievement-Striving", domain: "C", textEn: "Turn plans into actions.", textNo: "Omsetter planer til handling.", reverse: false, order: 274 },
+  { id: "c4_7", facet: "C4", facetName: "Achievement-Striving", domain: "C", textEn: "Plunge into tasks with all my heart.", textNo: "Kaster meg helhjertet inn i oppgaver.", reverse: false, order: 275 },
+  { id: "c4_8", facet: "C4", facetName: "Achievement-Striving", domain: "C", textEn: "Set high standards for myself and others.", textNo: "Setter høye standarder for meg selv og andre.", reverse: false, order: 276 },
+  { id: "c4_9", facet: "C4", facetName: "Achievement-Striving", domain: "C", textEn: "Demand quality.", textNo: "Krever kvalitet.", reverse: false, order: 277 },
+  { id: "c4_10", facet: "C4", facetName: "Achievement-Striving", domain: "C", textEn: "Am not highly motivated to succeed.", textNo: "Er ikke spesielt motivert for å lykkes.", reverse: true, order: 278 },
+
+  { id: "c5_5", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Get chores done right away.", textNo: "Gjør unna gjøremål med en gang.", reverse: false, order: 279 },
+  { id: "c5_6", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Start tasks right away.", textNo: "Starter oppgaver umiddelbart.", reverse: false, order: 280 },
+  { id: "c5_7", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Get to work at once.", textNo: "Går rett i gang med arbeidet.", reverse: false, order: 281 },
+  { id: "c5_8", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Find it difficult to get down to work.", textNo: "Synes det er vanskelig å komme i gang med arbeid.", reverse: true, order: 282 },
+  { id: "c5_9", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Need a push to get started.", textNo: "Trenger et puff for å komme i gang.", reverse: true, order: 283 },
+  { id: "c5_10", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Postpone decisions.", textNo: "Utsetter beslutninger.", reverse: true, order: 284 },
+
+  { id: "c6_5", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Avoid mistakes.", textNo: "Unngår feil.", reverse: false, order: 285 },
+  { id: "c6_6", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Choose my words with care.", textNo: "Velger ordene mine med omhu.", reverse: false, order: 286 },
+  { id: "c6_7", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Stick to my chosen path.", textNo: "Holder meg til den valgte veien.", reverse: false, order: 287 },
+  { id: "c6_8", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Like to act on a whim.", textNo: "Liker å handle på impuls.", reverse: true, order: 288 },
+  { id: "c6_9", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Do crazy things.", textNo: "Gjør sprø ting.", reverse: true, order: 289 },
+  { id: "c6_10", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Often make last-minute plans.", textNo: "Legger ofte planer i siste liten.", reverse: true, order: 290 },
 ] as const;
 
 /** De første 50 (order 1-50) -- det gratis, foreløpige resultatet. */
