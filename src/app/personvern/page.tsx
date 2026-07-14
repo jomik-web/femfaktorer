@@ -24,6 +24,7 @@ const SECTIONS = [
   { id: "spir", label: "Hvis du snakker med Spir" },
   { id: "tredjeparter", label: "Hvem har tilgang til opplysningene dine" },
   { id: "overforing", label: "Overføring utenfor EU/EØS" },
+  { id: "lagringstid", label: "Hvor lenge lagres opplysningene" },
   { id: "aldersgrense", label: "Aldersgrense" },
   { id: "rettigheter", label: "Dine rettigheter" },
   { id: "status", label: "Status på denne siden" },
@@ -232,15 +233,37 @@ export default function PersonvernPage() {
         </h2>
         <p className="text-ink/80 dark:text-warmgray/80">
           Disse tjenestene er involvert i driften av FemFaktorer og kan i ulik grad komme i
-          kontakt med opplysninger om deg:
+          kontakt med opplysninger om deg. For hver av dem er det oppgitt hva slags opplysninger
+          det gjelder, og hvilket rettslig grunnlag (behandlingsgrunnlag) behandlingen bygger på:
         </p>
         <div className="flex flex-col gap-3">
           <article className="rounded-lg bg-mint/50 p-4 dark:bg-white/5">
             <h3 className="font-semibold text-ink dark:text-white">Netlify -- hosting og drift</h3>
             <p className="text-sm text-ink/80 dark:text-warmgray/80">
               Serverer selve nettsiden og kjører de tekniske funksjonene bak den (bl.a. innlogging
-              og kontolagring). Genererer vanlige tekniske serverlogger (IP-adresse, tidspunkt) som
-              en del av normal drift og sikkerhet.
+              og kontolagring, via tjenesten Netlify Blobs). Genererer vanlige tekniske
+              serverlogger (IP-adresse, tidspunkt) som en del av normal drift og sikkerhet.
+            </p>
+            <p className="mt-2 text-sm text-ink/60 dark:text-warmgray/60">
+              Grunnlag: berettiget interesse (drift og sikkerhet). Se{" "}
+              <a
+                href="https://www.netlify.com/privacy/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal underline underline-offset-2"
+              >
+                Netlifys personvernerklæring
+              </a>{" "}
+              og{" "}
+              <a
+                href="https://www.netlify.com/legal/subprocessors/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal underline underline-offset-2"
+              >
+                deres liste over underleverandører
+              </a>
+              .
             </p>
           </article>
           <article className="rounded-lg bg-mint/50 p-4 dark:bg-white/5">
@@ -248,6 +271,19 @@ export default function PersonvernPage() {
             <p className="text-sm text-ink/80 dark:text-warmgray/80">
               Sender engangskoden på e-post når du logger inn for å lagre eller hente fram et
               resultat. Ser e-postadressen din og selve koden, ikke testresultatet ditt.
+            </p>
+            <p className="mt-2 text-sm text-ink/60 dark:text-warmgray/60">
+              Grunnlag: samtykke -- brukes kun når du selv aktivt ber om å lagre resultatet ditt.
+              Resend er sertifisert under EU-US Data Privacy Framework. Se{" "}
+              <a
+                href="https://resend.com/security/gdpr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal underline underline-offset-2"
+              >
+                Resends GDPR-side
+              </a>
+              .
             </p>
           </article>
           <article className="rounded-lg bg-mint/50 p-4 dark:bg-white/5">
@@ -258,6 +294,10 @@ export default function PersonvernPage() {
               Behandler testresultatet ditt og dine egne meldinger, men KUN når du selv aktivt
               starter en samtale med Spir. Se eget avsnitt over.
             </p>
+            <p className="mt-2 text-sm text-ink/60 dark:text-warmgray/60">
+              Grunnlag: uttrykkelig samtykke, gitt før hver samtale starter -- siden dette dreier
+              seg om personlighetsrelatert informasjon.
+            </p>
           </article>
           <article className="rounded-lg bg-mint/50 p-4 dark:bg-white/5">
             <h3 className="font-semibold text-ink dark:text-white">
@@ -266,7 +306,8 @@ export default function PersonvernPage() {
             <p className="text-sm text-ink/80 dark:text-warmgray/80">
               Brukes til å lagre og utvikle kildekoden til nettsiden. Testsvar, resultater eller
               andre personopplysninger om deg går aldri gjennom GitHub -- det er utelukkende et
-              utviklingsverktøy.
+              utviklingsverktøy, og listes her kun for full åpenhet, ikke fordi det behandler data
+              om deg.
             </p>
           </article>
         </div>
@@ -281,16 +322,47 @@ export default function PersonvernPage() {
           delvis utenfor EU/EØS. GDPR krever ikke at all databehandling skjer innenfor EU/EØS, men
           krever et gyldig overføringsgrunnlag -- her EUs standardpersonvernbestemmelser (SCC), som
           inngår i Anthropics kommersielle vilkår. Dette gjelder kun hvis du aktivt velger å bruke
-          Spir. For de andre tjenestene (Netlify, Resend), se deres egne personvernerklæringer for
-          informasjon om hvor data behandles.
+          Spir.
         </p>
+        <p className="text-ink/80 dark:text-warmgray/80">
+          Resend er sertifisert under EU-US Data Privacy Framework, en egen godkjent
+          overføringsmekanisme. For Netlify, se lenkene i avsnittet over for informasjon om hvor
+          data behandles og hvilket overføringsgrunnlag som gjelder.
+        </p>
+      </section>
+
+      <section id="lagringstid" className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold text-ink dark:text-white">
+          Hvor lenge lagres opplysningene
+        </h2>
+        <ul className="flex flex-col gap-2 text-ink/80 dark:text-warmgray/80">
+          <li>
+            -- Testsvar og resultat lokalt i nettleseren din: til du sletter dem selv, eller tømmer
+            nettleserdata for siden. Ingen automatisk utløpsdato.
+          </li>
+          <li>
+            -- Lagret kontoresultat (Netlify Blobs): til du sletter det selv. Det finnes per i dag
+            ingen automatisk sletting ved inaktivitet, men dette vurderes som en fremtidig
+            forbedring i tråd med prinsippet om lagringsbegrensning.
+          </li>
+          <li>
+            -- Innhold sendt til Spir (Anthropic): slettes automatisk hos Anthropic etter kort tid
+            (per i dag 7 dager), og brukes aldri til modelltrening.
+          </li>
+          <li>
+            -- Innloggingsøkten din (cookie): utløper automatisk etter 30 dager, eller når du
+            logger ut.
+          </li>
+        </ul>
       </section>
 
       <section id="aldersgrense" className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-ink dark:text-white">Aldersgrense</h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          FemFaktorer er i denne versjonen ment for personer over 18 år. Testen er ikke tilpasset
-          mindreårige, verken språklig eller når det gjelder samtykke.
+          FemFaktorer er i denne versjonen ment for personer over 18 år. Før testen starter, må du
+          selv bekrefte at du er over 18 -- en enkel, selvdeklarert bekreftelse, ikke en teknisk
+          alderskontroll. Testen er ikke tilpasset mindreårige, verken språklig eller når det
+          gjelder samtykke.
         </p>
       </section>
 
@@ -307,6 +379,10 @@ export default function PersonvernPage() {
           har du de vanlige rettighetene etter personvernregelverket: innsyn, retting, sletting og
           begrensning. Du kan også klage til Datatilsynet dersom du mener vi ikke behandler
           opplysningene dine på lovlig vis.
+        </p>
+        <p className="text-ink/80 dark:text-warmgray/80">
+          Ønsker du en kopi av resultatet ditt å ta med deg (dataportabilitet), kan du laste det
+          ned som PDF direkte fra resultatsiden.
         </p>
         <p className="text-ink/80 dark:text-warmgray/80">
           Datatilsynet:{" "}
@@ -327,7 +403,10 @@ export default function PersonvernPage() {
           Denne siden beskriver FemFaktorer slik løsningen faktisk fungerer i dag. Innholdet er
           foreløpig ikke kvalitetssikret av jurist, og vil bli gjennomgått og oppdatert før en
           eventuell bredere, offentlig lansering. Vi oppdaterer siden fortløpende når nye tjenester
-          eller funksjoner tas i bruk.
+          eller funksjoner tas i bruk. En personvernkonsekvensvurdering (DPIA) og signering av
+          databehandleravtaler med leverandørene over er planlagt gjennomført sammen med
+          juristgjennomgangen, siden testresultater og tilleggsseksjonen regnes som særlig sensitiv
+          informasjon.
         </p>
         <p className="text-sm text-ink/60 dark:text-warmgray/60">Sist oppdatert: 14.07.2026.</p>
       </section>

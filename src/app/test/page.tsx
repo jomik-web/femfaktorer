@@ -2,10 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ALL_QUESTIONS, FREE_QUESTIONS, FREE_TIER_LENGTH, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
 import type { AnswerValue } from "@/lib/scoring";
 import { computeTestResult, type AnswerMap, type ResultTier } from "@/lib/scoring";
-import { loadAnswers, saveAnswers, loadO6, saveO6, type O6ConsentStatus } from "@/lib/storage";
+import {
+  loadAnswers,
+  saveAnswers,
+  loadO6,
+  saveO6,
+  loadAgeConfirmed,
+  saveAgeConfirmed,
+  type O6ConsentStatus,
+} from "@/lib/storage";
 import { AnswerScale } from "@/components/AnswerScale";
 import { ProgressBar } from "@/components/ProgressBar";
 
@@ -34,10 +43,17 @@ export default function TestPage() {
   const [o6Phase, setO6Phase] = useState<"none" | "offer" | "questions">("none");
   const [o6Index, setO6Index] = useState(0);
 
+  // Aldersbekreftelse (v2.6, Dokument 07 §8) -- vises før noe annet dersom
+  // ikke tidligere bekreftet på denne enheten. "declined" viser en enkel
+  // avvisningsskjerm i stedet for å sende brukeren videre inn i testen.
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [ageDeclined, setAgeDeclined] = useState(false);
+
   const activeQuestions = continuedToFull ? ALL_QUESTIONS : FREE_QUESTIONS;
 
   // Last lagrede svar ved oppstart (autolagring, Dokument 09 §10.3).
   useEffect(() => {
+    setAgeConfirmed(loadAgeConfirmed());
     const stored = loadAnswers();
     setAnswers(stored.answers);
     setContinuedToFull(stored.continuedToFull);
@@ -86,6 +102,55 @@ export default function TestPage() {
   }
 
   if (!hydrated) return null;
+
+  if (ageDeclined) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
+          FemFaktorer er foreløpig for voksne
+        </h1>
+        <p className="text-ink/80 dark:text-warmgray/80">
+          Denne versjonen av testen er laget for personer over 18 år. Ingenting er lagret eller
+          sendt noe sted.
+        </p>
+        <Link href="/" className="self-center text-sm text-teal underline underline-offset-2">
+          Tilbake til forsiden
+        </Link>
+      </main>
+    );
+  }
+
+  if (!ageConfirmed) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
+          Før du starter
+        </h1>
+        <p className="text-ink/80 dark:text-warmgray/80">
+          FemFaktorer er i denne versjonen laget for personer over 18 år.
+        </p>
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              saveAgeConfirmed();
+              setAgeConfirmed(true);
+            }}
+            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
+          >
+            Ja, jeg er 18 år eller eldre
+          </button>
+          <button
+            type="button"
+            onClick={() => setAgeDeclined(true)}
+            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
+          >
+            Nei, jeg er under 18
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   if (o6Phase === "offer") {
     return (

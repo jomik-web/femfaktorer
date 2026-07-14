@@ -483,9 +483,10 @@ export default function ResultatPage() {
           <p className="text-sm text-ink/70 dark:text-warmgray/70">
             Vil du slippe å ta testen på nytt for å se resultatet igjen -- på denne eller en annen
             enhet -- kan du lagre det knyttet til e-postadressen din. Vi lagrer da bare de ferdig
-            beregnede skårene dine (fem hovedfaktorer og fasetter), ALDRI de 120 svarene du ga.
-            Innlogging skjer med en engangskode sendt på e-post, ikke passord, og du kan slette det
-            lagrede resultatet når som helst -- her, eller ved å logge inn på nytt.
+            beregnede skårene dine (fem hovedfaktorer og fasetter, og skåren fra den valgfrie
+            tilleggsseksjonen om du har svart på den), ALDRI de 120 svarene du ga. Innlogging skjer
+            med en engangskode sendt på e-post, ikke passord, og du kan slette det lagrede
+            resultatet når som helst -- her, eller ved å logge inn på nytt.
           </p>
 
           {loggedInEmail ? (

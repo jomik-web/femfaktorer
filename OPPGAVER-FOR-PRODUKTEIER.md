@@ -23,6 +23,15 @@ Bygget etter ditt ønske om å slippe å ta testen på nytt hver gang, og kunne 
 - [ ] **Finn en jurist** som kan kvalitetssikre personvern-/justeksten (Dokument 07) før reell lansering med ekte brukere. Blokkerer ikke bygging eller testing, bare offentlig lansering.
 - [ ] **Vurder domenenavn** (f.eks. femfaktorer.no) og evt. reserver det hos en registrar.
 
+## Nytt (v2.6) -- personvernside og GDPR-oppfølging
+
+Ny, fullstendig personvernside (`/personvern`) er publisert, sammen med en enkel 18+-bekreftelse før testen starter. Følgende gjenstår og bør tas sammen med juristgjennomgangen over, ikke separat:
+
+- [ ] **Databehandleravtaler (DPA)**: aksepter/signer DPA aktivt (ikke bare klikk gjennom) hos Netlify, Resend og Anthropic. Alle tre tilbyr dette som en del av sine kommersielle vilkår — se lenker i `/personvern`.
+- [ ] **Personvernkonsekvensvurdering (DPIA)**: bør gjennomføres før bred, offentlig lansering, siden testresultater (og særlig tilleggsseksjonen om politiske/verdimessige holdninger) regnes som sensitiv/særlig kategori informasjon.
+- [ ] **Vurder automatisk lagringsbegrensning** for lagrede kontoresultater (Netlify Blobs) — i dag slettes disse kun manuelt av brukeren selv, ingen utløpsdato. Bør vurderes som del av juristgjennomgangen.
+- [ ] **Fyll inn organisasjonsnummer** på `/personvern` så snart enkeltpersonforetaket er registrert (se oppgaven over).
+
 ## Kan vente
 
 - [ ] Plausible-konto (analyse) — sett opp nærmere lansering.

@@ -205,3 +205,29 @@ export function clearRestoredAccountResult(): void {
     // se over
   }
 }
+
+/**
+ * Aldersbekreftelse (v2.6, Dokument 07 §8: "enkel, synlig aldersbekreftelse
+ * fremfor teknisk alderskontroll"). Selvdeklarert, ikke en reell alderssjekk
+ * -- lagres lokalt slik at brukeren bare trenger å bekrefte én gang, ikke
+ * ved hvert testforsøk.
+ */
+const AGE_CONFIRMED_STORAGE_KEY = "femfaktorer.aldersbekreftelse.v1";
+
+export function loadAgeConfirmed(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(AGE_CONFIRMED_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function saveAgeConfirmed(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(AGE_CONFIRMED_STORAGE_KEY, "true");
+  } catch {
+    // se over
+  }
+}
