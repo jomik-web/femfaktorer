@@ -3,9 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ALL_QUESTIONS, FREE_QUESTIONS, FREE_TIER_LENGTH, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
-import type { AnswerValue, FactorResult, FacetResult } from "@/lib/scoring";
-import { computeTestResult, computeFacetResults, type AnswerMap, type ResultTier } from "@/lib/scoring";
+import {
+  ALL_QUESTIONS,
+  ALL_QUESTIONS_EXTENDED,
+  FREE_QUESTIONS,
+  FREE_TIER_LENGTH,
+  OPTIONAL_O6_QUESTIONS,
+  type Question,
+} from "@/data/questions";
+import type { AnswerValue, FactorResult, FacetResult, ResultTier } from "@/lib/scoring";
+import { computeTestResult, computeFacetResults, type AnswerMap } from "@/lib/scoring";
 import {
   loadAnswers,
   saveAnswers,
@@ -19,30 +26,51 @@ import { AnswerScale } from "@/components/AnswerScale";
 import { ProgressBar } from "@/components/ProgressBar";
 
 /**
- * To-trinns testflyt (se Grunnlagsdokumentet, beslutning om 120-spørsmål-
- * utvidelse): de første 50 spørsmålene gir et foreløpig resultat for de fem
- * hovedfaktorene. Ved spørsmål 50 stopper vi og spør -- på en smakfull, ikke
- * pushy måte (jf. Dokument 04 KORTRESULTAT-005/008) -- om brukeren vil
- * fortsette til alle 120 for et mer presist resultat og tilgang til Spir.
+ * TRE-TRINNS TESTFLYT (v2.11, tredje trapp -- "Utvidet versjon"): de første
+ * 50 spørsmålene gir et foreløpig resultat for de fem hovedfaktorene. Ved
+ * spørsmål 50 stopper vi og spør -- på en smakfull, ikke pushy måte (jf.
+ * Dokument 04 KORTRESULTAT-005/008) -- om brukeren vil fortsette til alle
+ * 120 for et mer presist resultat og tilgang til Spir. Ved spørsmål 120
+ * tilbys, på samme måte, et tredje og siste steg: alle 290 spørsmål (10 per
+ * fasett i stedet for 4-5), kalt "Utvidet versjon" i grensesnittet.
  *
- * Etter fullført 120-test tilbys en HELT VALGFRI bonusseksjon (O6, se
- * questions.ts) med eget, uttrykkelig samtykke (GDPR art. 9(2)(a)).
- * Produkteier har besluttet (14.07.2026) at funksjonen beholdes permanent.
+ * Sjekkpunktet etter 120 er bevisst plassert FØR O6-tilbudet, slik at O6
+ * (se under) alltid kommer til slutt, uansett hvilket av de tre nivåene
+ * brukeren til slutt lander på.
+ *
+ * Etter fullført test (uansett tier "full" eller "extended") tilbys en HELT
+ * VALGFRI bonusseksjon (O6, se questions.ts) med eget, uttrykkelig samtykke
+ * (GDPR art. 9(2)(a)). Produkteier har besluttet (14.07.2026) at funksjonen
+ * beholdes permanent.
  */
+
+function questionsForTier(tier: ResultTier): readonly Question[] {
+  if (tier === "extended") return ALL_QUESTIONS_EXTENDED;
+  if (tier === "full") return ALL_QUESTIONS;
+  return FREE_QUESTIONS;
+}
 
 /**
  * Sender de FERDIG BEREGNEDE skårene (ikke svarene) til det anonyme,
- * aggregerte normtelling-endepunktet -- v2.8, se
- * src/app/api/stats/submit-norm/route.ts og personvernsiden. Kalles KUN når
- * hele 120-testen er fullført. Bevisst "fire-and-forget": venter ikke på
+ * aggregerte normtelling-endepunktet -- v2.8, utvidet i v2.11 med en egen
+ * pott per tier (se src/lib/stats/blobs.ts og personvernsiden). Kalles KUN
+ * når brukeren har landet på sitt ENDELIGE nivå -- altså etter at
+ * full-tier-sjekkpunktet er avklart (enten ved at de takker nei til å
+ * fortsette, eller ved at de fullfører alle 290) -- IKKE automatisk ved
+ * hvert 120-punkt, siden noen av dem fortsetter videre til 290 og da skal
+ * telle i DEN potten i stedet. Bevisst "fire-and-forget": venter ikke på
  * svaret, blokkerer aldri navigasjonen, og feiler helt stille -- dette er
  * usynlig infrastruktur, ikke noe brukeren skal merke eller kunne se feile.
  */
-function submitAnonymousNormStats(factors: FactorResult[], facets: FacetResult[]): void {
+function submitAnonymousNormStats(
+  factors: FactorResult[],
+  facets: FacetResult[],
+  tier: "full" | "extended"
+): void {
   void fetch("/api/stats/submit-norm", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ factors, facets }),
+    body: JSON.stringify({ factors, facets, tier }),
   }).catch(() => {
     // Stille -- se doc-kommentar over.
   });
@@ -51,9 +79,11 @@ function submitAnonymousNormStats(factors: FactorResult[], facets: FacetResult[]
 export default function TestPage() {
   const router = useRouter();
   const [answers, setAnswers] = useState<AnswerMap>({});
-  const [continuedToFull, setContinuedToFull] = useState(false);
+  const [tier, setTier] = useState<ResultTier>("free");
   const [index, setIndex] = useState(0);
-  const [showCheckpoint, setShowCheckpoint] = useState(false);
+  // "afterFree" = sjekkpunktet ved 50 (tilbyr full), "afterFull" = sjekkpunktet
+  // ved 120 (tilbyr utvidet versjon).
+  const [checkpoint, setCheckpoint] = useState<"none" | "afterFree" | "afterFull">("none");
   const [hydrated, setHydrated] = useState(false);
 
   const [o6Status, setO6Status] = useState<O6ConsentStatus>("not_asked");
@@ -67,23 +97,25 @@ export default function TestPage() {
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [ageDeclined, setAgeDeclined] = useState(false);
 
-  const activeQuestions = continuedToFull ? ALL_QUESTIONS : FREE_QUESTIONS;
+  const activeQuestions = questionsForTier(tier);
 
   // Last lagrede svar ved oppstart (autolagring, Dokument 09 §10.3).
   useEffect(() => {
     setAgeConfirmed(loadAgeConfirmed());
     const stored = loadAnswers();
     setAnswers(stored.answers);
-    setContinuedToFull(stored.continuedToFull);
+    setTier(stored.tier);
     const storedO6 = loadO6();
     setO6Status(storedO6.status);
     setO6Answers(storedO6.answers);
 
-    const list = stored.continuedToFull ? ALL_QUESTIONS : FREE_QUESTIONS;
+    const list = questionsForTier(stored.tier);
     const firstUnanswered = list.findIndex((q) => stored.answers[q.id] === undefined);
     if (firstUnanswered === -1) {
-      if (!stored.continuedToFull) {
-        setShowCheckpoint(true);
+      if (stored.tier === "free") {
+        setCheckpoint("afterFree");
+      } else if (stored.tier === "full") {
+        setCheckpoint("afterFull");
       } else {
         goToO6OrResult(storedO6.status, storedO6.answers);
       }
@@ -102,7 +134,7 @@ export default function TestPage() {
     [answers, activeQuestions]
   );
 
-  /** Etter fullført 120-test: avgjør om O6-tilbudet skal vises, fortsettes, eller hoppes over. */
+  /** Etter fullført test (full ELLER extended): avgjør om O6-tilbudet skal vises, fortsettes, eller hoppes over. */
   function goToO6OrResult(status: O6ConsentStatus, o6answers: AnswerMap) {
     if (status === "not_asked") {
       setO6Phase("offer");
@@ -247,7 +279,7 @@ export default function TestPage() {
     );
   }
 
-  if (showCheckpoint) {
+  if (checkpoint === "afterFree") {
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
         <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
@@ -265,9 +297,9 @@ export default function TestPage() {
           <button
             type="button"
             onClick={() => {
-              setContinuedToFull(true);
-              saveAnswers(answers, true);
-              setShowCheckpoint(false);
+              setTier("full");
+              saveAnswers(answers, "full");
+              setCheckpoint("none");
               const nextIndex = ALL_QUESTIONS.findIndex((q) => answers[q.id] === undefined);
               setIndex(nextIndex === -1 ? 0 : nextIndex);
             }}
@@ -287,20 +319,73 @@ export default function TestPage() {
     );
   }
 
+  if (checkpoint === "afterFull") {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
+          Du har svart på alle de 120 spørsmålene
+        </h1>
+        <p className="text-ink/80 dark:text-warmgray/80">
+          Vil du gå enda dypere? Utvidet versjon stiller 10 spørsmål per underkategori i stedet for
+          4-5, og gir dermed det mest presise resultatet FemFaktorer kan tilby -- til sammen 290
+          spørsmål.
+        </p>
+        <p className="text-sm text-ink/60 dark:text-warmgray/60">
+          Resultatet ditt fra de 120 spørsmålene er ikke ufullstendig som beskrivelse av deg fordi
+          du velger å stoppe her -- de resterende spørsmålene gir bare en enda sikrere måling.
+        </p>
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              setTier("extended");
+              saveAnswers(answers, "extended");
+              setCheckpoint("none");
+              const nextIndex = ALL_QUESTIONS_EXTENDED.findIndex((q) => answers[q.id] === undefined);
+              setIndex(nextIndex === -1 ? 0 : nextIndex);
+            }}
+            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
+          >
+            Fortsett til Utvidet versjon (290)
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const result = computeTestResult(answers, ALL_QUESTIONS, "full");
+              if (result.complete && result.factors) {
+                submitAnonymousNormStats(result.factors, computeFacetResults(answers, ALL_QUESTIONS), "full");
+              }
+              goToO6OrResult(o6Status, o6Answers);
+            }}
+            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
+          >
+            Behold resultatet fra de 120 spørsmålene
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   if (!question) return null;
 
   function handleAnswer(value: AnswerValue) {
     const next: AnswerMap = { ...answers, [question!.id]: value };
     setAnswers(next);
-    saveAnswers(next, continuedToFull);
+    saveAnswers(next, tier);
 
-    const tier: ResultTier = continuedToFull ? "full" : "free";
     const result = computeTestResult(next, activeQuestions, tier);
     if (result.complete) {
       if (tier === "free") {
-        setShowCheckpoint(true);
+        setCheckpoint("afterFree");
+      } else if (tier === "full") {
+        setCheckpoint("afterFull");
       } else {
-        submitAnonymousNormStats(result.factors ?? [], computeFacetResults(next, ALL_QUESTIONS));
+        // tier === "extended" -- brukerens endelige, mest presise nivå.
+        submitAnonymousNormStats(
+          result.factors ?? [],
+          computeFacetResults(next, ALL_QUESTIONS_EXTENDED),
+          "extended"
+        );
         goToO6OrResult(o6Status, o6Answers);
       }
       return;

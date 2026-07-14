@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ALL_QUESTIONS, FREE_QUESTIONS, OPTIONAL_O6_QUESTIONS, type Domain } from "@/data/questions";
+import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED, FREE_QUESTIONS, OPTIONAL_O6_QUESTIONS, type Domain } from "@/data/questions";
 import {
   computeTestResult,
   computeOptionalO6Score,
@@ -65,18 +65,19 @@ export default function ResultatPage() {
   useEffect(() => {
     const stored = loadAnswers();
     // Prøv det spørsmålssettet brukeren faktisk er inne i (jf. testflyten):
-    // har de valgt å fortsette forbi 50, sjekk mot alle 120 -- ellers mot de
-    // første 50 (det foreløpige, gratis resultatet).
-    const questionSet = stored.continuedToFull ? ALL_QUESTIONS : FREE_QUESTIONS;
-    const resultTier: ResultTier = stored.continuedToFull ? "full" : "free";
+    // "extended" -> alle 290, "full" -> alle 120, ellers de første 50 (det
+    // foreløpige, gratis resultatet).
+    const questionSet =
+      stored.tier === "extended" ? ALL_QUESTIONS_EXTENDED : stored.tier === "full" ? ALL_QUESTIONS : FREE_QUESTIONS;
+    const resultTier: ResultTier = stored.tier;
     const result = computeTestResult(stored.answers, questionSet, resultTier);
 
     if (result.complete && result.factors) {
       setFactors(result.factors);
       setTier(result.tier ?? resultTier);
       // Fasettskår (underkategorier) er kun meningsfulle -- og kun vist -- for
-      // den fulle testen (v2.1, se scoring.ts computeFacetResults).
-      if (resultTier === "full") {
+      // full/extended-testen (v2.1/v2.11, se scoring.ts computeFacetResults).
+      if (resultTier === "full" || resultTier === "extended") {
         setFacets(computeFacetResults(stored.answers, questionSet));
       }
 
@@ -96,7 +97,7 @@ export default function ResultatPage() {
     if (restored) {
       setFactors(restored.factors);
       setFacets(restored.facets);
-      setTier("full");
+      setTier(restored.tier);
       setO6Score(restored.o6Score);
       setIsRestored(true);
       setHydrated(true);
@@ -112,10 +113,10 @@ export default function ResultatPage() {
     if (factors && !activeFactor) setActiveFactor(factors[0]?.factor ?? null);
   }, [factors, activeFactor]);
 
-  // Sjekk innloggingsstatus -- kun relevant (og kun spurt om) for fulltesten,
-  // se produkteiers krav om at korttesten ikke skal tilby lagring.
+  // Sjekk innloggingsstatus -- kun relevant (og kun spurt om) for full/extended-
+  // testen, se produkteiers krav om at korttesten ikke skal tilby lagring.
   useEffect(() => {
-    if (tier !== "full") return;
+    if (tier === "free" || tier === null) return;
     let cancelled = false;
     fetch("/api/account/me")
       .then((res) => res.json())
@@ -172,6 +173,12 @@ export default function ResultatPage() {
     setO6Score(null);
   }
 
+  // "full" og "extended" deler nesten hele den detaljerte visningen --
+  // fasetter, samspill, kontolagring, PDF-nedlasting osv. Kun noen få steder
+  // (spørsmålssett-valg ved beregning, og selve oppfordringsteksten nederst)
+  // skiller genuint mellom de to nivåene, se resten av filen.
+  const isDetailed = tier === "full" || tier === "extended";
+
   async function requestSaveCode(e: FormEvent) {
     e.preventDefault();
     setSaveError(null);
@@ -204,7 +211,7 @@ export default function ResultatPage() {
       const res = await fetch("/api/account/save-result", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ factors, facets, o6Score }),
+        body: JSON.stringify({ factors, facets, o6Score, tier }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -259,13 +266,13 @@ export default function ResultatPage() {
   // hoveddomene de skal vises under -- se plasseringsregelen i
   // data/combinationInsights.ts (samme domene -> der; ulike domener -> under
   // det som kommer sist i visningsrekkefølgen).
-  const domainCombosByDomain: Map<Domain, CombinationInsight[]> =
-    tier === "full"
-      ? matchCombinationInsightsByDomain(factors, bandFor, DISPLAY_TO_DOMAIN)
-      : new Map<Domain, CombinationInsight[]>();
-  const facetCombosByDomain: Map<Domain, FacetCombinationInsight[]> =
-    tier === "full" ? matchFacetCombinationInsights(facets, bandFor) : new Map<Domain, FacetCombinationInsight[]>();
-  const closing = tier === "full" ? buildClosingSynthesis(factors) : null;
+  const domainCombosByDomain: Map<Domain, CombinationInsight[]> = isDetailed
+    ? matchCombinationInsightsByDomain(factors, bandFor, DISPLAY_TO_DOMAIN)
+    : new Map<Domain, CombinationInsight[]>();
+  const facetCombosByDomain: Map<Domain, FacetCombinationInsight[]> = isDetailed
+    ? matchFacetCombinationInsights(facets, bandFor)
+    : new Map<Domain, FacetCombinationInsight[]>();
+  const closing = isDetailed ? buildClosingSynthesis(factors) : null;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-10 px-6 py-12 print:max-w-none">
@@ -274,7 +281,7 @@ export default function ResultatPage() {
           <h1 className="text-2xl font-semibold text-ink dark:text-white sm:text-3xl">
             Din profil
           </h1>
-          {tier === "full" && (
+          {isDetailed && (
             <button
               type="button"
               onClick={() => window.print()}
@@ -288,6 +295,17 @@ export default function ResultatPage() {
         {tier === "free" && (
           <p className="text-sm text-ink/60 dark:text-warmgray/60">
             Dette er et foreløpig resultat, basert på de første 50 av 120 spørsmål.
+          </p>
+        )}
+        {tier === "full" && (
+          <p className="text-sm text-ink/60 dark:text-warmgray/60">
+            Basert på fullversjonen (alle 120 spørsmål).
+          </p>
+        )}
+        {tier === "extended" && (
+          <p className="text-sm text-ink/60 dark:text-warmgray/60">
+            Basert på Utvidet versjon (alle 290 spørsmål) -- det mest presise resultatet FemFaktorer
+            kan gi, med 10 spørsmål per underkategori i stedet for 4-5.
           </p>
         )}
       </header>
@@ -316,7 +334,7 @@ export default function ResultatPage() {
         </>
       )}
 
-      {tier === "full" && (
+      {isDetailed && (
         <>
           <nav
             className="flex flex-wrap gap-2 print:hidden"
@@ -474,7 +492,7 @@ export default function ResultatPage() {
         </section>
       )}
 
-      {tier === "full" && accountChecked && (
+      {isDetailed && accountChecked && (
         <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
           <h2 className="font-semibold text-ink dark:text-white">Lagre resultatet ditt</h2>
           {isRestored && (
@@ -600,7 +618,7 @@ export default function ResultatPage() {
         </section>
       )}
 
-      {tier === "free" ? (
+      {tier === "free" && (
         <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
           <h2 className="font-semibold text-ink dark:text-white">
             Vil du se et mer presist resultat?
@@ -618,7 +636,27 @@ export default function ResultatPage() {
             Fortsett til alle 120
           </Link>
         </section>
-      ) : (
+      )}
+
+      {tier === "full" && (
+        <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+          <h2 className="font-semibold text-ink dark:text-white">Vil du gå enda dypere?</h2>
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
+            Utvidet versjon stiller 10 spørsmål per underkategori i stedet for 4-5 (290 spørsmål
+            totalt), og gir det mest presise resultatet FemFaktorer kan tilby. Resultatet ditt over
+            er ikke ufullstendig fordi du velger å stoppe her -- de resterende spørsmålene gir bare
+            en enda sikrere måling.
+          </p>
+          <Link
+            href="/test"
+            className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white"
+          >
+            Fortsett til Utvidet versjon
+          </Link>
+        </section>
+      )}
+
+      {isDetailed && (
         <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
           <h2 className="font-semibold text-ink dark:text-white">Vil du utforske resultatet videre?</h2>
           <p className="text-sm text-ink/70 dark:text-warmgray/70">

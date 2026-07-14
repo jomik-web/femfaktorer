@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { normStatsStore } from "@/lib/stats/blobs";
+import { normStatsStore, type NormStatsTier } from "@/lib/stats/blobs";
 import { emptyNormStats, bucketIndexFor, type NormStats } from "@/lib/stats/types";
 import { isValidFactorResult, isValidFacetResult } from "@/lib/account/validate";
 
@@ -8,12 +8,19 @@ export const runtime = "nodejs";
 interface SubmitNormBody {
   factors: unknown;
   facets: unknown;
+  tier: unknown;
+}
+
+function isValidNormStatsTier(value: unknown): value is NormStatsTier {
+  return value === "full" || value === "extended";
 }
 
 /**
- * Tar imot ferdig beregnede skårer fra en FULLFØRT 120-test (se test/page.tsx)
- * og legger dem inn i et anonymt, samlet histogram -- ALDRI som en
- * identifiserbar enkeltpost. Se lib/stats/blobs.ts for personvernbegrunnelsen.
+ * Tar imot ferdig beregnede skårer fra en FULLFØRT 120- eller 290-test (se
+ * test/page.tsx) og legger dem inn i et anonymt, samlet histogram -- ALDRI
+ * som en identifiserbar enkeltpost. Se lib/stats/blobs.ts for
+ * personvernbegrunnelsen, og for hvorfor de to tier-nivåene (v2.11) skrives
+ * til HVER SIN separate butikk i stedet for å blandes sammen.
  *
  * Leser BEVISST ingen cookies, økt eller annen identifiserende informasjon --
  * denne ruten skal ikke ha noen måte å vite hvem som sender inn på.
@@ -38,9 +45,12 @@ export async function POST(request: Request) {
   if (!Array.isArray(body.facets) || !body.facets.every(isValidFacetResult)) {
     return NextResponse.json({ error: "Ugyldig fasettdata." }, { status: 400 });
   }
+  if (!isValidNormStatsTier(body.tier)) {
+    return NextResponse.json({ error: "Ugyldig eller manglende tier." }, { status: 400 });
+  }
 
   try {
-    const store = normStatsStore();
+    const store = normStatsStore(body.tier);
     const existing = (await store.get("aggregate", { type: "json" })) as NormStats | null;
     const stats: NormStats = existing ?? emptyNormStats();
 

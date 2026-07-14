@@ -83,6 +83,9 @@ export default function LoggInnPage() {
         facets: resultData.result.facets,
         o6Score: resultData.result.o6Score,
         savedAt: resultData.result.savedAt,
+        // Eldre kontoresultater (før v2.11) har ikke dette feltet -- de kan
+        // kun være "full", siden extended-tier ikke fantes den gangen.
+        tier: resultData.result.tier === "extended" ? "extended" : "full",
       });
       router.push("/resultat");
     } catch {

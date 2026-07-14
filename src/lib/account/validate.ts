@@ -17,6 +17,11 @@ export function isValidFactorResult(value: unknown): value is FactorResult {
   );
 }
 
+/** Kun "full" og "extended" er gyldige for lagring på konto -- "free" tilbyr aldri lagring (se resultat/page.tsx). */
+export function isValidAccountTier(value: unknown): value is "full" | "extended" {
+  return value === "full" || value === "extended";
+}
+
 export function isValidFacetResult(value: unknown): value is FacetResult {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;

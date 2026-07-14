@@ -64,8 +64,9 @@ export default function PersonvernPage() {
         <ul className="flex flex-col gap-2 text-ink/80 dark:text-warmgray/80">
           <li>-- Du trenger ingen konto for å ta testen.</li>
           <li>
-            -- De 120 svarene dine i seg selv forlater aldri nettleseren din. Fullfører du hele
-            testen, sendes kun de ferdig beregnede skårene -- helt anonymt -- til en samlet
+            -- De rå svarene dine i seg selv forlater aldri nettleseren din, uansett om du tar
+            korttesten (50), fullversjonen (120) eller Utvidet versjon (290 spørsmål). Fullfører du
+            120 eller 290, sendes kun de ferdig beregnede skårene -- helt anonymt -- til en samlet
             statistikk (se eget avsnitt), i tillegg til det du selv aktivt velger å dele med Spir
             eller ved å lagre resultatet på en konto.
           </li>
@@ -93,11 +94,12 @@ export default function PersonvernPage() {
       <section id="testsvar" className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-ink dark:text-white">Testsvarene dine</h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Svarene du gir i testen -- både korttesten (50 spørsmål) og fullversjonen (120 spørsmål)
-          -- lagres utelukkende lokalt i nettleseren din (såkalt <em>localStorage</em>). De sendes
-          aldri til FemFaktorer sine servere som en del av selve testgjennomføringen. Fullfører du
-          hele testen, sendes de FERDIG BEREGNEDE skårene dine -- helt anonymt -- til et samlet
-          statistikkgrunnlag; se eget avsnitt rett under.
+          Svarene du gir i testen -- korttesten (50 spørsmål), fullversjonen (120) og Utvidet
+          versjon (290) -- lagres utelukkende lokalt i nettleseren din (såkalt{" "}
+          <em>localStorage</em>). De sendes aldri til FemFaktorer sine servere som en del av selve
+          testgjennomføringen. Fullfører du 120 eller 290 spørsmål, sendes de FERDIG BEREGNEDE
+          skårene dine -- helt anonymt -- til et samlet statistikkgrunnlag; se eget avsnitt rett
+          under.
         </p>
         <ul className="flex flex-col gap-2 text-ink/80 dark:text-warmgray/80">
           <li>
@@ -123,8 +125,8 @@ export default function PersonvernPage() {
           FemFaktorer viser i dag resultatet som nivåbånd (f.eks. "Svært tydelig høy"), ikke som et
           eksakt tall -- blant annet fordi vi ennå ikke har et dokumentert normgrunnlag å sammenligne
           med (se metode-og-kilder-siden). For å kunne bygge et slikt normgrunnlag over tid, sender
-          nettleseren din -- KUN når du fullfører hele 120-spørsmålstesten -- de ferdig beregnede
-          skårene dine til en løpende, samlet statistikk.
+          nettleseren din -- KUN når du fullfører fullversjonen (120 spørsmål) eller Utvidet versjon
+          (290 spørsmål) -- de ferdig beregnede skårene dine til en løpende, samlet statistikk.
         </p>
         <ul className="flex flex-col gap-2 text-ink/80 dark:text-warmgray/80">
           <li>
@@ -138,8 +140,10 @@ export default function PersonvernPage() {
             for full åpenhet om hva som faktisk sendes fra nettleseren din.
           </li>
           <li>
-            -- Gjelder kun fullversjonen (120 spørsmål). Korttesten (50 spørsmål) sender ingenting
-            til dette statistikkgrunnlaget.
+            -- Fullversjonen (120 spørsmål) og Utvidet versjon (290 spørsmål) teller i to HELT
+            SEPARATE statistikkgrunnlag, ikke ett felles -- fordi Utvidet versjon har flere
+            spørsmål per underkategori og dermed gir mer pålitelige skårer, som ikke bør blandes med
+            de fra fullversjonen. Korttesten (50 spørsmål) sender ingenting til noen av dem.
           </li>
         </ul>
       </section>
@@ -149,8 +153,9 @@ export default function PersonvernPage() {
           Den valgfrie tilleggsseksjonen (politiske og verdimessige holdninger)
         </h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Etter fullført 120-spørsmålstest kan du velge en helt separat, valgfri tilleggsseksjon om
-          politiske og verdimessige holdninger. Dette regnes som en særlig kategori
+          Etter fullført fullversjon (120 spørsmål) eller Utvidet versjon (290 spørsmål) kan du
+          velge en helt separat, valgfri tilleggsseksjon om politiske og verdimessige holdninger.
+          Dette regnes som en særlig kategori
           personopplysninger etter GDPR artikkel 9, og krever derfor et eget, uttrykkelig samtykke
           -- atskilt fra samtykket for resten av testen. Denne seksjonen teller ikke med i noen av
           de fem hovedfaktorene.
@@ -172,14 +177,16 @@ export default function PersonvernPage() {
           Hvis du lagrer resultatet ditt (konto)
         </h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Hvis du har tatt fullversjonen (120 spørsmål), kan du velge å lagre resultatet ditt
-          knyttet til e-postadressen din, slik at du slipper å ta testen på nytt for å se det igjen
-          -- også fra en annen enhet. Denne funksjonen finnes ikke for korttesten.
+          Hvis du har tatt fullversjonen (120 spørsmål) eller Utvidet versjon (290 spørsmål), kan du
+          velge å lagre resultatet ditt knyttet til e-postadressen din, slik at du slipper å ta
+          testen på nytt for å se det igjen -- også fra en annen enhet. Denne funksjonen finnes ikke
+          for korttesten. Vi lagrer også hvilken av de to versjonene resultatet er basert på, slik
+          at du ser dette igjen når du logger inn.
         </p>
         <ul className="flex flex-col gap-2 text-ink/80 dark:text-warmgray/80">
           <li>
             -- Vi lagrer bare de <strong>ferdig beregnede skårene</strong> dine (de fem
-            hovedfaktorene, fasettene, og ev. tilleggsseksjonen) -- aldri de 120 rå svarene du ga.
+            hovedfaktorene, fasettene, og ev. tilleggsseksjonen) -- aldri de rå svarene du ga.
           </li>
           <li>
             -- Innlogging skjer med en engangskode sendt til e-posten din, ikke passord. Koden

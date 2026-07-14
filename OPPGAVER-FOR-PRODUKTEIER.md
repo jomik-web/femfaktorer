@@ -2,6 +2,10 @@
 
 Sist oppdatert: 14.07.2026
 
+## Utvidet versjon (290 spørsmål) er nå koblet inn (v2.11, 14.07.2026)
+
+Tredje testtrapp er ferdig bygget og koblet inn i hele appen: sjekkpunkt etter 120 spørsmål tilbyr "Utvidet versjon" (alle 290, 10 spørsmål/fasett), resultatsiden viser den på samme måte som fullversjonen (pluss en egen presiseringstekst), Spir og PDF-nedlasting fungerer for begge, og kontolagring viser nå hvilken versjon resultatet er basert på ved gjeninnlogging. Normtall for utvidet versjon samles i en egen, separat pott (ikke blandet med 120-testens), siden skårene er statistisk mer pålitelige. Ingen handling kreves fra deg -- dette er rent kode/produktarbeid.
+
 ## Prisbeslutning (v2.8, notert 14.07.2026 -- ingen kode involvert ennå)
 
 Når betalingsløsning bygges (fortsatt utenfor omfang, se Dokument 07 §9): 120- og 300-spørsmålsversjonen skal koste det samme. Kun testlengde/presisjon skiller dem, ikke pris.

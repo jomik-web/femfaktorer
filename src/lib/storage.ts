@@ -8,8 +8,14 @@
  *  - Systemet skal aldri krasje ved ugyldige lagrede data.
  */
 
-import { ALL_QUESTIONS, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
-import { isValidAnswerValue, type AnswerMap, type FactorResult, type FacetResult } from "@/lib/scoring";
+import { ALL_QUESTIONS_EXTENDED, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
+import {
+  isValidAnswerValue,
+  type AnswerMap,
+  type FactorResult,
+  type FacetResult,
+  type ResultTier,
+} from "@/lib/scoring";
 import { isValidFactorResult, isValidFacetResult } from "@/lib/account/validate";
 
 const STORAGE_KEY = "femfaktorer.korttest.v1";
@@ -19,26 +25,38 @@ const STORAGE_KEY = "femfaktorer.korttest.v1";
 // hele det lagrede settet er identisk med dagens. Dette gjør at en bruker
 // som har stoppet ved 50 av 120 spørsmål ikke mister svarene sine bare fordi
 // det lagrede settet er en delmengde av alle spørsmålene.
-const STORAGE_VERSION = 2;
+// v3 (290-spørsmål-utvidelsen, v2.11): `continuedToFull: boolean` erstattet
+// med `tier: ResultTier`, som nå kan være "free" | "full" | "extended".
+// Gamle v2-lagrede svar avvises rett og slett (samme prinsipp som v1->v2) --
+// brukeren starter da bare på nytt fra begynnelsen, ingen migrering forsøkt.
+const STORAGE_VERSION = 3;
 
 interface StoredPayload {
   version: number;
   answers: AnswerMap;
-  /** Satt når brukeren aktivt har valgt å fortsette forbi de første 50. */
-  continuedToFull?: boolean;
+  /** Hvor langt brukeren aktivt har valgt å fortsette: "free" er default/ikke lagret aktivt. */
+  tier?: ResultTier;
   updatedAt: string;
 }
 
-const currentQuestionIds = new Set(ALL_QUESTIONS.map((q) => q.id));
+function normalizeTier(value: unknown): ResultTier {
+  return value === "full" || value === "extended" ? value : "free";
+}
 
-export function loadAnswers(): { answers: AnswerMap; continuedToFull: boolean } {
-  if (typeof window === "undefined") return { answers: {}, continuedToFull: false };
+// Bruker det STØRSTE gyldige spørsmålssettet (290) som fasit for hvilke
+// spørsmål-id-er som fortsatt regnes som gyldige -- det er en overmengde av
+// både 50-, 120- og 290-settet, så et lagret svar for et hvilket som helst
+// tier valideres korrekt uansett hvor langt brukeren har kommet.
+const currentQuestionIds = new Set(ALL_QUESTIONS_EXTENDED.map((q) => q.id));
+
+export function loadAnswers(): { answers: AnswerMap; tier: ResultTier } {
+  if (typeof window === "undefined") return { answers: {}, tier: "free" };
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { answers: {}, continuedToFull: false };
+    if (!raw) return { answers: {}, tier: "free" };
     const parsed: unknown = JSON.parse(raw);
-    if (!isValidStoredPayload(parsed)) return { answers: {}, continuedToFull: false };
-    if (parsed.version !== STORAGE_VERSION) return { answers: {}, continuedToFull: false };
+    if (!isValidStoredPayload(parsed)) return { answers: {}, tier: "free" };
+    if (parsed.version !== STORAGE_VERSION) return { answers: {}, tier: "free" };
 
     const cleaned: AnswerMap = {};
     for (const [id, value] of Object.entries(parsed.answers)) {
@@ -46,19 +64,19 @@ export function loadAnswers(): { answers: AnswerMap; continuedToFull: boolean } 
         cleaned[id] = value;
       }
     }
-    return { answers: cleaned, continuedToFull: parsed.continuedToFull === true };
+    return { answers: cleaned, tier: normalizeTier(parsed.tier) };
   } catch {
     // Ugyldig/korrupt JSON -- behandles som tom, ikke en krasj.
-    return { answers: {}, continuedToFull: false };
+    return { answers: {}, tier: "free" };
   }
 }
 
-export function saveAnswers(answers: AnswerMap, continuedToFull: boolean): void {
+export function saveAnswers(answers: AnswerMap, tier: ResultTier): void {
   if (typeof window === "undefined") return;
   const payload: StoredPayload = {
     version: STORAGE_VERSION,
     answers,
-    continuedToFull,
+    tier,
     updatedAt: new Date().toISOString(),
   };
   try {
@@ -166,6 +184,12 @@ export interface RestoredAccountResult {
   facets: FacetResult[];
   o6Score: number | null;
   savedAt: string;
+  /**
+   * Hvilken testversjon resultatet er basert på (v2.11). Eldre lagrede
+   * kontoresultater fra før dette feltet fantes, har ikke dette satt --
+   * de behandles som "full" (den eneste tier-en som kunne lagres den gangen).
+   */
+  tier: Extract<ResultTier, "full" | "extended">;
 }
 
 export function saveRestoredAccountResult(result: RestoredAccountResult): void {
@@ -191,7 +215,8 @@ export function loadRestoredAccountResult(): RestoredAccountResult | null {
     if (!Array.isArray(v.facets) || !v.facets.every(isValidFacetResult)) return null;
     if (typeof v.savedAt !== "string") return null;
     const o6Score = typeof v.o6Score === "number" ? v.o6Score : null;
-    return { factors: v.factors, facets: v.facets, o6Score, savedAt: v.savedAt };
+    const tier = v.tier === "extended" ? "extended" : "full";
+    return { factors: v.factors, facets: v.facets, o6Score, savedAt: v.savedAt, tier };
   } catch {
     return null;
   }

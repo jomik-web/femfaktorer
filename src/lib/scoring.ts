@@ -129,13 +129,20 @@ export interface FactorResult {
   score: number;
 }
 
-export type ResultTier = "free" | "full";
+/**
+ * "extended" (v2.11) -- tredje trapp: alle 290 spørsmål (10 per fasett i N/E/A/C,
+ * som kun har 5 fasetter siden O6 holdes utenfor). Samme skåringslogikk som
+ * "full" -- computeTestResult/computeFacetResults er allerede generiske over
+ * `questionSet` sin lengde, så ingen egen gren trengs her. Se questions.ts
+ * (ALL_QUESTIONS_EXTENDED) og test/page.tsx for selve testflyten.
+ */
+export type ResultTier = "free" | "full" | "extended";
 
 export interface TestResult {
   complete: boolean;
   /** Populert bare når complete === true. */
   factors?: FactorResult[];
-  /** "free" = basert på de første 50 (foreløpig), "full" = alle 120 (presist). */
+  /** "free" = basert på de første 50 (foreløpig), "full" = alle 120, "extended" = alle 290 (mest presist). */
   tier?: ResultTier;
   /** Domener som mangler minst ett svar -- brukes til å styre "hopp til ubesvart". */
   incompleteDomains: Domain[];

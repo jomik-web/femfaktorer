@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { readSession, ACCOUNT_SESSION_COOKIE_NAME } from "@/lib/account/session";
 import { accountStore } from "@/lib/account/blobs";
-import { isValidFactorResult, isValidFacetResult } from "@/lib/account/validate";
+import { isValidFactorResult, isValidFacetResult, isValidAccountTier } from "@/lib/account/validate";
 import type { StoredAccountResult } from "@/lib/account/types";
 
 export const runtime = "nodejs";
@@ -11,12 +11,13 @@ interface SaveRequestBody {
   factors: unknown;
   facets: unknown;
   o6Score: unknown;
+  tier: unknown;
 }
 
 /**
  * Lagrer (eller oppdaterer) det innloggede resultatet. Krever gyldig
- * innloggingsøkt -- gjelder KUN den fulle testen, se resultat/page.tsx som
- * bare tilbyr lagring for tier === "full".
+ * innloggingsøkt -- gjelder KUN "full" og "extended" (v2.11), se
+ * resultat/page.tsx som aldri tilbyr lagring for tier === "free".
  */
 export async function POST(request: Request) {
   const cookieStore = await cookies();
@@ -46,11 +47,15 @@ export async function POST(request: Request) {
   if (body.o6Score !== null && typeof body.o6Score !== "number") {
     return NextResponse.json({ error: "Ugyldig tilleggsskår." }, { status: 400 });
   }
+  if (!isValidAccountTier(body.tier)) {
+    return NextResponse.json({ error: "Ugyldig eller manglende tier." }, { status: 400 });
+  }
 
   const record: StoredAccountResult = {
     factors: body.factors,
     facets: body.facets,
     o6Score: (body.o6Score as number | null) ?? null,
+    tier: body.tier,
     savedAt: new Date().toISOString(),
   };
 

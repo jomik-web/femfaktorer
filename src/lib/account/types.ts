@@ -1,15 +1,22 @@
-import type { FactorResult, FacetResult } from "@/lib/scoring";
+import type { FactorResult, FacetResult, ResultTier } from "@/lib/scoring";
 
 /**
  * Det som faktisk lagres per konto (nøklet på e-post i accountStore(), se
  * lib/account/blobs.ts). KUN ferdig beregnede skårer -- se filhode i
- * blobs.ts for personvernbegrunnelsen for hvorfor de 120 rå svarene
+ * blobs.ts for personvernbegrunnelsen for hvorfor de rå svarene
  * bevisst IKKE lagres her.
  */
 export interface StoredAccountResult {
   factors: FactorResult[];
   facets: FacetResult[];
   o6Score: number | null;
+  /**
+   * Hvilken testversjon resultatet er basert på (v2.11) -- "full" (120
+   * spørsmål) eller "extended" (290, "Utvidet versjon"). Vises til brukeren
+   * ved gjeninnlogging, etter produkteiers eksplisitte ønske om at dette
+   * skal fremgå tydelig.
+   */
+  tier: Extract<ResultTier, "full" | "extended">;
   /** ISO 8601-tidspunkt for når resultatet sist ble lagret/oppdatert. */
   savedAt: string;
   /**

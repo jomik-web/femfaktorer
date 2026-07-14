@@ -209,11 +209,15 @@ export const ALL_QUESTIONS: readonly Question[] = [
  * kryssjekket mot IPIP-kilden og oversatt 14.07.2026. Til sammen 170 nye
  * spørsmål (36+36+26+36+36), som sammen med de 120 eksisterende gir 290.
  *
- * IKKE tatt i bruk noe sted ennå (ingen tier-logikk, sjekkpunkt-flyt,
- * scoring- eller UI-endring bygget på dette settet). Selve
- * tier-integrasjonen (koble inn i testflyten, sjekkpunkt etter 120 spørsmål,
- * resultatvisning, kontolagring, Spir, PDF-eksport) er et eget, større
- * steg som ikke er igangsatt -- avklares med produkteier før oppstart.
+ * TIER-INTEGRASJON FULLFØRT (v2.11, 14.07.2026): "extended" er nå et gyldig
+ * ResultTier (se scoring.ts), koblet inn i hele testflyten (test/page.tsx:
+ * nytt sjekkpunkt etter 120, tilbyr "Utvidet versjon"), resultatvisningen
+ * (resultat/page.tsx, delt visning med "full" via `isDetailed`), Spir
+ * (spir/page.tsx, bruker riktig spørsmålssett/tier), kontolagring
+ * (StoredAccountResult har nå `tier`, vises ved gjeninnlogging), PDF-
+ * nedlasting (samme knapp som "full") og en egen, separat normtall-pott
+ * (lib/stats/blobs.ts) siden 10 item/fasett gir mer pålitelige skårer enn
+ * 4-5 og ikke bør blandes med full-testens pott.
  */
 export const EXTENDED_QUESTIONS_N: readonly Question[] = [
   { id: "n1_5", facet: "N1", facetName: "Anxiety", domain: "N", textEn: "Get caught up in my problems.", textNo: "Blir lett oppslukt av egne problemer.", reverse: false, order: 121 },
@@ -424,6 +428,29 @@ export const EXTENDED_QUESTIONS_C: readonly Question[] = [
   { id: "c6_10", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Often make last-minute plans.", textNo: "Legger ofte planer i siste liten.", reverse: true, order: 290 },
 ] as const;
 
+/**
+ * Alle 290 spørsmål (v2.11, tredje trapp -- "Utvidet versjon"). ALL_QUESTIONS
+ * (120) pluss de fem EXTENDED_QUESTIONS_*-blokkene over (170), sortert på
+ * `order` slik at rekkefølgen blir sammenhengende 1-290.
+ *
+ * IKKE jevnt fordelt per domene: N/E/A/C har 6 fasetter x 10 spørsmål = 60
+ * hver, mens Åpenhet (O) kun har 5 fasetter (O6/Liberalism er fortsatt
+ * utelatt, se OPTIONAL_O6_QUESTIONS under) x 10 = 50. Det er forskjellig fra
+ * 120-settet, der O var kunstig jevnet ut til 24 via fire "kompensasjons"-
+ * spørsmål -- her trengs ikke det trikset, siden hver fasett uansett får sine
+ * fulle 10 IPIP-spørsmål. Se assertExtendedQuestionSetIntegrity for vaktposten.
+ */
+export const ALL_QUESTIONS_EXTENDED: readonly Question[] = [
+  ...ALL_QUESTIONS,
+  ...EXTENDED_QUESTIONS_N,
+  ...EXTENDED_QUESTIONS_E,
+  ...EXTENDED_QUESTIONS_O,
+  ...EXTENDED_QUESTIONS_A,
+  ...EXTENDED_QUESTIONS_C,
+]
+  .slice()
+  .sort((a, b) => a.order - b.order);
+
 /** De første 50 (order 1-50) -- det gratis, foreløpige resultatet. */
 export const FREE_QUESTIONS: readonly Question[] = ALL_QUESTIONS.filter(
   (q) => q.order <= FREE_TIER_LENGTH
@@ -527,5 +554,66 @@ export function assertQuestionSetIntegrity(): void {
         `Spørsmålsintegritet brutt: domene ${domain} har ${freeCounts[domain]} spørsmål i gratisversjonen, forventet ${EXPECTED_PER_DOMAIN_FREE}.`
       );
     }
+  }
+}
+
+// Vaktpost for den utvidede 290-versjonen (v2.11) -- EGEN sjekk, siden
+// fordelingen IKKE er jevn som i 120-settet: N/E/A/C har 6 fasetter x 10 = 60
+// hver, Åpenhet (O) har 5 fasetter (O6 utelatt) x 10 = 50. 4x60 + 50 = 290.
+const EXPECTED_TOTAL_EXTENDED = 290;
+const EXPECTED_PER_DOMAIN_EXTENDED: Record<Domain, number> = {
+  N: 60,
+  E: 60,
+  O: 50,
+  A: 60,
+  C: 60,
+};
+
+export function assertExtendedQuestionSetIntegrity(): void {
+  if (ALL_QUESTIONS_EXTENDED.length !== EXPECTED_TOTAL_EXTENDED) {
+    throw new Error(
+      `Forventet ${EXPECTED_TOTAL_EXTENDED} spørsmål totalt i den utvidede versjonen, fant ${ALL_QUESTIONS_EXTENDED.length}.`
+    );
+  }
+  const counts: Record<Domain, number> = { N: 0, E: 0, O: 0, A: 0, C: 0 };
+  const seenIds = new Set<string>();
+  const seenOrders = new Set<number>();
+
+  let previousOrder = 0;
+  for (const q of ALL_QUESTIONS_EXTENDED) {
+    if (seenIds.has(q.id)) throw new Error(`Duplikat spørsmåls-id (utvidet sett): ${q.id}`);
+    seenIds.add(q.id);
+    if (seenOrders.has(q.order)) throw new Error(`Duplikat order-verdi (utvidet sett): ${q.order}`);
+    seenOrders.add(q.order);
+    if (q.order !== previousOrder + 1) {
+      throw new Error(
+        `Order-rekkefølge brutt i det utvidede settet: forventet ${previousOrder + 1}, fant ${q.order}.`
+      );
+    }
+    previousOrder = q.order;
+    counts[q.domain]++;
+  }
+
+  for (const domain of Object.keys(counts) as Domain[]) {
+    if (counts[domain] !== EXPECTED_PER_DOMAIN_EXTENDED[domain]) {
+      throw new Error(
+        `Spørsmålsintegritet brutt (utvidet sett): domene ${domain} har ${counts[domain]} spørsmål, forventet ${EXPECTED_PER_DOMAIN_EXTENDED[domain]}.`
+      );
+    }
+  }
+
+  // De første 120 (etter sortering på order) skal være nøyaktig ALL_QUESTIONS,
+  // uendret -- den utvidede versjonen skal ALDRI endre på hva 120-testen selv
+  // består av, kun legge til bak den.
+  const first120Ids = ALL_QUESTIONS_EXTENDED.slice(0, 120)
+    .map((q) => q.id)
+    .sort();
+  const allQuestionsIds = ALL_QUESTIONS.map((q) => q.id)
+    .slice()
+    .sort();
+  if (JSON.stringify(first120Ids) !== JSON.stringify(allQuestionsIds)) {
+    throw new Error(
+      "Integritetsbrudd: de første 120 spørsmålene i det utvidede settet stemmer ikke overens med ALL_QUESTIONS."
+    );
   }
 }

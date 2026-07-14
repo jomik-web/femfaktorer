@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ALL_QUESTIONS } from "@/data/questions";
+import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED } from "@/data/questions";
 import { computeTestResult, computeFacetResults, type FactorResult, type FacetResult } from "@/lib/scoring";
 import { loadAnswers } from "@/lib/storage";
 
@@ -38,17 +38,21 @@ export default function FemPage() {
 
   useEffect(() => {
     const stored = loadAnswers();
-    // Spir krever alle 120 spørsmål besvart (Grunnlagsdokumentet, beslutning
-    // om 120-utvidelsen) -- et foreløpig 50-resultat er ikke nok.
-    if (!stored.continuedToFull) {
+    // Spir krever minst alle 120 spørsmål besvart (Grunnlagsdokumentet,
+    // beslutning om 120-utvidelsen) -- et foreløpig 50-resultat er ikke nok.
+    // Fra v2.11: bruker det spørsmålssettet og den skåringen som faktisk
+    // matcher brukerens nivå -- "extended" (290) gir Spir mer presise
+    // fasettskårer enn "full" (120), men begge låser opp samtalen likt.
+    if (stored.tier === "free") {
       setLocked(true);
       setHydrated(true);
       return;
     }
-    const result = computeTestResult(stored.answers, ALL_QUESTIONS, "full");
+    const questionSet = stored.tier === "extended" ? ALL_QUESTIONS_EXTENDED : ALL_QUESTIONS;
+    const result = computeTestResult(stored.answers, questionSet, stored.tier);
     if (result.complete && result.factors) {
       setFactors(result.factors);
-      setFacets(computeFacetResults(stored.answers, ALL_QUESTIONS));
+      setFacets(computeFacetResults(stored.answers, questionSet));
     } else {
       setLocked(true);
     }

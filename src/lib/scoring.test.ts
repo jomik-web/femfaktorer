@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { ALL_QUESTIONS, FREE_QUESTIONS, assertQuestionSetIntegrity } from "@/data/questions";
+import {
+  ALL_QUESTIONS,
+  ALL_QUESTIONS_EXTENDED,
+  FREE_QUESTIONS,
+  assertQuestionSetIntegrity,
+  assertExtendedQuestionSetIntegrity,
+} from "@/data/questions";
 import {
   scoreItem,
   computeDomainRawScores,
@@ -54,6 +60,40 @@ describe("questions.ts (120-spørsmål-utvidelsen)", () => {
 
   it("assertQuestionSetIntegrity() kaster ikke feil for gjeldende datasett", () => {
     expect(() => assertQuestionSetIntegrity()).not.toThrow();
+  });
+});
+
+describe("questions.ts (utvidet 290-spørsmål-versjon, v2.11)", () => {
+  it("har nøyaktig 290 spørsmål, 60 per domene unntatt Åpenhet (50)", () => {
+    const counts: Record<string, number> = {};
+    for (const q of ALL_QUESTIONS_EXTENDED) counts[q.domain] = (counts[q.domain] ?? 0) + 1;
+    expect(ALL_QUESTIONS_EXTENDED.length).toBe(290);
+    expect(counts).toEqual({ N: 60, E: 60, O: 50, A: 60, C: 60 });
+  });
+
+  it("har unike id-er og en sammenhengende order-rekkefølge 1-290", () => {
+    const ids = new Set(ALL_QUESTIONS_EXTENDED.map((q) => q.id));
+    const orders = ALL_QUESTIONS_EXTENDED.map((q) => q.order).sort((a, b) => a - b);
+    expect(ids.size).toBe(290);
+    expect(orders).toEqual(Array.from({ length: 290 }, (_, i) => i + 1));
+  });
+
+  it("de første 120 (etter order) er identiske med ALL_QUESTIONS -- utvidelsen endrer ikke 120-testen", () => {
+    const first120Ids = ALL_QUESTIONS_EXTENDED.slice(0, 120)
+      .map((q) => q.id)
+      .sort();
+    const allQuestionsIds = ALL_QUESTIONS.map((q) => q.id)
+      .slice()
+      .sort();
+    expect(first120Ids).toEqual(allQuestionsIds);
+  });
+
+  it("inneholder ingen O6-item (Liberalism er utelatt av personvernhensyn)", () => {
+    expect(ALL_QUESTIONS_EXTENDED.some((q) => q.facet === "O6")).toBe(false);
+  });
+
+  it("assertExtendedQuestionSetIntegrity() kaster ikke feil for gjeldende datasett", () => {
+    expect(() => assertExtendedQuestionSetIntegrity()).not.toThrow();
   });
 });
 
@@ -180,6 +220,25 @@ describe("computeTestResult -- full test (alle 120)", () => {
         "Åpenhet for erfaring",
       ].sort()
     );
+  });
+});
+
+describe("computeTestResult -- utvidet test (alle 290, v2.11)", () => {
+  it("beregner alle fem faktorer og setter tier: 'extended' når alle 290 er fullført", () => {
+    const result = computeTestResult(fillAll(ALL_QUESTIONS_EXTENDED, 3), ALL_QUESTIONS_EXTENDED, "extended");
+    expect(result.complete).toBe(true);
+    expect(result.tier).toBe("extended");
+    for (const f of result.factors!) {
+      expect(f.score).toBe(50);
+    }
+  });
+});
+
+describe("computeFacetResults -- utvidet test (v2.11)", () => {
+  it("gir 29 fasetter med 10 spørsmål bak hver (unntatt Åpenhet-fasettene, som har 10 hver de også)", () => {
+    const results = computeFacetResults(fillAll(ALL_QUESTIONS_EXTENDED, 3), ALL_QUESTIONS_EXTENDED);
+    expect(results).toHaveLength(29);
+    expect(results.some((f) => f.facet === "O6")).toBe(false);
   });
 });
 
