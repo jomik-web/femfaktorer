@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/slik-fungerer", label: "Slik fungerer det" },
-  { href: "/om-femfaktormodellen", label: "Om femfaktormodellen" },
-  { href: "/metode-og-kilder", label: "Metode og kilder" },
+  // v2.5: /om-femfaktormodellen og /metode-og-kilder er slått sammen inn i
+  // /slik-fungerer ("Om FemFaktorer") -- se redirect-filene i de gamle
+  // mappene. Personvern flyttet til egen, fullstendig side.
+  { href: "/slik-fungerer", label: "Om FemFaktorer" },
+  { href: "/personvern", label: "Personvern" },
   { href: "/hjelp", label: "Hjelp" },
   // Lagret fullversjon-resultat (v2.4) -- gjelder kun fulltesten, se resultat/page.tsx.
   { href: "/logg-inn", label: "Logg inn" },

@@ -1,6 +1,9 @@
+import Link from "next/link";
+
 /**
  * Innhold basert på Dokument 04: GLOBAL-002, KORTTEST-006, RESULTAT-006/007,
- * AI-005, AI-006.
+ * AI-005, AI-006. Lenker til /personvern (v2.5) for den fullstendige
+ * oversikten i stedet for å gjenta alt her.
  */
 export default function HjelpPage() {
   return (
@@ -19,6 +22,13 @@ export default function HjelpPage() {
           Svarene dine lagres bare i denne nettleseren (lokalt på enheten din), ikke hos
           FemFaktorer. Du trenger ingen konto for å ta testen. Du kan slette dataene dine når som
           helst fra resultatsiden.
+        </p>
+        <p className="text-sm text-ink/60 dark:text-warmgray/60">
+          Full oversikt, inkludert cookies og hvilke tjenester som er involvert:{" "}
+          <Link href="/personvern" className="text-teal underline underline-offset-2">
+            se personvernsiden
+          </Link>
+          .
         </p>
       </section>
 
