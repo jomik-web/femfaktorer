@@ -14,7 +14,16 @@ const ABSOLUTE_PATTERNS: RegExp[] = [
   /\bbeviser\b/i,
   /\bhundre ?prosent\b/i,
   /\bgarantert\b/i,
-  /\bdu er\b/i, // "du er X" er ofte en kategorisk identitetspåstand -- ønsket språk er "dette kan tyde på..."
+  // v2.14 (15.07.2026, feilrettet): opprinnelig /\bdu er\b/i var altfor bred --
+  // "du er" er en helt vanlig, ufarlig konstruksjon i naturlig norsk
+  // ("du er inne på noe", "du er nysgjerrig på det") og traff nesten ethvert
+  // ekte Spir-svar, slik at fallback-meldingen ble vist for praktisk talt
+  // hver eneste melding. Innsnevret til den grammatiske formen som faktisk
+  // kjennetegner en kategorisk identitetspåstand: "du er en/et/ei X"
+  // (f.eks. "du er en introvert", "du er et unntak"). Den mer generelle
+  // tonekravet ("aldri bastant, aldri en identitetspåstand") håndheves nå i
+  // tillegg av systemprompt-regel §3/§7 -- se systemPrompt.ts.
+  /\bdu er (en|et|ei)\s+\w+/i,
   /\bdiagnos/i,
 ];
 
