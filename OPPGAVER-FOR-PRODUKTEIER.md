@@ -2,6 +2,12 @@
 
 Sist oppdatert: 15.07.2026
 
+## Nytt: synlige svarsett-knapper for betatestere + kontolagring på pause (v2.16, 15.07.2026)
+
+Etter ditt ønske: resultatsiden har nå to synlige knapper -- "Last ned svarene som CSV" og "Last opp et svarsett" -- tilgjengelig for alle betatestere, ikke bare deg. Tanken er at betatestere slipper å svare på alle 290 spørsmålene på nytt hver gang testen oppdateres: de laster ned svarene sine én gang, og laster dem opp igjen etter en oppdatering for å se resultatet med det samme. Knappene vises både når resultatet er ferdig, og på "ingen fullført test funnet"-siden. Alt styres fra én fil (`src/lib/featureFlags.ts`) -- når betatestingen er over, fjerner dere hele funksjonen ved å sette `BETA_ANSWER_SET_TOOLS_ENABLED = false` der (koden ligger fortsatt igjen til dere evt. vil bruke den senere).
+
+Samtidig er kontolagring (innlogging med e-postkode, "lagre resultatet mitt", `/logg-inn`) satt PÅ PAUSE -- etter ditt ønske, siden dere nå primært jobber med språk og tilbakemeldinger, ikke kontofunksjonen. Lenken til innlogging er fjernet fra bunnteksten, lagre-seksjonen er skjult på resultatsiden, og selve `/logg-inn`-siden viser en forklarende melding i stedet for skjemaet (i tilfelle noen har den bokmerket). Ingen data er slettet, og ingenting er fjernet fra koden -- reaktiver ved å sette `ACCOUNT_SAVE_ENABLED = true` i samme fil når dere vil ta den i bruk igjen. Merk: noen tekster på f.eks. `/hjelp` og `/personvern` nevner fortsatt innlogging -- ikke rettet i denne runden, siden det er ren tekst og ikke en funksjon som faktisk kan brukes akkurat nå.
+
 ## Fikset: Spir svarte alltid det samme (v2.14, 15.07.2026)
 
 Den tekniske tonesjekken for Spir sine svar (som skal hindre bastante/kategoriske påstander) hadde et mønster (`du er X`) som var altfor bredt og traff nesten alle ekte svar -- derfor viste Spir fallback-meldingen uansett hva du spurte om. Innsnevret til den grammatiske formen som faktisk er en identitetspåstand ("du er en/et X"), og styrket systemprompten med samme regel. Testet mot flere realistiske setninger. Ingen handling kreves fra deg -- husk bare å `git push` som vanlig.

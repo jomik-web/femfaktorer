@@ -32,6 +32,8 @@ import {
 } from "@/data/combinationInsights";
 import { computeAccountResultExpiry } from "@/lib/account/types";
 import { buildFacetDrivenOverview } from "@/data/domainComposition";
+import { ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
+import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
 
 const DISPLAY_TO_DOMAIN: Record<DisplayFactor, Domain> = Object.fromEntries(
   (Object.entries(DOMAIN_TO_DISPLAY) as [Domain, DisplayFactor][]).map(([domain, display]) => [display, domain])
@@ -116,7 +118,7 @@ export default function ResultatPage() {
   // Sjekk innloggingsstatus -- kun relevant (og kun spurt om) for full/extended-
   // testen, se produkteiers krav om at korttesten ikke skal tilby lagring.
   useEffect(() => {
-    if (tier === "free" || tier === null) return;
+    if (!ACCOUNT_SAVE_ENABLED || tier === "free" || tier === null) return;
     let cancelled = false;
     fetch("/api/account/me")
       .then((res) => res.json())
@@ -147,6 +149,15 @@ export default function ResultatPage() {
         <Link href="/test" className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white">
           Gå til testen
         </Link>
+        {BETA_ANSWER_SET_TOOLS_ENABLED && (
+          <div className="mt-4 flex w-full flex-col items-center gap-3 border-t border-warmgray pt-6 dark:border-white/10">
+            <p className="text-sm text-ink/60 dark:text-warmgray/60">
+              Har du tatt testen før og lastet ned svarene dine? Last dem opp for å se resultatet
+              med én gang, uten å svare på nytt.
+            </p>
+            <AnswerSetCsvPanel afterImport="reload" hideDownload />
+          </div>
+        )}
       </main>
     );
   }
@@ -492,7 +503,20 @@ export default function ResultatPage() {
         </section>
       )}
 
-      {isDetailed && accountChecked && (
+      {BETA_ANSWER_SET_TOOLS_ENABLED && (
+        <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+          <h2 className="font-semibold text-ink dark:text-white">Betatest: ta vare på svarene dine</h2>
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
+            Testen kan bli oppdatert innimellom mens vi jobber videre med FemFaktorer. Last ned
+            svarene dine som en fil nå, så slipper du å svare på alt på nytt etter en oppdatering
+            -- last filen opp igjen her for å se resultatet med én gang. Denne muligheten fjernes
+            igjen når betatestingen er ferdig.
+          </p>
+          <AnswerSetCsvPanel afterImport="reload" />
+        </section>
+      )}
+
+      {ACCOUNT_SAVE_ENABLED && isDetailed && accountChecked && (
         <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
           <h2 className="font-semibold text-ink dark:text-white">Lagre resultatet ditt</h2>
           {isRestored && (

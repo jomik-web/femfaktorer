@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveRestoredAccountResult } from "@/lib/storage";
+import { ACCOUNT_SAVE_ENABLED } from "@/lib/featureFlags";
 
 type Step = "email" | "code";
 
@@ -25,6 +26,31 @@ export default function LoggInnPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  // Kontolagring er midlertidig satt på pause under betatesting (v2.16, se
+  // lib/featureFlags.ts) -- vis en forklarende melding i stedet for
+  // skjemaet, i tilfelle noen har denne siden bokmerket fra før.
+  if (!ACCOUNT_SAVE_ENABLED) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
+        <header className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold text-ink dark:text-white">Logg inn</h1>
+          <p className="text-ink/70 dark:text-warmgray/70">
+            Innlogging og kontolagring er satt på pause under betatestingen -- vi jobber nå
+            primært med språket i tilbakemeldingene og med Spir-samtalen. Vil du unngå å svare på
+            alt på nytt etter en oppdatering, kan du i stedet laste ned svarene dine som en fil på
+            resultatsiden, og laste den opp igjen senere.
+          </p>
+        </header>
+        <Link href="/resultat" className="rounded-lg bg-teal px-5 py-2.5 text-center font-medium text-white">
+          Gå til resultatsiden
+        </Link>
+        <Link href="/" className="text-sm text-ink/60 underline underline-offset-2 dark:text-warmgray/60">
+          Tilbake til forsiden
+        </Link>
+      </main>
+    );
+  }
 
   async function requestCode(e: FormEvent) {
     e.preventDefault();

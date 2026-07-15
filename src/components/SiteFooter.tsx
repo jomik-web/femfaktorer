@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ACCOUNT_SAVE_ENABLED } from "@/lib/featureFlags";
 
 const LINKS = [
   // v2.5: /om-femfaktormodellen og /metode-og-kilder er slått sammen inn i
@@ -10,8 +11,10 @@ const LINKS = [
   { href: "/slik-fungerer", label: "Om FemFaktorer" },
   { href: "/personvern", label: "Personvern" },
   { href: "/hjelp", label: "Hjelp" },
-  // Lagret fullversjon-resultat (v2.4) -- gjelder kun fulltesten, se resultat/page.tsx.
-  { href: "/logg-inn", label: "Logg inn" },
+  // Lagret fullversjon-resultat (v2.4) -- gjelder kun fulltesten, se
+  // resultat/page.tsx. Skjules midlertidig når ACCOUNT_SAVE_ENABLED er
+  // slått av (v2.16, se lib/featureFlags.ts).
+  ...(ACCOUNT_SAVE_ENABLED ? [{ href: "/logg-inn", label: "Logg inn" }] : []),
 ];
 
 /**
