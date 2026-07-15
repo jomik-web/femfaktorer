@@ -203,9 +203,13 @@ export function parseAnswerSetCsv(raw: string): ParseAnswerSetResult {
   const delimiter = semiCount >= commaCount ? ";" : ",";
 
   const rows = splitCsv(bodyText, delimiter).filter((r) => r.some((c) => c.trim().length > 0));
-  if (rows.length === 0) return { ok: false, error: "Fant ingen data i filen." };
+  // `rows.length === 0`-sjekken over narrower ikke rows[0] sin type (kjent
+  // TS-begrensning) -- med noUncheckedIndexedAccess må selve indekseringen
+  // sjekkes eksplisitt, ikke bare lengden på arrayet.
+  const headerRow = rows[0];
+  if (!headerRow) return { ok: false, error: "Fant ingen data i filen." };
 
-  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const header = headerRow.map((h) => h.trim().toLowerCase());
   const idCol = header.indexOf("id");
   const sectionCol = header.indexOf("section");
   const svarCol = header.indexOf("svar");
