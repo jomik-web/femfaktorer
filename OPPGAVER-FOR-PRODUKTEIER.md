@@ -1,6 +1,14 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 14.07.2026
+Sist oppdatert: 15.07.2026
+
+## Fikset: Spir svarte alltid det samme (v2.14, 15.07.2026)
+
+Den tekniske tonesjekken for Spir sine svar (som skal hindre bastante/kategoriske påstander) hadde et mønster (`du er X`) som var altfor bredt og traff nesten alle ekte svar -- derfor viste Spir fallback-meldingen uansett hva du spurte om. Innsnevret til den grammatiske formen som faktisk er en identitetspåstand ("du er en/et X"), og styrket systemprompten med samme regel. Testet mot flere realistiske setninger. Ingen handling kreves fra deg -- husk bare å `git push` som vanlig.
+
+## Nytt: last ned/last opp et fast svarsett til testing (v2.15, 15.07.2026)
+
+Egen, skjult verktøyside på `/verktoy/svardata` (ikke lenket noe sted i menyen) der du kan laste ned alle svarene du har gitt akkurat nå som en CSV-fil, og laste den samme (eller en du har redigert for hånd i Excel) inn igjen senere -- du sendes da rett til resultatsiden, som om testen nettopp var fullført. Tanken er at du kan bygge deg faste svarsett (f.eks. "typisk høy N-profil") og bruke dem til å teste rapporttekst og Spir-samtale mot et kjent, uforandret svarsett mens resten av tjenesten fortsatt endrer seg under utviklingen. Filen åpnes direkte i norsk-språklig Excel (semikolon-skilt, riktig æøå). Ingen handling kreves fra deg nå -- bruk siden når du vil lage et testsett.
 
 ## Utvidet versjon (290 spørsmål) er nå koblet inn (v2.11, 14.07.2026)
 
