@@ -127,6 +127,8 @@ export const INTERPRETATIONS: Copy = {
         "Definerte oppgaver og velprøvde metoder passer godt for deg -- roller med tydelige rammer, som drift, forvaltning eller fagområder med etablert praksis, kan kjennes trygge og oversiktlige. Skal du inn i en mer nyskapende rolle, kan det hjelpe å bevisst trene på å tåle usikkerhet i en periode.",
       relationshipNote:
         "I en kjæreste- eller samboerrelasjon setter du pris på faste rammer og et rolig tempo -- en partner som deler eller respekterer det, matcher deg som regel godt. Blant venner er det ofte de faste, langvarige vennskapene du verdsetter mest, fremfor stadig nye bekjentskaper.",
+      synthesis:
+        "Det konkrete og velprøvde tiltrekker deg tydelig mer enn det uprøvde -- du velger gjerne metoder som allerede har vist seg å fungere, holder deg til en kjent rute på ferie, og bruker sjelden mye tid på kunst eller teori for teoriens skyld. Denne forankringen i det kjente gjør deg praktisk og forutsigbar å samarbeide med, siden andre som regel vet hvor de har deg -- men et prosjekt uten fasit, eller en omstilling du ikke har bedt om, krever gjerne en bevisst innsats for å legge vante løsninger til side. På jobben handler dette ofte om å få ting unnagjort fremfor å utforske alternativer først, og roller med tydelige rammer -- drift, forvaltning, fagområder med etablert praksis -- kjennes gjerne tryggere for deg enn en nyskapende rolle. I relasjoner veier stabilitet tyngre enn spenning: en partner som deler eller respekterer et rolig tempo passer deg som regel godt, og blant venner er det ofte de faste, langvarige vennskapene du verdsetter mest.",
     },
     mid: {
       overview:
@@ -138,6 +140,8 @@ export const INTERPRETATIONS: Copy = {
         "Du takler både strukturerte oppgaver og mer utforskende arbeidsformer rimelig greit, og passer derfor inn i mange typer roller -- fra jobber med faste rammer til oppgaver som krever litt nytenkning underveis.",
       relationshipNote:
         "Sammen med en partner beveger du deg naturlig mellom det kjente og det nye, og tilpasser deg gjerne den andres behov for stabilitet eller variasjon underveis.",
+      synthesis:
+        "Du beveger deg naturlig mellom det kjente og det nye -- byr en anledning seg, blir du gjerne med på noe nytt, uten at du aktivt søker det uprøvde hele tiden. Denne fleksibiliteten gjør deg tilpasningsdyktig i de fleste sammenhenger, men det kan være vanskelig å vite i farten om du egentlig lengter etter noe nytt, eller bare er vant til å tenke at du burde. Privat varierer interessene dine gjerne med hvem du er sammen med, og på jobben takler du rutinepregede og kreative oppgaver omtrent like godt -- en allsidighet som passer inn i mange typer roller, fra faste rammer til oppgaver som krever litt nytenkning underveis. Sammen med en partner beveger du deg på samme måte naturlig mellom det kjente og det nye, og tilpasser deg gjerne den andres behov for stabilitet eller variasjon underveis.",
     },
     high: {
       overview:
@@ -149,6 +153,8 @@ export const INTERPRETATIONS: Copy = {
         "Roller som gir rom for nytenkning, utforsking eller kreativt arbeid passer godt for deg. Sterkt rutinepregede stillinger kan over tid oppleves lite stimulerende, siden trangen til å utforske noe nytt melder seg uansett hvor du er.",
       relationshipNote:
         "I en kjæreste- eller samboerrelasjon fungerer det som regel best med en partner som tåler, eller helst deler, interessen din for det nye og uprøvde -- trygghet handler mer om felles utforsking for deg enn om fast forutsigbarhet. Blant venner trekkes du mot dem som byr på nye perspektiver.",
+      synthesis:
+        "Nye ideer, inntrykk og perspektiver tiltrekker deg tydelig -- det viser seg gjerne som interesse for kunst, en uvant idé, eller et sted du ikke kjenner fra før, og som en vane med å stille spørsmål ved det andre tar for gitt. Nysgjerrigheten din gjør deg kreativ og til en pådriver når noe faktisk trenger å tenkes nytt, men ren gjentakelse og stor forutsigbarhet er situasjoner der den samme trangen til det nye lett kan oppleves som utålmodighet, både for deg selv og andre rundt deg. På jobben er det ofte du som foreslår en annen løsning enn den vante, og roller som gir rom for nytenkning, utforsking eller kreativt arbeid passer deg godt -- sterkt rutinepregede stillinger kan over tid kjennes lite stimulerende. I en kjæreste- eller samboerrelasjon fungerer det som regel best med en partner som tåler, eller helst deler, interessen din for det nye og uprøvde, og blant venner trekkes du gjerne mot dem som byr på nye perspektiver.",
     },
   },
   conscientiousness: {
@@ -203,6 +209,8 @@ export const INTERPRETATIONS: Copy = {
         "Roller med mer selvstendig arbeid, dybdefokus og færre avbrytelser passer godt for deg. Åpne kontorlandskap, eller jobber med mye uforutsigbar sosial kontakt, kan tappe mer energi enn de gir tilbake.",
       relationshipNote:
         "Du trives best med noen få nære relasjoner fremfor et stort nettverk. En partner som respekterer behovet ditt for egen tid, og venner som forstår at du trenger ro innimellom, passer deg som regel godt.",
+      synthesis:
+        "Ro og egen tid gir deg mer energi enn store forsamlinger av mennesker -- du foretrekker én-til-én-samtaler fremfor store selskaper, og trenger tid alene for å lade opp etter en sosial dag. Denne preferansen for ro gir deg godt fokus og evne til dypere konsentrasjon uten å bli avledet av det som skjer rundt deg, men mye sosial energi over tid -- nettverksbygging, store arrangementer -- kan kjennes tyngre å holde ut i enn for andre. På jobben presterer du gjerne best med færre avbrytelser og mer skjermet tid, og roller med selvstendig arbeid og dybdefokus passer deg bedre enn åpne kontorlandskap eller mye uforutsigbar sosial kontakt. Du trives best med noen få nære relasjoner fremfor et stort nettverk -- en partner som respekterer behovet ditt for egen tid, og venner som forstår at du trenger ro innimellom, passer deg som regel godt.",
     },
     mid: {
       overview:
@@ -214,6 +222,8 @@ export const INTERPRETATIONS: Copy = {
         "Du fungerer godt både i team og med selvstendig arbeid, og tilpasser deg derfor ulike arbeidsmiljøer uten at det ene tapper deg mer enn det andre.",
       relationshipNote:
         "Sosial energi varierer fra dag til dag for deg, og du finner som regel selv en rimelig balanse mellom samvær med partner og venner, og egen tid.",
+      synthesis:
+        "Sosialt selskap og egen tid deler plassen ganske jevnt i livet ditt, uten at det ene klart dominerer -- du blir gjerne med på sosiale ting, men setter også pris på en kveld helt alene uten at det føles som noe savn. Denne vekslingen gjør deg fleksibel i de fleste sosiale situasjoner, men det kan være vanskelig å kjenne etter i farten om det egentlig er ro eller selskap du trenger mest. Privat varierer energien din en del fra dag til dag; på jobben fungerer du godt både i team og med selvstendig arbeid, og tilpasser deg dermed ulike arbeidsmiljøer uten at det ene tapper deg mer enn det andre. Sosial energi varierer på samme måte fra dag til dag i relasjonene dine, og du finner som regel selv en rimelig balanse mellom samvær med partner og venner, og egen tid.",
     },
     high: {
       overview:
@@ -225,6 +235,8 @@ export const INTERPRETATIONS: Copy = {
         "Arbeid der du får møte mennesker, samarbeide, påvirke eller formidle -- som salg, prosjektledelse eller kundekontakt -- gir deg ofte energi i stedet for å tappe deg. Dager med variasjon og jevnlig kontakt med andre passer deg bedre enn lange strekk med stillesittende arbeid alene.",
       relationshipNote:
         "Du trives som regel best når det skjer noe sammen med andre -- en middag med venner, en tur, en spontan plan. En partner som setter pris på, eller i det minste forstår, behovet ditt for et aktivt sosialt liv, passer deg godt. Venner og familie er ofte en viktig kilde til energi og gode opplevelser for deg.",
+      synthesis:
+        "Du får tydelig energi av mennesker, og merker det raskt når det skjer noe rundt deg -- det faller naturlig for deg å ta kontakt først, presentere deg for noen du ikke kjenner, eller foreslå at gruppen gjør noe sammen i stedet for å vente og se. Den sosiale energien din smitter lett over på andre, og du blir ofte den som drar i gang driv og stemning i en gruppe -- baksiden er at det kan bli fristende å fylle kalenderen litt for mye, og en helg uten planer kan kjennes tommere for deg enn for mange andre. På jobben bidrar du ofte til liv, fremdrift og engasjement i møter og prosjekter, og arbeid der du får møte mennesker, samarbeide eller formidle -- som salg, prosjektledelse eller kundekontakt -- gir deg gjerne energi i stedet for å tappe deg. Du trives som regel best når det skjer noe sammen med andre, enten det er en middag med venner eller en spontan plan, og en partner som setter pris på -- eller i det minste forstår -- behovet ditt for et aktivt sosialt liv, passer deg godt.",
     },
   },
   agreeableness: {
@@ -238,6 +250,8 @@ export const INTERPRETATIONS: Copy = {
         "Roller som krever tøffe forhandlinger, tydelige beslutninger, eller å stå alene i uenighet, passer ofte godt for deg. I team med mye samarbeid kan det være nyttig å bevisst løfte frem andres perspektiv, selv når du er trygg på ditt eget.",
       relationshipNote:
         "Du setter grenser tydelig overfor en partner eller venner, noe som kan være en styrke. Nære relasjoner trenger likevel av og til at du bevisst viser fram at du bryr deg, ikke bare at du har rett.",
+      synthesis:
+        "Egne vurderinger veier tungt hos deg, også når de støter mot det andre mener -- du sier tydelig fra når du er uenig, og forhandler hardt når det trengs. Denne tydeligheten gjør deg god til å sette grenser og stå støtt i konflikt når det faktisk er nødvendig, men tett samarbeid kan dra nytte av at du bevisst løfter frem den andre partens perspektiv, selv når du er trygg på ditt eget. På jobben er det ofte du som utfordrer beslutninger andre ikke våger å stille spørsmål ved, og roller som krever tøffe forhandlinger eller tydelige beslutninger passer deg derfor godt. Du setter grenser tydelig overfor en partner eller venner, noe som kan være en styrke i seg selv -- men nære relasjoner trenger av og til at du bevisst viser at du bryr deg, ikke bare at du har rett.",
     },
     mid: {
       overview:
@@ -249,6 +263,8 @@ export const INTERPRETATIONS: Copy = {
         "Du tilpasser samarbeidsstilen din etter hvem du jobber med, og fungerer derfor rimelig godt i de fleste team -- verken for ettergivende eller for konfronterende.",
       relationshipNote:
         "Du gir og tar omtrent i lik grad i relasjoner, avhengig av situasjonen -- en balansert stil som en partner eller venner som regel opplever som rimelig.",
+      synthesis:
+        "Egne og andres behov teller omtrent likt for deg, avhengig av situasjonen du står i -- du gir deg gjerne i en diskusjon den ene dagen og holder på ditt den neste, uten noe fast mønster. Denne jevne vektingen gjør deg til en forutsigbar og rettferdig samarbeidspartner, men utfordringen kan være å skjønne i farten når du egentlig burde sette deg selv først -- eller omvendt. På jobben tilpasser du samarbeidsstilen din etter hvem du jobber med, og fungerer derfor rimelig godt i de fleste team -- verken for ettergivende eller for konfronterende. Du gir og tar omtrent i lik grad i relasjoner også, avhengig av situasjonen -- en balansert stil som en partner eller venner som regel opplever som rimelig.",
     },
     high: {
       overview:
@@ -260,6 +276,8 @@ export const INTERPRETATIONS: Copy = {
         "Du er en verdsatt samarbeidspartner i team, men risikerer å ta på deg mer enn du burde for å hjelpe andre. Bevisst grensesetting på jobb kan derfor være ekstra viktig for deg.",
       relationshipNote:
         "En partner eller venner lener seg gjerne på deg som en varm og støttende person å ha rundt seg. Pass på at det ikke går på bekostning av dine egne behov i det lange løp.",
+      synthesis:
+        "Andres behov opptar en stor plass hos deg, og du finner ofte glede i å hjelpe -- du sier gjerne ja når noen ber om hjelp, selv når det koster deg noe, og velger heller å unngå konflikt enn å skape uenighet. Andre lener seg gjerne på deg som en varm, tillitsvekkende samarbeidspartner nettopp derfor, men å sette grenser kan bli vanskeligere med det samme trekket, selv når det går ut over deg selv. På jobben tar du ofte på deg mer enn du burde for å hjelpe andre, og selv om du er en verdsatt samarbeidspartner i team, kan bevisst grensesetting derfor være ekstra viktig for deg. Privat bruker du mye energi på å unngå at noen blir skuffet, og en partner eller venner lener seg gjerne på deg som en varm og støttende person å ha rundt seg -- pass på at det ikke går på bekostning av dine egne behov i det lange løp.",
     },
   },
   stability: {
@@ -273,6 +291,8 @@ export const INTERPRETATIONS: Copy = {
         "Høyt tempo, stramme tidsfrister og mye uforutsigbarhet i jobben kan kjennes tyngre for deg enn for mange andre. Roller med noe mer forutsigbarhet, og støtte fra kolleger eller leder, kan gjøre stor forskjell.",
       relationshipNote:
         "Forutsigbarhet og tydelig kommunikasjon fra en partner og nære venner hjelper deg å kjenne deg trygg. Det kan være verdt å være åpen om hva som skaper uro for deg, slik at de rundt deg kan møte det.",
+      synthesis:
+        "Bekymring, uro og humørsvingninger rammer deg noe hardere enn mange andre i perioder -- smått kan vokse seg stort i tankene dine, og humøret ditt kan svinge en del i løpet av én og samme dag. Denne følsomheten betyr også at du er følelsesmessig oppmerksom og legger merke til nyanser i stemninger som andre overser, men i stressende perioder er det ekstra viktig for deg å ha noen faste holdepunkter -- rutiner, mennesker eller steder -- som hjelper deg å roe deg selv ned. På jobben kjennes press og tidsfrister ofte tyngre enn de ser ut til for andre, og roller med noe mer forutsigbarhet, sammen med støtte fra kolleger eller leder, kan gjøre stor forskjell. Forutsigbarhet og tydelig kommunikasjon fra en partner og nære venner hjelper deg å kjenne deg trygg, og det kan være verdt å være åpen om hva som skaper uro for deg, slik at de rundt deg kan møte det.",
     },
     mid: {
       overview:
@@ -284,6 +304,8 @@ export const INTERPRETATIONS: Copy = {
         "Du tåler et visst arbeidspress uten at det går nevneverdig utover deg, men flere krevende ting samtidig kan likevel kjennes tyngre. Faste rutiner på jobb kan være en nyttig støtte i travle perioder.",
       relationshipNote:
         "Du er som regel den nokså rolige i opp- og nedturer sammen med en partner eller venner, uten at det betyr at ingenting berører deg.",
+      synthesis:
+        "Livets opp- og nedturer håndteres med en ganske jevn linje hos deg -- du blir litt stresset eller nedfor når noe faktisk er krevende, men det tar sjelden overhånd eller varer unødvendig lenge. Denne jevne linjen gir deg en solid, stabil grunnmur å møte hverdagen fra, men er flere ting krevende samtidig, eller varer presset lenge, kan det likevel være nyttig å ha noen faste rutiner å støtte deg på. På jobben tåler du et visst arbeidspress uten at det går nevneverdig utover deg, selv om flere krevende ting samtidig kan kjennes tyngre -- faste rutiner kan da være en nyttig støtte i travle perioder. Du er som regel den nokså rolige i opp- og nedturer sammen med en partner eller venner også, uten at det betyr at ingenting berører deg.",
     },
     high: {
       overview:
@@ -295,6 +317,8 @@ export const INTERPRETATIONS: Copy = {
         "Du takler press og uforutsigbarhet bedre enn mange andre, noe som kan gjøre deg til en verdifull ressurs i krevende eller krisepregede roller. Vær samtidig oppmerksom på at det samme trekket kan gjøre deg mindre lydhør for tidlige varselsignaler.",
       relationshipNote:
         "Du er gjerne den stødige når en partner eller venner går gjennom noe vanskelig. Pass på at de som reagerer sterkere enn deg, ikke opplever at bekymringene deres blir avfeid.",
+      synthesis:
+        "Stress og motgang preller lettere av deg enn hos mange andre, selv når mye skjer samtidig -- andre kommer gjerne til deg når noe er vanskelig, fordi du sjelden virker overveldet, og kritikk tar sjelden tak i deg over lang tid. Roen din gjør deg til en stødig støtte for andre i krevende situasjoner, og gir deg selv ro til å tenke klart under press, men reell risiko og tidlige varselsignaler er noe det samme trekket kan gjøre deg mindre oppmerksom på. På jobben er du gjerne den som holder hodet kaldt når andre stresser, og du takler press og uforutsigbarhet bedre enn mange andre -- en egenskap som kan gjøre deg til en verdifull ressurs i krevende eller krisepregede roller, så lenge du er bevisst på at folk rundt deg noen ganger må si tydelig ifra før du fanger opp at noe er galt. Du er gjerne den stødige når en partner eller venner går gjennom noe vanskelig -- pass på at de som reagerer sterkere enn deg, ikke opplever at bekymringene deres blir avfeid.",
     },
   },
 };
