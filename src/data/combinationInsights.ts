@@ -285,7 +285,7 @@ export const FACET_COMBINATION_INSIGHTS: FacetCombinationInsight[] = [
     text: "Denne kombinasjonen kan virke motstridende: du stoler på egen evne til å løse oppgaver, men merker samtidig at kapasiteten strekker seg tynnere når flere krav kommer samtidig. Selvtilliten er ofte reell og velfundert -- det som svikter under høyt press er mer kapasitet der og da enn selve troen på egen dyktighet.",
   },
   {
-    id: "e5-high-n1-low",
+    id: "e5-high-n1-high",
     facetA: "E5",
     bandA: "high",
     facetB: "N1",
@@ -330,12 +330,12 @@ export const FACET_COMBINATION_INSIGHTS: FacetCombinationInsight[] = [
     text: "Denne kombinasjonen kan gi en tydelig, konfronterende stil i uenighet -- du tar plass og gir deg ikke lett. Det kan være en klar styrke i forhandlinger eller beslutninger som må tas raskt, men tett samarbeid kan noen ganger dra nytte av at du bevisst går inn for kompromiss selv når du er sikker i din sak.",
   },
   {
-    id: "o4-high-n1-low",
+    id: "o4-high-n1-high",
     facetA: "O4",
     bandA: "high",
     facetB: "N1",
-    bandB: "low",
-    title: "Høy eventyrlyst og lavere emosjonell stabilitet på bekymring-fasetten",
+    bandB: "high",
+    title: "Høy eventyrlyst og høy emosjonell stabilitet på bekymring-fasetten",
     text: "Denne kombinasjonen kan bety at du oppsøker nye erfaringer, steder og arbeidsmåter uten at bekymring holder deg tilbake. Det åpner ofte dører andre nøler ved -- verdt å ha i bakhodet er at det samme gjør det lettere å undervurdere reell risiko ved det ukjente.",
   },
   {

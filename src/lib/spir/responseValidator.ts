@@ -9,8 +9,17 @@
  */
 
 const ABSOLUTE_PATTERNS: RegExp[] = [
-  /\balltid\b/i,
-  /\baldri\b/i,
+  // v2.21 (17.07.2026, feilrettet): opprinnelig /\balltid\b/i og /\baldri\b/i
+  // trigget på HELT vanlige, ufarlige HEDGE-konstruksjoner -- nøyaktig samme
+  // klasse feil som "du er X" (v2.14 under): en for bred ordmatch som fanget
+  // opp naturlig, forsiktig norsk språkbruk Spir er BEDT om å bruke (se
+  // systemPrompt.ts regel 3). "Det er ikke alltid lett" og "du trenger ikke
+  // aldri bekymre deg" er hedges, ikke bastante påstander -- men de inneholder
+  // jo ordet "alltid"/"aldri". Fikset ved å ikke flagge når ordet kommer rett
+  // etter en negasjon ("ikke", "sjelden") -- fanger fortsatt opp den faktisk
+  // bastante bruken ("du VIL ALLTID...", "dette skjer ALDRI for deg").
+  /(?<!ikke\s)(?<!sjelden\s)\balltid\b/i,
+  /(?<!ikke\s)(?<!sjelden\s)\baldri\b/i,
   /\bbeviser\b/i,
   /\bhundre ?prosent\b/i,
   /\bgarantert\b/i,

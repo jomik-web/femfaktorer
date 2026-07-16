@@ -273,12 +273,26 @@ export async function POST(request: Request) {
   const text: string = data?.content?.[0]?.text ?? "";
 
   if (!text) {
+    // v2.21: logg til Netlify sine funksjonslogger -- før dette var
+    // fallback-meldingen en "svart boks" uten spor, umulig å diagnostisere i
+    // etterkant når produkteier rapporterte at den dukket opp. Logger ALDRI
+    // brukerens egen melding eller resultatdata, kun Anthropic-svarets egen
+    // stopp-årsak (nyttig for å skille "tom respons" fra andre feilmodus).
+    console.error("[spir] Tomt svar fra Anthropic", { stopReason: data?.stop_reason ?? null });
     return NextResponse.json({ reply: SPIR_FALLBACK_MESSAGE, flagged: false });
   }
 
   const validation = validateSpirResponse(text);
   if (!validation.ok) {
     // Teknisk håndheving (besluttet v1.5): ikke vis et svar som bryter tonekravet.
+    // v2.21: logg de faktiske flaggede ordene + selve svarteksten, slik at et
+    // ev. gjentakende falskt positivt treff i ABSOLUTE_PATTERNS (se
+    // responseValidator.ts) faktisk kan spores og rettes, i stedet for å
+    // forbli en uforklarlig, gjentakende feilmelding for brukeren.
+    console.error("[spir] Svar flagget av tonesjekken", {
+      flaggedTerms: validation.flaggedTerms,
+      text,
+    });
     return NextResponse.json({
       reply: SPIR_FALLBACK_MESSAGE,
       flagged: true,
