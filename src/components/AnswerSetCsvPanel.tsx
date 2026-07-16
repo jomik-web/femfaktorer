@@ -19,6 +19,22 @@ export interface AnswerSetCsvPanelProps {
 }
 
 /**
+ * Sant KUN på ekte iPhone/iPad (iOS/iPadOS) -- IKKE på Mac. iPadOS 13+
+ * utgir seg for å være Mac i userAgent, derfor det ekstra touch-sjekket
+ * (ekte Mac-er har ikke maxTouchPoints > 1). Nødvendig fordi Web Share API
+ * finnes på BÅDE iOS og desktop Safari/macOS -- uten dette sjekket ville
+ * Mac-brukere også få dele-arket i stedet for en vanlig nedlasting (se
+ * feilrapport 16.07.2026: nedlastingen "forsvant" bak et Airdrop/dele-ark
+ * på Mac etter forrige fiks, som kun skulle gjelde iPhone/iPad).
+ */
+function isIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  if (/iPhone|iPod|iPad/.test(ua)) return true;
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
+/**
  * Delt last ned/last opp-panel for CSV-svarsett (v2.16, 15.07.2026).
  * Selve bygge-/parselogikken ligger i lib/devTools/answerSetCsv.ts og er
  * uavhengig av UI -- se den filens doc-kommentar for formatdetaljer.
@@ -50,13 +66,14 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
 
     // iPhone/iPad Safari støtter IKKE <a download> pålitelig for blob-URL-er
     // -- i stedet for å faktisk laste ned filen, åpner den bare innholdet
-    // som en vanlig tekstside (dette er akkurat det som ble opplevd:
-    // ingenting synlig skjedde, eller en "Vis"-lenke som åpnet rå CSV-tekst
-    // i nettleseren i stedet for å laste den ned). Web Share API gir en
-    // ordentlig "Lagre til Filer"-dialog på iOS der den støttes -- prøv den
-    // FØRST, og fall tilbake til vanlig nedlasting (som fungerer fint på
-    // desktop-nettlesere og de fleste Android-nettlesere) ellers.
+    // som en vanlig tekstside. Web Share API gir en ordentlig "Lagre til
+    // Filer"-dialog på iOS -- men KUN der, se isIOS() over. Vanlig Mac
+    // Safari (og andre desktop-nettlesere) har også Web Share API, men der
+    // fungerer <a download> helt fint fra før -- så vi bruker delingsarket
+    // KUN på ekte iPhone/iPad, ikke på Mac, for å unngå å legge en unødig
+    // dele-dialog i veien for en helt vanlig nedlasting.
     if (
+      isIOS() &&
       typeof navigator !== "undefined" &&
       typeof navigator.share === "function" &&
       typeof navigator.canShare === "function"
