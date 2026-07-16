@@ -1,6 +1,16 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 15.07.2026
+Sist oppdatert: 17.07.2026
+
+## Nytt: guidet, personlig gjennomgang med Spir -- underkategori for underkategori (v2.19, 17.07.2026)
+
+Etter ditt ønske om at Spir skal kunne gi et ekte personlig svar i stedet for kun standardtekstene: `/spir` spør nå først hvordan du vil snakke med Spir. "Fri samtale" er som før. Det nye alternativet, "Gå gjennom resultatet steg for steg", går sammen med deg gjennom alle de 29 underkategoriene, én om gangen, i samme rekkefølge som i selve rapporten (domene for domene). For hver underkategori åpner Spir med en kort, personlig tolkning av akkurat DITT tall der -- ikke en gjenbrukt standardsetning -- og stiller 1-2 utdypende spørsmål. Du svarer, kan stille flere spørsmål tilbake til analysen, og går videre til neste underkategori med en egen knapp når du selv er klar (Spir hopper aldri videre selv). Etter siste underkategori kan du enten gå tilbake til resultatsiden eller fortsette i fri samtale, med hele gjennomgangen som Spir fortsatt husker.
+
+Noen ting du bør vite:
+- Rekkefølgen og fremdriften styres av nettsiden, ikke av KI-en -- det samme "aldri en stille gjetning"-prinsippet som resten av løsningen. Spir kan derfor ikke finne på å hoppe over eller bytte rekkefølge på underkategorier.
+- Tonereglene (aldri bastant, aldri diagnose, alltid vis både styrker og utfordringer, osv.) gjelder identisk i begge samtaleformer -- de ligger nå i én delt tekstblokk i koden, nettopp for at de to formene aldri skal kunne gli fra hverandre over tid.
+- Dette er ren tillegg, ikke en erstatning -- den statiske rapporten på `/resultat` er uendret. Guidet gjennomgang er et alternativt, dypere lag oppå den, akkurat slik vi ble enige om.
+- Ingen handling kreves fra deg for at dette skal virke -- husk bare `git push` som vanlig for at Netlify skal bygge den nye versjonen.
 
 ## Nytt: synlige svarsett-knapper for betatestere + kontolagring på pause (v2.16, 15.07.2026)
 

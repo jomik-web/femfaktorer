@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import type { FactorResult, FacetResult } from "@/lib/scoring";
-import { buildSpirSystemPrompt } from "@/lib/spir/systemPrompt";
+import { DOMAIN_TO_DISPLAY, DISPLAY_FACTOR_LABELS_NO } from "@/lib/scoring";
+import { buildSpirSystemPrompt, buildGuidedFacetSystemPrompt } from "@/lib/spir/systemPrompt";
 import { validateSpirResponse, SPIR_FALLBACK_MESSAGE } from "@/lib/spir/responseValidator";
 import { readStore } from "@/lib/admin/store";
+import { FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
 
 export const runtime = "nodejs";
 
@@ -47,6 +49,22 @@ interface FemRequestBody {
    * administrasjonspanelet (Dokument 09 §21.1), ikke bygget i dette utkastet.
    */
   exchangeCount: number;
+  /**
+   * v2.19: guidet fasett-for-fasett-gjennomgang (se lib/spir/systemPrompt.ts,
+   * buildGuidedFacetSystemPrompt). Valgfritt -- når det er med, bygges en
+   * helt annen systemprompt som holder Spir fokusert på ÉN navngitt
+   * underkategori om gangen, i stedet for fri samtale. Klienten
+   * (spir/page.tsx) styrer selv rekkefølgen og når man går videre --
+   * serveren stoler IKKE på klientens tekstbeskrivelser av fasetten, den
+   * validerer bare at `facetCode` finnes i de innsendte fasettdataene og
+   * slår opp navn/domene/definisjon selv fra facetInterpretations.ts.
+   */
+  guidedFacet?: {
+    facetCode: string;
+    /** Antall Spir-svar allerede gitt PÅ DENNE fasetten i denne økten -- samme "myk brems, ikke vanntett sperre"-forbehold som exchangeCount over. */
+    exchangeCountForFacet: number;
+    isLastFacetOverall: boolean;
+  };
 }
 
 /** Antall tidligere utvekslinger (bruker + Spir) vi tar med til Anthropic -- begrenser tokenvekst i lange samtaler. */
@@ -72,6 +90,18 @@ function isValidFactorResult(value: unknown): value is FactorResult {
     typeof v.score === "number" &&
     v.score >= 0 &&
     v.score <= 100
+  );
+}
+
+function isValidGuidedFacet(value: unknown): value is NonNullable<FemRequestBody["guidedFacet"]> {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.facetCode === "string" &&
+    v.facetCode.length > 0 &&
+    typeof v.exchangeCountForFacet === "number" &&
+    v.exchangeCountForFacet >= 0 &&
+    typeof v.isLastFacetOverall === "boolean"
   );
 }
 
@@ -125,6 +155,9 @@ export async function POST(request: Request) {
   if (body.history !== undefined && (!Array.isArray(body.history) || !body.history.every(isValidChatTurn))) {
     return NextResponse.json({ error: "Ugyldig samtalehistorikk." }, { status: 400 });
   }
+  if (body.guidedFacet !== undefined && !isValidGuidedFacet(body.guidedFacet)) {
+    return NextResponse.json({ error: "Ugyldig data for guidet gjennomgang." }, { status: 400 });
+  }
 
   // Admin-panelets nødstopp og justerbare tak (Dokument 09 §21.1) -- leses
   // ved hver forespørsel, ikke bare ved oppstart, slik at en endring i
@@ -154,13 +187,39 @@ export async function POST(request: Request) {
     );
   }
 
-  const systemPrompt = buildSpirSystemPrompt(body.factors, body.facets ?? [], body.exchangeCount ?? 0);
+  let systemPrompt: string;
+  if (body.guidedFacet) {
+    // Slår opp fasettmetadata (navn/domene/definisjon) SELV, fra den
+    // godkjente kildefilen -- stoler aldri på tekst klienten måtte sende for
+    // dette, kun på den validerte fasettkoden (se isValidGuidedFacet over).
+    const facetMeta = FACET_INTERPRETATIONS[body.guidedFacet.facetCode];
+    const facetScoreEntry = (body.facets ?? []).find((f) => f.facet === body.guidedFacet!.facetCode);
+    if (!facetMeta || !facetScoreEntry) {
+      return NextResponse.json({ error: "Ugyldig underkategori for guidet gjennomgang." }, { status: 400 });
+    }
+    systemPrompt = buildGuidedFacetSystemPrompt(body.factors, body.facets ?? [], {
+      facetLabel: facetMeta.label,
+      facetDescription: facetMeta.description,
+      domainLabel: DISPLAY_FACTOR_LABELS_NO[DOMAIN_TO_DISPLAY[facetMeta.domain]],
+      facetScore: facetScoreEntry.score,
+      exchangeCountForFacet: body.guidedFacet.exchangeCountForFacet,
+      isLastFacetOverall: body.guidedFacet.isLastFacetOverall,
+    });
+  } else {
+    systemPrompt = buildSpirSystemPrompt(body.factors, body.facets ?? [], body.exchangeCount ?? 0);
+  }
 
   // Intro-meldingen er en systeminitiert instruks, ikke noe brukeren faktisk
   // skrev -- se FemRequestBody.intro og spir/page.tsx. Erstatter innholdet
   // som faktisk sendes til Anthropic, uten å røre det klienten viser i UI.
+  // I guidet modus sender klienten en egen, kort utløsertekst (se
+  // spir/page.tsx sine GUIDED_START_TRIGGER/GUIDED_NEXT_TRIGGER) som
+  // `body.message` -- selve fasettfokuset ligger i systemPrompt over, ikke i
+  // denne teksten, så den trenger ikke gjenta instruksen.
   const currentTurnContent = body.intro
-    ? "Start samtalen. Se på hele profilen min over (hovedfaktorer og fasetter) og pek på 1-2 av de tydeligste eller mest uventede funnene -- gjerne en fasett som peker en annen vei enn resten av domenet den hører til, om det finnes en slik i profilen. Åpne med en kort, konkret refleksjon rundt det du finner mest interessant, og avslutt med ETT spørsmål som inviterer meg til å utdype eller kjenne etter."
+    ? body.guidedFacet
+      ? body.message
+      : "Start samtalen. Se på hele profilen min over (hovedfaktorer og fasetter) og pek på 1-2 av de tydeligste eller mest uventede funnene -- gjerne en fasett som peker en annen vei enn resten av domenet den hører til, om det finnes en slik i profilen. Åpne med en kort, konkret refleksjon rundt det du finner mest interessant, og avslutt med ETT spørsmål som inviterer meg til å utdype eller kjenne etter."
     : body.message;
 
   const history = (body.history ?? []).slice(-MAX_HISTORY_TURNS);

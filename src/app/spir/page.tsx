@@ -3,28 +3,71 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED } from "@/data/questions";
-import { computeTestResult, computeFacetResults, type FactorResult, type FacetResult } from "@/lib/scoring";
+import {
+  computeTestResult,
+  computeFacetResults,
+  DOMAIN_TO_DISPLAY,
+  DISPLAY_FACTOR_LABELS_NO,
+  type FactorResult,
+  type FacetResult,
+} from "@/lib/scoring";
 import { loadAnswers } from "@/lib/storage";
+import { FACET_ORDER_BY_DOMAIN, FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
+import { DOMAIN_DISPLAY_ORDER } from "@/data/combinationInsights";
 
 interface ChatMessage {
   role: "user" | "fem";
   text: string;
   /**
-   * Sant for den systeminitierte "start samtalen"-instruksen som utløser
-   * Spirs åpningsreplikk (v2.2) -- filtreres bort fra det som faktisk vises
-   * i chatten, men beholdes i historikken som sendes til Anthropic, siden
-   * en samtale der må starte med en "user"-rolle.
+   * Sant for systeminitierte utløsermeldinger (åpning av fri samtale, eller
+   * start/fremgang i den guidede gjennomgangen) -- filtreres bort fra det
+   * som faktisk vises i chatten, men beholdes i historikken som sendes til
+   * Anthropic, siden en samtale der må starte med en "user"-rolle.
    */
   hidden?: boolean;
 }
 
-/** Må matche instruksen serveren bruker for intro-meldingen, se api/spir/route.ts. */
+type ChatMode = "free" | "guided";
+
+/** Må matche instruksen serveren bruker for intro-meldingen i fri samtale, se api/spir/route.ts. */
 const INTRO_TRIGGER_TEXT = "Start samtalen.";
+/** v2.19: skjulte utløsertekster for den guidede gjennomgangen -- selve fasettfokuset ligger i systemprompten (se api/spir/route.ts), ikke i denne teksten. */
+const GUIDED_START_TRIGGER = "Start den guidede gjennomgangen med den første underkategorien.";
+const GUIDED_NEXT_TRIGGER = "Gå videre til neste underkategori.";
+
+/** Rekkefølge alle fasetter tas opp i under en guidet gjennomgang -- domene for domene (samme rekkefølge som i rapporten), IPIP-standardrekkefølge innad i hvert domene. */
+const WALKTHROUGH_ORDER: string[] = DOMAIN_DISPLAY_ORDER.flatMap((domain) => FACET_ORDER_BY_DOMAIN[domain]);
+
+interface GuidedPosition {
+  facetCode: string;
+  facetLabel: string;
+  domainLabel: string;
+  isLastFacetOverall: boolean;
+}
+
+/**
+ * Slår opp all kontekst en guidet forespørsel trenger for én posisjon i
+ * WALKTHROUGH_ORDER. Returnerer null ved uventet manglende data i stedet for
+ * å late som om en gjetning er trygg (samme prinsipp som ellers i produktet).
+ */
+function resolveGuidedPosition(index: number): GuidedPosition | null {
+  const facetCode = WALKTHROUGH_ORDER[index];
+  if (!facetCode) return null;
+  const meta = FACET_INTERPRETATIONS[facetCode];
+  if (!meta) return null;
+  return {
+    facetCode,
+    facetLabel: meta.label,
+    domainLabel: DISPLAY_FACTOR_LABELS_NO[DOMAIN_TO_DISPLAY[meta.domain]],
+    isLastFacetOverall: index === WALKTHROUGH_ORDER.length - 1,
+  };
+}
 
 export default function FemPage() {
   const [factors, setFactors] = useState<FactorResult[] | null>(null);
   const [facets, setFacets] = useState<FacetResult[]>([]);
   const [consented, setConsented] = useState(false);
+  const [mode, setMode] = useState<ChatMode | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,9 +75,16 @@ export default function FemPage() {
   const [hydrated, setHydrated] = useState(false);
 
   const [locked, setLocked] = useState(false);
-  // Sant så snart Spir har fått i oppdrag å åpne samtalen selv -- hindrer at
-  // introen sendes flere ganger (v2.2, se systemPrompt.ts og api/spir/route.ts).
+  // Sant så snart Spir har fått i oppdrag å åpne samtalen selv (fri modus)
+  // eller hente sin første fasett (guidet modus) -- hindrer at det skjer flere ganger.
   const [introStarted, setIntroStarted] = useState(false);
+
+  // Guidet gjennomgang (v2.19): hvor langt i WALKTHROUGH_ORDER vi har kommet,
+  // og hvor mange Spir-svar som er gitt PÅ DENNE fasetten så langt
+  // (nullstilles ved hver fremgang). Kun i bruk når mode === "guided".
+  const [guidedIndex, setGuidedIndex] = useState(0);
+  const [guidedExchangeCountForFacet, setGuidedExchangeCountForFacet] = useState(0);
+  const [guidedDone, setGuidedDone] = useState(false);
 
   useEffect(() => {
     const stored = loadAnswers();
@@ -59,12 +109,11 @@ export default function FemPage() {
     setHydrated(true);
   }, []);
 
-  // Lar Spir selv åpne samtalen med en refleksjon + spørsmål, i stedet for å
-  // vente passivt på at brukeren skal skrive noe først (Anette sin
-  // tilbakemelding, se systemPrompt.ts v2.2). Kjøres kun én gang, når
-  // samtykke er gitt og resultatet er klart.
+  // Fri samtale: lar Spir selv åpne med en refleksjon + spørsmål, i stedet
+  // for å vente passivt på at brukeren skal skrive noe først (Anette sin
+  // tilbakemelding, se systemPrompt.ts v2.2). Kjøres kun én gang.
   useEffect(() => {
-    if (!consented || !factors || introStarted) return;
+    if (mode !== "free" || !consented || !factors || introStarted) return;
     setIntroStarted(true);
     setLoading(true);
     setError(null);
@@ -98,7 +147,76 @@ export default function FemPage() {
         setError("Fikk ikke kontakt med Spir. Sjekk nettforbindelsen og prøv igjen.");
       })
       .finally(() => setLoading(false));
-  }, [consented, factors, facets, introStarted]);
+  }, [mode, consented, factors, facets, introStarted]);
+
+  // Guidet gjennomgang: henter automatisk den første underkategorien når
+  // modusen velges, på samme måte som fri-samtale-effekten over.
+  useEffect(() => {
+    if (mode !== "guided" || !consented || !factors || introStarted) return;
+    setIntroStarted(true);
+    void sendGuidedTrigger(0, GUIDED_START_TRIGGER, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, consented, factors, facets, introStarted]);
+
+  async function sendGuidedTrigger(index: number, triggerText: string, historyOverride?: ChatMessage[]) {
+    if (!factors) return;
+    const position = resolveGuidedPosition(index);
+    if (!position) {
+      // Skal i praksis ikke skje (index kommer enten fra 0 eller fra
+      // advanceGuided sin egen grensesjekk) -- men heller vise sluttskjermen
+      // enn å late som om en ugyldig posisjon er en gyldig fasett.
+      setGuidedDone(true);
+      return;
+    }
+    const history = historyOverride ?? messages;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/spir", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          factors,
+          facets,
+          message: triggerText,
+          intro: true,
+          history,
+          exchangeCount: history.filter((m) => m.role === "user" && !m.hidden).length,
+          guidedFacet: {
+            facetCode: position.facetCode,
+            exchangeCountForFacet: 0,
+            isLastFacetOverall: position.isLastFacetOverall,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Noe gikk galt. Prøv igjen.");
+        return;
+      }
+      setMessages([
+        ...history,
+        { role: "user", text: triggerText, hidden: true },
+        { role: "fem", text: data.reply },
+      ]);
+      setGuidedIndex(index);
+      setGuidedExchangeCountForFacet(0);
+    } catch {
+      setError("Fikk ikke kontakt med Spir. Sjekk nettforbindelsen og prøv igjen.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function advanceGuided() {
+    if (loading) return;
+    const nextIndex = guidedIndex + 1;
+    if (nextIndex >= WALKTHROUGH_ORDER.length) {
+      setGuidedDone(true);
+      return;
+    }
+    void sendGuidedTrigger(nextIndex, GUIDED_NEXT_TRIGGER);
+  }
 
   if (!hydrated) return null;
 
@@ -118,8 +236,9 @@ export default function FemPage() {
   }
 
   // Personvern (Dokument 07 §2, §4.3): resultatet sendes til AI-leverandøren
-  // KUN når brukeren aktivt samtykker her -- aldri automatisk.
-  if (!consented) {
+  // KUN når brukeren aktivt samtykker her -- aldri automatisk. Samtykke og
+  // valg av samtaleform (v2.19) skjer på samme skjerm.
+  if (!consented || !mode) {
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12">
         <h1 className="text-xl font-semibold text-ink dark:text-white">Før du starter</h1>
@@ -131,17 +250,38 @@ export default function FemPage() {
           meldingene dine enn det som trengs for samtalen. Testsvarene dine forblir lokalt i
           nettleseren uansett.
         </p>
-        <div className="flex gap-3">
+        <p className="text-ink/80 dark:text-warmgray/80">Du kan velge hvordan samtalen skal foregå:</p>
+        <div className="flex flex-col gap-3">
           <button
             type="button"
-            onClick={() => setConsented(true)}
-            className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white"
+            onClick={() => {
+              setConsented(true);
+              setMode("guided");
+            }}
+            className="rounded-lg bg-teal px-5 py-3 text-left font-medium text-white"
           >
-            Ja, start samtale med Spir
+            Gå gjennom resultatet steg for steg med Spir
+            <span className="mt-1 block text-sm font-normal text-white/80">
+              Spir tar for seg én underkategori om gangen, spør deg om den, og dere går videre
+              sammen når du er klar.
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setConsented(true);
+              setMode("free");
+            }}
+            className="rounded-lg border border-teal px-5 py-3 text-left font-medium text-teal"
+          >
+            Snakk fritt med Spir
+            <span className="mt-1 block text-sm font-normal text-teal/80">
+              Åpen samtale om hele resultatet, uten en fast rekkefølge.
+            </span>
           </button>
           <Link
             href="/resultat"
-            className="rounded-lg px-5 py-2.5 font-medium text-ink/70 dark:text-warmgray/70"
+            className="rounded-lg px-5 py-2.5 text-center font-medium text-ink/70 dark:text-warmgray/70"
           >
             Nei, gå tilbake
           </Link>
@@ -162,6 +302,8 @@ export default function FemPage() {
     setMessages(nextMessages);
     setLoading(true);
 
+    const guidedPosition = mode === "guided" ? resolveGuidedPosition(guidedIndex) : null;
+
     try {
       const res = await fetch("/api/spir", {
         method: "POST",
@@ -172,6 +314,15 @@ export default function FemPage() {
           message: trimmed,
           history,
           exchangeCount: messages.filter((m) => m.role === "user" && !m.hidden).length,
+          ...(guidedPosition
+            ? {
+                guidedFacet: {
+                  facetCode: guidedPosition.facetCode,
+                  exchangeCountForFacet: guidedExchangeCountForFacet,
+                  isLastFacetOverall: guidedPosition.isLastFacetOverall,
+                },
+              }
+            : {}),
         }),
       });
       const data = await res.json();
@@ -180,12 +331,16 @@ export default function FemPage() {
         return;
       }
       setMessages([...nextMessages, { role: "fem", text: data.reply }]);
+      if (guidedPosition) setGuidedExchangeCountForFacet((n) => n + 1);
     } catch {
       setError("Fikk ikke kontakt med Spir. Sjekk nettforbindelsen og prøv igjen.");
     } finally {
       setLoading(false);
     }
   }
+
+  const guidedPosition = mode === "guided" ? resolveGuidedPosition(guidedIndex) : null;
+  const showInput = mode === "free" || (mode === "guided" && !guidedDone);
 
   return (
     <main className="mx-auto flex h-screen max-w-2xl flex-col px-6 py-8">
@@ -194,6 +349,15 @@ export default function FemPage() {
         <p className="text-sm text-ink/60 dark:text-warmgray/60">
           Spir tolker resultatet ditt -- den kan ikke endre skårene dine.
         </p>
+        {mode === "guided" && !guidedDone && guidedPosition && (
+          <p className="mt-2 text-sm font-medium text-teal">
+            Underkategori {guidedIndex + 1} av {WALKTHROUGH_ORDER.length} -- {guidedPosition.domainLabel}:{" "}
+            {guidedPosition.facetLabel}
+          </p>
+        )}
+        {mode === "guided" && guidedDone && (
+          <p className="mt-2 text-sm font-medium text-teal">Gjennomgangen er ferdig.</p>
+        )}
       </header>
 
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
@@ -202,7 +366,11 @@ export default function FemPage() {
           .map((m, i) => (
             <div
               key={i}
-              className={m.role === "user" ? "self-end rounded-lg bg-mint px-4 py-2 dark:bg-teal/20" : "self-start rounded-lg bg-warmgray px-4 py-2 dark:bg-white/10"}
+              className={
+                m.role === "user"
+                  ? "self-end rounded-lg bg-mint px-4 py-2 dark:bg-teal/20"
+                  : "self-start rounded-lg bg-warmgray px-4 py-2 dark:bg-white/10"
+              }
             >
               {m.text}
             </div>
@@ -211,31 +379,69 @@ export default function FemPage() {
         {error && <p className="text-sm text-coral">{error}</p>}
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void sendMessage();
-        }}
-        className="flex gap-3 border-t border-warmgray pt-4 pb-8 dark:border-white/10"
-      >
-        <label htmlFor="fem-input" className="sr-only">
-          Skriv en melding til Spir
-        </label>
-        <input
-          id="fem-input"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Spør Spir om resultatet ditt …"
-          className="flex-1 rounded-lg border border-warmgray px-4 py-2 dark:border-white/20 dark:bg-transparent"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-lg bg-teal px-5 py-2 font-medium text-white disabled:opacity-50"
+      {mode === "guided" && !guidedDone && (
+        <div className="flex flex-wrap items-center gap-4 border-t border-warmgray pt-4 dark:border-white/10">
+          <button
+            type="button"
+            onClick={advanceGuided}
+            disabled={loading}
+            className="rounded-lg bg-teal px-5 py-2 font-medium text-white disabled:opacity-50"
+          >
+            Gå videre til neste underkategori →
+          </button>
+          <button
+            type="button"
+            onClick={() => setGuidedDone(true)}
+            disabled={loading}
+            className="text-sm font-medium text-ink/60 underline dark:text-warmgray/60"
+          >
+            Avslutt gjennomgangen her
+          </button>
+        </div>
+      )}
+
+      {mode === "guided" && guidedDone && (
+        <div className="flex flex-wrap items-center gap-3 border-t border-warmgray pt-4 pb-4 dark:border-white/10">
+          <Link href="/resultat" className="rounded-lg bg-teal px-5 py-2 font-medium text-white">
+            Tilbake til resultatet
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMode("free")}
+            className="rounded-lg border border-teal px-5 py-2 font-medium text-teal"
+          >
+            Fortsett å snakke fritt med Spir
+          </button>
+        </div>
+      )}
+
+      {showInput && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void sendMessage();
+          }}
+          className="flex gap-3 border-t border-warmgray pt-4 pb-8 dark:border-white/10"
         >
-          Send
-        </button>
-      </form>
+          <label htmlFor="fem-input" className="sr-only">
+            Skriv en melding til Spir
+          </label>
+          <input
+            id="fem-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Spør Spir om resultatet ditt …"
+            className="flex-1 rounded-lg border border-warmgray px-4 py-2 dark:border-white/20 dark:bg-transparent"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-lg bg-teal px-5 py-2 font-medium text-white disabled:opacity-50"
+          >
+            Send
+          </button>
+        </form>
+      )}
     </main>
   );
 }
