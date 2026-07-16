@@ -37,7 +37,7 @@ import {
   type FacetCombinationInsight,
 } from "@/data/combinationInsights";
 import { computeAccountResultExpiry } from "@/lib/account/types";
-import { buildFacetDrivenOverview } from "@/data/domainComposition";
+import { buildFacetDrivenOverview, buildFacetAwareNote } from "@/data/domainComposition";
 import { ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
 
@@ -386,6 +386,10 @@ export default function ResultatPage() {
               // Fallback for hovedkategorier som ennå ikke har fått ny
               // `synthesis`-tekst (v2.17-utrulling, se interpretations.ts).
               const facetDrivenOverview = buildFacetDrivenOverview(f.factor, domain, f.score, facetsForDomain);
+              // v2.18: gjenreist fasettbevissthet -- nevner hvilke(n)
+              // underkategori(er) som driver hovedkategoriskåren, som en
+              // egen linje i tillegg til (ikke i stedet for) synthesis-teksten.
+              const facetAwareNote = buildFacetAwareNote(f.factor, f.score, facetsForDomain);
               const domainCombos: CombinationInsight[] = domainCombosByDomain.get(domain) ?? [];
               const facetCombos: FacetCombinationInsight[] = facetCombosByDomain.get(domain) ?? [];
               // Ny struktur (domenedefinisjon -> fasetter -> én sammenhengende
@@ -448,6 +452,9 @@ export default function ResultatPage() {
                   {useNewLayout ? (
                     <article className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
                       <p className="text-ink/80 dark:text-warmgray/80">{copy.synthesis}</p>
+                      {facetAwareNote && (
+                        <p className="text-ink/80 dark:text-warmgray/80">{facetAwareNote}</p>
+                      )}
                       <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
                     </article>
                   ) : (

@@ -24,12 +24,22 @@
  * -- der er stereotyp-problemet mindre akutt. Presiseringssetningen (punkt
  * 6 under) er også kun bygget for "high"-båndet foreløpig, siden det er der
  * problemet er tydeligst dokumentert; kan utvides til "low" senere.
+ *
+ * v2.18 (16.07.2026): `buildFacetDrivenOverview` over er nå UBRUKT i praksis
+ * -- siden alle fem hovedkategorier har fått en fast `synthesis`-tekst (se
+ * interpretations.ts v2.17), faller resultat/page.tsx aldri lenger tilbake
+ * til den. Fasettbevisstheten er derfor gjenreist på en annen måte, som
+ * IKKE gjenbruker fasettsetninger ordrett (de vises jo allerede rett over i
+ * Underkategorier-seksjonen): `buildFacetAwareNote` under legger til en kort,
+ * dynamisk setning som NEVNER hvilke(n) underkategori(er) som faktisk driver
+ * skåren -- pluss samme stereotyp-presisering som før -- vist som en egen
+ * linje i tillegg til (ikke i stedet for) den faste synthesis-teksten.
  */
 
 import type { Domain } from "@/data/questions";
 import type { DisplayFactor, FacetResult } from "@/lib/scoring";
 import { INTERPRETATIONS, bandFor, type Band } from "@/data/interpretations";
-import { FACET_ORDER_BY_DOMAIN, facetInterpretationFor } from "@/data/facetInterpretations";
+import { FACET_ORDER_BY_DOMAIN, FACET_INTERPRETATIONS, facetInterpretationFor } from "@/data/facetInterpretations";
 
 /**
  * Kort, generisk åpningssetning per hovedkategori og nivåbånd -- bevisst UTEN
@@ -154,4 +164,55 @@ export function buildFacetDrivenOverview(
   }
 
   return [opener, ...facetSentences, caveat].filter((s) => s.length > 0).join(" ");
+}
+
+/**
+ * Kort, dynamisk tilleggssetning (v2.18) som NEVNER hvilke(n) underkategori-
+ * er som faktisk driver hovedkategoriskåren -- uten å gjenta selve
+ * fasettsetningen (den står allerede i Underkategorier-seksjonen rett over,
+ * se resultat/page.tsx). Vises SAMMEN MED den faste `synthesis`-teksten, som
+ * en egen linje -- ikke i stedet for den. Inkluderer samme
+ * stereotyp-presisering som buildFacetDrivenOverview brukte (kun for "high"
+ * foreløpig, se filhode).
+ */
+export function buildFacetAwareNote(
+  factor: DisplayFactor,
+  domainScore: number,
+  facetsForDomain: FacetResult[]
+): string {
+  if (facetsForDomain.length === 0) return "";
+
+  const domainBand = bandFor(domainScore);
+  const withDistance: DrivingFacet[] = facetsForDomain.map((facet) => ({
+    facet,
+    distanceFromMid: Math.abs(facet.score - 50),
+  }));
+  withDistance.sort((a, b) => b.distanceFromMid - a.distanceFromMid);
+
+  const driving = withDistance.filter((d) => d.distanceFromMid >= DRIVING_FACET_THRESHOLD).slice(0, 2);
+
+  // Svært jevn fasettprofil -- ingen enkelt-underkategori peker seg ut som
+  // driver. Sier det eksplisitt fremfor å late som om én fasett stikker seg
+  // frem når ingen faktisk gjør det.
+  if (driving.length === 0) {
+    return "Underkategoriene dine ligger relativt jevnt fordelt her, uten at én bestemt peker seg klart ut som driver.";
+  }
+
+  const labels = driving.map((d) => FACET_INTERPRETATIONS[d.facet.facet]?.label ?? d.facet.facet);
+  const namesJoined = labels.length === 2 ? `${labels[0]} og ${labels[1]}` : (labels[0] ?? "");
+  const flertall = labels.length === 2 ? "e" : "";
+  let note = `Hos deg er det særlig underkategorien${flertall} ${namesJoined} som driver dette resultatet.`;
+
+  if (domainBand === "high") {
+    const stereotypeCode = STEREOTYPE_FACET[factor];
+    const stereotypeIsDriving = driving.some((d) => d.facet.facet === stereotypeCode);
+    if (!stereotypeIsDriving) {
+      const stereotypeFacet = facetsForDomain.find((f) => f.facet === stereotypeCode);
+      if (stereotypeFacet && bandFor(stereotypeFacet.score) !== "high") {
+        note += ` ${STEREOTYPE_CAVEAT[factor]}`;
+      }
+    }
+  }
+
+  return note;
 }
