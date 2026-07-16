@@ -1,4 +1,5 @@
 import type { FactorResult, FacetResult } from "@/lib/scoring";
+import { FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
 
 /**
  * Systemprompt for Spir. Kilde for reglene: Dokument 05 (AI-arkitektur og
@@ -35,6 +36,21 @@ import type { FactorResult, FacetResult } from "@/lib/scoring";
  * hverandre. Selve rekkefølgen på fasettene og hvem som går til "neste" er
  * IKKE en AI-avgjørelse -- klienten (spir/page.tsx) styrer det deterministisk
  * via en egen "gå videre"-knapp, se den filens `WALKTHROUGH_ORDER`.
+ *
+ * v2.20 (17.07.2026, feilrettet -- oppdaget i guidet gjennomgang): Spir
+ * beskrev en skår på 92/100 for fasetten "Bekymring / ro" (N1) som "svært
+ * sensitiv for bekymring", altså MOTSATT av riktig retning -- tallet betyr
+ * mer RO, ikke mer bekymring (se scoring.ts computeFacetResults: N-fasetter
+ * blir snudd, `100 - scaled`, nøyaktig som hovedfaktoren "Emosjonell
+ * stabilitet"). Rotårsaken: `facetLines` under sendte det rå ENGELSKE
+ * IPIP-fasettnavnet ("Anxiety") sammen med det allerede snudde tallet --
+ * Spir la naturlig nok til grunn vanlig IPIP-retning (høy Anxiety = mer
+ * engstelig) i stedet for denne tjenestens snudde konvensjon. Fikset ved å
+ * (a) bruke det norske bipolare visningsnavnet (samme som i selve
+ * rapporten, `FACET_INTERPRETATIONS[...].label`, f.eks. "Bekymring / ro")
+ * i stedet for det engelske IPIP-navnet, og (b) legge til en eksplisitt
+ * retningsregel (`SCORE_DIRECTION_NOTE`) som ber Spir se bort fra egen
+ * bakgrunnskunnskap om hvordan lignende skalaer normalt er orientert.
  */
 
 const SHARED_INTRO =
@@ -51,11 +67,26 @@ const SHARED_TONE_RULES = `REGLER DU ALDRI SKAL BRYTE:
 8. Tone: varm, konstruktiv, løsningsorientert.
 9. Hold svarene korte og konkrete (2-4 setninger normalt, pluss ett oppfølgingsspørsmål der det passer), med mindre brukeren eksplisitt ber om mer.`;
 
+/**
+ * v2.20: eksplisitt retningsanker for tallene -- se filhodets feilrettingsnotat.
+ * Skal ALLTID vises rett under fasettlisten i begge prompt-varianter.
+ */
+const SCORE_DIRECTION_NOTE = `VIKTIG OM RETNING PÅ TALLENE: for hver fasett over betyr en høy skår alltid mer av det ordet som står SIST i den norske merkelappen, når merkelappen er delt med skråstrek (f.eks. i "Bekymring / ro" betyr en høy skår MER RO, ikke mer bekymring -- i "Nedstemthet / motstandskraft" betyr en høy skår MER MOTSTANDSKRAFT). Stol UTELUKKENDE på dette prinsippet og på selve tallet du får oppgitt -- ikke på egen bakgrunnskunnskap om hvordan lignende psykologiske delskalaer (f.eks. engelske IPIP-fasettnavn) vanligvis er orientert. Denne tjenesten har bevisst snudd retningen på enkelte fasetter (særlig innen Emosjonell stabilitet) slik at en høy skår alltid samsvarer med retningen til hovedfaktoren den hører til.`;
+
 function buildFactorAndFacetLines(factors: FactorResult[], facets: FacetResult[]): { factorLines: string; facetLines: string } {
   const factorLines = factors.map((f) => `- ${f.label}: ${f.score}/100`).join("\n");
   const facetLines =
     facets.length > 0
-      ? facets.map((f) => `- ${f.facet} (${f.facetName}), domene ${f.domain}: ${f.score}/100`).join("\n")
+      ? facets
+          .map((f) => {
+            // Norsk bipolart visningsnavn (samme som i selve rapporten) --
+            // IKKE det engelske IPIP-navnet (f.eks. "Anxiety"), som har
+            // motsatt implisitt retning av det snudde tallet for N-fasetter.
+            // Se v2.20-feilrettingen i filhodet.
+            const label = FACET_INTERPRETATIONS[f.facet]?.label ?? f.facetName;
+            return `- ${f.facet} (${label}), domene ${f.domain}: ${f.score}/100`;
+          })
+          .join("\n")
       : "(ikke tilgjengelig i denne samtalen)";
   return { factorLines, facetLines };
 }
@@ -79,6 +110,8 @@ ${factorLines}
 
 BRUKERENS RESULTAT PÅ UNDERFASETTER (ferdig beregnet, samme regel -- aldri endre tallene):
 ${facetLines}
+
+${SCORE_DIRECTION_NOTE}
 
 ${phaseNote}
 
@@ -139,6 +172,8 @@ ${factorLines}
 
 BRUKERENS RESULTAT PÅ UNDERFASETTER (ferdig beregnet, samme regel -- aldri endre tallene):
 ${facetLines}
+
+${SCORE_DIRECTION_NOTE}
 
 DERE ER I EN GUIDET GJENNOMGANG, IKKE EN FRI SAMTALE:
 Dere går sammen gjennom underkategoriene i resultatet, én om gangen, i en fast rekkefølge som grensesnittet styrer. Akkurat nå er dere på underkategorien "${ctx.facetLabel}" i domenet ${ctx.domainLabel}. Definisjon av hva den måler: ${ctx.facetDescription}
