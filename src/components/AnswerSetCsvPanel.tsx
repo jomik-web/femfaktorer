@@ -33,7 +33,7 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
   const [importing, setImporting] = useState(false);
   const [importedInfo, setImportedInfo] = useState<string | null>(null);
 
-  function handleDownload() {
+  async function handleDownload() {
     const stored = loadAnswers();
     const storedO6 = loadO6();
     const csv = buildAnswerSetCsv({
@@ -42,14 +42,43 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
       o6Status: storedO6.status,
       o6Answers: storedO6.answers,
     });
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = `femfaktorer-svardata-${stored.tier}-${date}.csv`;
     // BOM (﻿) foran innholdet -- gjør at norsk-språklig Excel tolker
     // filen som UTF-8 med én gang, slik at æøå vises riktig.
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+    const content = "﻿" + csv;
+
+    // iPhone/iPad Safari støtter IKKE <a download> pålitelig for blob-URL-er
+    // -- i stedet for å faktisk laste ned filen, åpner den bare innholdet
+    // som en vanlig tekstside (dette er akkurat det som ble opplevd:
+    // ingenting synlig skjedde, eller en "Vis"-lenke som åpnet rå CSV-tekst
+    // i nettleseren i stedet for å laste den ned). Web Share API gir en
+    // ordentlig "Lagre til Filer"-dialog på iOS der den støttes -- prøv den
+    // FØRST, og fall tilbake til vanlig nedlasting (som fungerer fint på
+    // desktop-nettlesere og de fleste Android-nettlesere) ellers.
+    if (
+      typeof navigator !== "undefined" &&
+      typeof navigator.share === "function" &&
+      typeof navigator.canShare === "function"
+    ) {
+      try {
+        const file = new File([content], filename, { type: "text/csv" });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file] });
+          return;
+        }
+      } catch (err) {
+        // Brukeren avbrøt delingen selv -- ikke vis noen feilmelding, bare la det være.
+        if (err instanceof Error && err.name === "AbortError") return;
+        // Annen, uventet feil -- fortsett til den vanlige nedlastingen under som fallback.
+      }
+    }
+
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const date = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `femfaktorer-svardata-${stored.tier}-${date}.csv`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
