@@ -94,22 +94,25 @@ export interface Interpretation {
 type Copy = Record<DisplayFactor, Record<Band, Interpretation>>;
 
 /**
- * Kort definisjon av hva hver hovedkategori faktisk måler, og hva en høy
- * versus lav skår typisk peker mot -- vist ØVERST i hver kategori-seksjon,
- * FØR underkategoriene (v2.17). Bevisst korte og nøytrale -- ingen
- * verdivurdering av om høyt eller lavt er "best".
+ * Nøytral forklaring av hva hovedkategorien MÅLER -- vist ØVERST i hver
+ * kategori-seksjon, FØR underkategoriene (v2.17). Dette er bevisst IKKE
+ * personlig ("du") -- det er en forklaring av testmetoden og begrepet,
+ * samme register som fasettenes `description`-felt i
+ * facetInterpretations.ts, ikke en kommentar til den som tar testen. Den
+ * personlige, individuelle tolkningen kommer i `synthesis`/`overview`
+ * under. Ingen verdivurdering av om høyt eller lavt er "best".
  */
 export const DOMAIN_DEFINITIONS: Record<DisplayFactor, string> = {
   openness:
-    "Åpenhet for erfaring handler om hvor nysgjerrig du er på nye ideer, opplevelser og perspektiver -- i fantasi, kunst, tanker eller livsstil. Høy skår peker mot en som søker variasjon og det ukjente, mens lav skår peker mot en som foretrekker det konkrete og velprøvde.",
+    "Åpenhet for erfaring måler graden av nysgjerrighet på nye ideer, opplevelser og perspektiver -- i fantasi, kunst, tanker eller livsstil. En høy skår indikerer en søken etter variasjon og det ukjente; en lav skår indikerer en preferanse for det konkrete og velprøvde.",
   conscientiousness:
-    "Planmessighet handler om hvor mye struktur, ansvar og målrettethet du legger inn i det du gjør. Høy skår peker mot grundighet og pålitelighet over tid, mens lav skår peker mot fleksibilitet og evne til å improvisere når planer endrer seg.",
+    "Planmessighet måler graden av struktur, ansvar og målrettethet i hvordan oppgaver organiseres og gjennomføres. En høy skår indikerer grundighet og pålitelighet over tid; en lav skår indikerer fleksibilitet og evne til å improvisere når planer endres.",
   extraversion:
-    "Ekstroversjon handler om hvor mye energi du henter fra sosial kontakt og ytre stimulering, og hvor tydelig du selv tar initiativ og plass sosialt. Høy skår peker mot en som lader opp blant andre mennesker, mens lav skår peker mot en som henter mer energi fra ro og egen tid.",
+    "Ekstroversjon måler hvor mye energi som hentes fra sosial kontakt og ytre stimulering, og hvor tydelig initiativ og plass tas sosialt. En høy skår indikerer at sosial kontakt gir energi; en lav skår indikerer at ro og egen tid gir mer energi.",
   agreeableness:
-    "Medmenneskelighet handler om hvordan du balanserer egne behov opp mot andres -- tillit, omtanke og vilje til samarbeid. Høy skår peker mot en som setter fellesskap og andres behov høyt, mens lav skår peker mot en som er mer opptatt av å ivareta egne interesser.",
+    "Medmenneskelighet måler hvordan egne behov balanseres opp mot andres -- tillit, omtanke og vilje til samarbeid. En høy skår indikerer at fellesskap og andres behov vektlegges høyt; en lav skår indikerer større vekt på egne interesser.",
   stability:
-    "Emosjonell stabilitet handler om hvor lett du blir aktivert av stress, usikkerhet og motgang, og hvor fort du finner roen igjen etterpå. Høy skår peker mot en som holder seg jevn under press, mens lav skår peker mot en som kjenner følelsene sterkere og reagerer raskere på det som skjer.",
+    "Emosjonell stabilitet måler hvor lett man aktiveres av stress, usikkerhet og motgang, og hvor raskt roen gjenopprettes etterpå. En høy skår indikerer en jevn respons under press; en lav skår indikerer sterkere følelsesmessige reaksjoner og raskere aktivering.",
 };
 
 export const INTERPRETATIONS: Copy = {
