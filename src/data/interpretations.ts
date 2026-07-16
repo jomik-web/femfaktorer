@@ -34,6 +34,21 @@
  * "batteri"-metafor ble vurdert som for påtrengende). Samme faglige
  * innhold, retning og styrkegrad som før -- kun formidlingen er endret.
  * Ekstroversjon/høy er ordrett den brukergodkjente testteksten.
+ *
+ * v2.17 (rapportomstrukturering, PÅGÅENDE utrulling, 16.07.2026): produkteier
+ * ønsket en ny rekkefølge -- domenedefinisjon, deretter underkategoriene
+ * FØRST, og til slutt én sammenhengende hovedkategori-analyse som viser til
+ * fasettfunnene med ANDRE ord (ikke gjenbruker fasettsetningene ordrett),
+ * og som vever inn jobb-/relasjonsimplikasjoner i selve teksten i stedet for
+ * egne bokser. Det nye feltet `synthesis` under erstatter `overview` +
+ * `nuance` + `careerNote` + `relationshipNote` i visningen NÅR det finnes
+ * (se resultat/page.tsx -- domener uten `synthesis` ennå viser fortsatt den
+ * gamle strukturen, slik at utrullingen kan skje kategori for kategori uten
+ * at siden ser ufullstendig ut underveis). Planmessighet er første pilot.
+ * De gamle feltene (`overview` m.fl.) beholdes i datastrukturen selv etter
+ * migrering -- de brukes fortsatt internt av buildFacetDrivenOverview()
+ * (fallback) og buildClosingSynthesis() til den avsluttende seksjonen også
+ * er redesignet, som skjer etter at alle fem kategoriene er migrert.
  */
 
 import type { DisplayFactor, FactorResult } from "@/lib/scoring";
@@ -64,9 +79,38 @@ export interface Interpretation {
    * venner/familie -- se filhode om v3-korrigeringen.
    */
   relationshipNote: string;
+  /**
+   * NYTT FELT (v2.17). Én sammenhengende avsluttende analyse for hele
+   * hovedkategorien -- skrevet EFTER at underkategoriene er presentert på
+   * siden, så den skal aldri gjenta ordrett det fasettekstene allerede har
+   * sagt. Vever inn jobb- og relasjonsimplikasjoner som en naturlig del av
+   * teksten (ikke egne avsnitt/overskrifter), og nevner gjerne "til tross
+   * for" eller "i kombinasjon med"-mønstre der det er dekning for det.
+   * Valgfritt inntil ALLE fem hovedkategorier er migrert -- se filhode.
+   */
+  synthesis?: string;
 }
 
 type Copy = Record<DisplayFactor, Record<Band, Interpretation>>;
+
+/**
+ * Kort definisjon av hva hver hovedkategori faktisk måler, og hva en høy
+ * versus lav skår typisk peker mot -- vist ØVERST i hver kategori-seksjon,
+ * FØR underkategoriene (v2.17). Bevisst korte og nøytrale -- ingen
+ * verdivurdering av om høyt eller lavt er "best".
+ */
+export const DOMAIN_DEFINITIONS: Record<DisplayFactor, string> = {
+  openness:
+    "Åpenhet for erfaring handler om hvor nysgjerrig du er på nye ideer, opplevelser og perspektiver -- i fantasi, kunst, tanker eller livsstil. Høy skår peker mot en som søker variasjon og det ukjente, mens lav skår peker mot en som foretrekker det konkrete og velprøvde.",
+  conscientiousness:
+    "Planmessighet handler om hvor mye struktur, ansvar og målrettethet du legger inn i det du gjør. Høy skår peker mot grundighet og pålitelighet over tid, mens lav skår peker mot fleksibilitet og evne til å improvisere når planer endrer seg.",
+  extraversion:
+    "Ekstroversjon handler om hvor mye energi du henter fra sosial kontakt og ytre stimulering, og hvor tydelig du selv tar initiativ og plass sosialt. Høy skår peker mot en som lader opp blant andre mennesker, mens lav skår peker mot en som henter mer energi fra ro og egen tid.",
+  agreeableness:
+    "Medmenneskelighet handler om hvordan du balanserer egne behov opp mot andres -- tillit, omtanke og vilje til samarbeid. Høy skår peker mot en som setter fellesskap og andres behov høyt, mens lav skår peker mot en som er mer opptatt av å ivareta egne interesser.",
+  stability:
+    "Emosjonell stabilitet handler om hvor lett du blir aktivert av stress, usikkerhet og motgang, og hvor fort du finner roen igjen etterpå. Høy skår peker mot en som holder seg jevn under press, mens lav skår peker mot en som kjenner følelsene sterkere og reagerer raskere på det som skjer.",
+};
 
 export const INTERPRETATIONS: Copy = {
   openness: {
@@ -115,6 +159,8 @@ export const INTERPRETATIONS: Copy = {
         "Roller med stor grad av frihet og variasjon passer ofte bedre for deg enn stillinger som krever tett, langsiktig oppfølging av detaljer. Ekstern struktur -- sjekklister, eller faste rutiner satt av andre -- kan være god støtte i oppgaver der presisjon er avgjørende.",
       relationshipNote:
         "En partner eller nære venner opplever deg gjerne som avslappet og fleksibel å være sammen med, men også som noe mindre forutsigbar når det gjelder avtaler og oppfølging. Tydelig kommunikasjon om hva du faktisk kan love, er ekstra nyttig i nære relasjoner.",
+      synthesis:
+        "Faste rutiner og detaljerte planer styrer sjelden hverdagen din -- du forholder deg heller til det som dukker opp, og improviserer når noe endrer seg. Det gjør deg fleksibel når planer legges om på kort varsel, men kan gjøre det tyngre å holde fokus på noe som krever tett oppfølging over lang tid, som et stort prosjekt eller en avtale langt frem i tid. Denne friheten fra faste rammer preger både jobb og relasjoner: du trives best i roller med rom for å tenke underveis fremfor lange løp med faste milepæler, og en partner eller nære venner opplever deg gjerne som avslappet å være sammen med -- men også som noe mindre forutsigbar når det gjelder avtaler, så tydelighet om hva du faktisk kan love er ekstra nyttig.",
     },
     mid: {
       overview:
@@ -126,6 +172,8 @@ export const INTERPRETATIONS: Copy = {
         "Du takler både strukturerte oppgaver og mer frie arbeidsformer -- evnen til å justere hvor mye system du legger på en oppgave er en styrke i roller som varierer mye fra dag til dag.",
       relationshipNote:
         "Du tilpasser graden av planlegging etter hva situasjonen og relasjonen krever, uten at det ene alltid dominerer overfor en partner eller nære venner.",
+      synthesis:
+        "Struktur kommer og går etter behov hos deg -- du lager gjerne en liste til det viktigste, men ikke til alt, og både følger og avviker fra en plan uten at det stresser deg nevneverdig. Det gjør deg tilpasningsdyktig i de fleste sammenhenger, men det er ikke alltid opplagt -- verken for deg selv eller andre -- hvor mye struktur en gitt oppgave faktisk krever. Denne vekslingen gjør deg til en fleksibel kollega som takler både stramt strukturerte og friere arbeidsformer omtrent like godt, og i nære relasjoner tilpasser du gjerne graden av planlegging etter hva situasjonen faktisk ber om, uten at det ene alltid dominerer.",
     },
     high: {
       overview:
@@ -137,6 +185,8 @@ export const INTERPRETATIONS: Copy = {
         "Roller som krever nøyaktighet, pålitelighet og evne til å fullføre over tid passer godt for deg. Vær samtidig oppmerksom på at høye krav til deg selv kan gjøre det vanskeligere å delegere, eller akseptere at noe er «godt nok».",
       relationshipNote:
         "En partner eller nære venner stoler gjerne på at du følger opp det du sier -- en styrke i nære relasjoner. Egne høye standarder kan likevel av og til smitte over på forventningene du har til dem.",
+      synthesis:
+        "Grundighet og sans for detaljer peker seg tydelig ut hos deg -- du dobbeltsjekker gjerne arbeid før du leverer det, og lover sjelden noe du ikke faktisk følger opp. Den påliteligheten er en klar styrke når noe krever nøyaktighet eller langsiktig oppfølging, men rask og uforutsigbar endring kan kreve at du bevisst gir deg selv -- og andre -- litt mer rom for at ting ikke går helt som planlagt. På jobben gjør denne påliteligheten at andre gjerne gir deg ansvar uten å måtte følge opp i detalj, og i nære relasjoner er det samme mønsteret en styrke -- en partner eller nære venner vet at du følger opp det du sier. Vær samtidig oppmerksom på at egne høye krav lett kan smitte over på forventningene du har til andre, både hjemme og på jobb.",
     },
   },
   extraversion: {

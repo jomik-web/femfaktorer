@@ -22,7 +22,13 @@ import {
   clearRestoredAccountResult,
 } from "@/lib/storage";
 import { RoughFactorIndicator } from "@/components/RoughFactorIndicator";
-import { INTERPRETATIONS, NON_DIAGNOSTIC_NOTICE, bandFor, buildClosingSynthesis } from "@/data/interpretations";
+import {
+  INTERPRETATIONS,
+  DOMAIN_DEFINITIONS,
+  NON_DIAGNOSTIC_NOTICE,
+  bandFor,
+  buildClosingSynthesis,
+} from "@/data/interpretations";
 import { FACET_INTERPRETATIONS, FACET_ORDER_BY_DOMAIN, facetInterpretationFor } from "@/data/facetInterpretations";
 import {
   matchCombinationInsightsByDomain,
@@ -371,15 +377,23 @@ export default function ResultatPage() {
           {factors.map((f) => {
               const isActive = f.factor === activeFactor;
               const domain = DISPLAY_TO_DOMAIN[f.factor];
-              const copy = INTERPRETATIONS[f.factor][bandFor(f.score)];
+              const band = bandFor(f.score);
+              const copy = INTERPRETATIONS[f.factor][band];
               const order = FACET_ORDER_BY_DOMAIN[domain];
               const facetsForDomain = order
                 .map((code) => facets.find((fa) => fa.facet === code))
                 .filter((fa): fa is FacetResult => fa !== undefined);
+              // Fallback for hovedkategorier som ennå ikke har fått ny
+              // `synthesis`-tekst (v2.17-utrulling, se interpretations.ts).
               const facetDrivenOverview = buildFacetDrivenOverview(f.factor, domain, f.score, facetsForDomain);
               const domainCombos: CombinationInsight[] = domainCombosByDomain.get(domain) ?? [];
               const facetCombos: FacetCombinationInsight[] = facetCombosByDomain.get(domain) ?? [];
-              const hasCombos = domainCombos.length > 0 || facetCombos.length > 0;
+              // Ny struktur (domenedefinisjon -> fasetter -> én sammenhengende
+              // analyse) vises KUN når hovedkategorien har fått sin nye
+              // `synthesis`-tekst -- inntil da vises den gamle strukturen
+              // uendret, slik at ingen kategori ser ufullstendig ut midt i
+              // utrullingen. Se interpretations.ts filhode.
+              const useNewLayout = Boolean(copy.synthesis);
 
               return (
                 <section
@@ -390,23 +404,8 @@ export default function ResultatPage() {
                   <div className="flex flex-col gap-3">
                     <h2 className="text-3xl font-bold text-ink dark:text-white sm:text-4xl">{f.label}</h2>
                     <RoughFactorIndicator factor={f.factor} label={f.label} score={f.score} />
+                    <p className="text-sm text-ink/60 dark:text-warmgray/60">{DOMAIN_DEFINITIONS[f.factor]}</p>
                   </div>
-
-                  <article className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
-                    <p className="text-ink/80 dark:text-warmgray/80">{facetDrivenOverview}</p>
-                    <p className="text-ink/80 dark:text-warmgray/80">{copy.nuance}</p>
-                    <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
-                    <div className="mt-3 flex flex-col gap-3 border-t border-ink/10 pt-3 dark:border-white/10">
-                      <div>
-                        <h3 className="text-sm font-medium text-ink dark:text-white">I jobbsammenheng</h3>
-                        <p className="text-ink/80 dark:text-warmgray/80">{copy.careerNote}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-ink dark:text-white">I relasjoner</h3>
-                        <p className="text-ink/80 dark:text-warmgray/80">{copy.relationshipNote}</p>
-                      </div>
-                    </div>
-                  </article>
 
                   {facetsForDomain.length > 0 && (
                     <div className="flex flex-col gap-4">
@@ -414,39 +413,71 @@ export default function ResultatPage() {
                       <div className="flex flex-col gap-5">
                         {facetsForDomain.map((fa) => {
                           const meta = FACET_INTERPRETATIONS[fa.facet];
-                          const band = bandFor(fa.score);
+                          const facetBand = bandFor(fa.score);
                           return (
                             <div key={fa.facet} className="flex flex-col gap-1.5">
                               <RoughFactorIndicator factor={f.factor} label={meta?.label ?? fa.facet} score={fa.score} />
+                              {meta?.description && (
+                                <p className="text-xs italic text-ink/50 dark:text-warmgray/50">
+                                  {meta.description}
+                                </p>
+                              )}
                               <p className="text-sm text-ink/70 dark:text-warmgray/70">
-                                {facetInterpretationFor(fa.facet, band)}
+                                {facetInterpretationFor(fa.facet, facetBand)}
                               </p>
                             </div>
                           );
                         })}
                       </div>
+                      {facetCombos.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          {facetCombos.map((c) => (
+                            <article
+                              key={c.id}
+                              className="flex flex-col gap-1.5 rounded-lg bg-mint/50 p-4 dark:bg-white/5"
+                            >
+                              <h4 className="text-sm font-semibold text-ink dark:text-white">{c.title}</h4>
+                              <p className="text-sm text-ink/80 dark:text-warmgray/80">{c.text}</p>
+                            </article>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  {hasCombos && (
+                  {useNewLayout ? (
+                    <article className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
+                      <p className="text-ink/80 dark:text-warmgray/80">{copy.synthesis}</p>
+                      <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
+                    </article>
+                  ) : (
+                    <article className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
+                      <p className="text-ink/80 dark:text-warmgray/80">{facetDrivenOverview}</p>
+                      <p className="text-ink/80 dark:text-warmgray/80">{copy.nuance}</p>
+                      <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
+                      <div className="mt-3 flex flex-col gap-3 border-t border-ink/10 pt-3 dark:border-white/10">
+                        <div>
+                          <h3 className="text-sm font-medium text-ink dark:text-white">I jobbsammenheng</h3>
+                          <p className="text-ink/80 dark:text-warmgray/80">{copy.careerNote}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-ink dark:text-white">I relasjoner</h3>
+                          <p className="text-ink/80 dark:text-warmgray/80">{copy.relationshipNote}</p>
+                        </div>
+                      </div>
+                    </article>
+                  )}
+
+                  {domainCombos.length > 0 && (
                     <div className="flex flex-col gap-4">
                       <div>
                         <h3 className="font-semibold text-ink dark:text-white">Spennende samspill</h3>
                         <p className="text-sm text-ink/60 dark:text-warmgray/60">
-                          Noen kombinasjoner av faktorer og underkategorier gir kjente, godt dokumenterte
-                          mønstre. Her er de som passer med resultatet ditt.
+                          Noen kombinasjoner av hovedfaktorer gir kjente, godt dokumenterte mønstre. Her er
+                          de som passer med resultatet ditt.
                         </p>
                       </div>
                       {domainCombos.map((c) => (
-                        <article
-                          key={c.id}
-                          className="flex flex-col gap-2 rounded-lg bg-mint/50 p-5 dark:bg-white/5"
-                        >
-                          <h4 className="font-semibold text-ink dark:text-white">{c.title}</h4>
-                          <p className="text-ink/80 dark:text-warmgray/80">{c.text}</p>
-                        </article>
-                      ))}
-                      {facetCombos.map((c) => (
                         <article
                           key={c.id}
                           className="flex flex-col gap-2 rounded-lg bg-mint/50 p-5 dark:bg-white/5"
@@ -463,21 +494,10 @@ export default function ResultatPage() {
 
           {closing && (
             <section className="flex flex-col gap-4 border-t border-warmgray pt-8 dark:border-white/10">
-              <h2 className="text-xl font-semibold text-ink dark:text-white">
-                Hva kan dette bety videre?
-              </h2>
-              <div>
-                <h3 className="text-sm font-medium text-ink dark:text-white">Jobb</h3>
-                <p className="text-ink/80 dark:text-warmgray/80">{closing.career}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-ink dark:text-white">Relasjoner</h3>
-                <p className="text-ink/80 dark:text-warmgray/80">{closing.relationships}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-ink dark:text-white">Personlig utvikling</h3>
-                <p className="text-ink/80 dark:text-warmgray/80">{closing.personalDevelopment}</p>
-              </div>
+              <h2 className="text-xl font-semibold text-ink dark:text-white">Hva betyr dette for deg?</h2>
+              <p className="text-ink/80 dark:text-warmgray/80">
+                {closing.career} {closing.relationships} {closing.personalDevelopment}
+              </p>
             </section>
           )}
         </>
