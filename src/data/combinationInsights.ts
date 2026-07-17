@@ -350,6 +350,27 @@ export const FACET_COMBINATION_INSIGHTS: FacetCombinationInsight[] = [
 ];
 
 /**
+ * Samme som matchFacetCombinationInsights under, men UTEN domenegruppering
+ * -- til bruk der man vil se på tvers av hele profilen uten å plassere hvert
+ * funn under ett bestemt domene (v2.22, se interpretations.ts sin nye
+ * buildClosingSynthesis, som bruker denne til den avsluttende
+ * profil-oppsummeringen).
+ */
+export function matchFacetCombinationInsightsFlat(
+  facets: FacetResult[],
+  bandFor: (score: number) => "low" | "mid" | "high"
+): FacetCombinationInsight[] {
+  const extremeByFacet = new Map<string, ExtremeBand>();
+  for (const f of facets) {
+    const band = bandFor(f.score);
+    if (band === "low" || band === "high") extremeByFacet.set(f.facet, band);
+  }
+  return FACET_COMBINATION_INSIGHTS.filter(
+    (c) => extremeByFacet.get(c.facetA) === c.bandA && extremeByFacet.get(c.facetB) === c.bandB
+  );
+}
+
+/**
  * Finner alle kuraterte FASETT-kombinasjoner som treffer brukerens faktiske
  * profil, og grupperer dem etter hvilket hoveddomene de skal vises under
  * (se filhode om plasseringsregelen).
@@ -358,17 +379,8 @@ export function matchFacetCombinationInsights(
   facets: FacetResult[],
   bandFor: (score: number) => "low" | "mid" | "high"
 ): Map<Domain, FacetCombinationInsight[]> {
-  const extremeByFacet = new Map<string, ExtremeBand>();
-  for (const f of facets) {
-    const band = bandFor(f.score);
-    if (band === "low" || band === "high") extremeByFacet.set(f.facet, band);
-  }
-
   const byDomain = new Map<Domain, FacetCombinationInsight[]>();
-  for (const combo of FACET_COMBINATION_INSIGHTS) {
-    if (extremeByFacet.get(combo.facetA) !== combo.bandA) continue;
-    if (extremeByFacet.get(combo.facetB) !== combo.bandB) continue;
-
+  for (const combo of matchFacetCombinationInsightsFlat(facets, bandFor)) {
     const domainA = FACET_INTERPRETATIONS[combo.facetA]?.domain;
     const domainB = FACET_INTERPRETATIONS[combo.facetB]?.domain;
     if (!domainA || !domainB) continue; // ukjent fasettkode -- ignorer defensivt

@@ -54,8 +54,13 @@ export default function ResultatPage() {
   const [o6Score, setO6Score] = useState<number | null>(null);
   // Hvilken hovedkategori-"side" som vises for den fulle testen (v2.3,
   // produkteiers ønske om å dele opp rapporten i én side per hovedkategori
-  // i stedet for alt på én lang side).
-  const [activeFactor, setActiveFactor] = useState<DisplayFactor | null>(null);
+  // i stedet for alt på én lang side). v2.22: kan også være "summary" -- den
+  // avsluttende profiloppsummeringen ("Hva betyr dette for deg") fikk sin
+  // egen fane i stedet for å vises under HVER hovedkategori-fane (den forrige
+  // plasseringen, utenfor factors.map() men fortsatt inni samme synlige
+  // område, gjorde at den i praksis dukket opp uansett hvilken hovedkategori
+  // som var valgt -- rapportert som "kommer etter hvert hovedkategori").
+  const [activeFactor, setActiveFactor] = useState<DisplayFactor | "summary" | null>(null);
   // Sant når resultatet vises fra kontoen (etter innlogging på en enhet uten
   // lokale svar) i stedet for fra denne enhetens egne lagrede testsvar --
   // v2.4, se lib/storage.ts og /logg-inn.
@@ -289,7 +294,7 @@ export default function ResultatPage() {
   const facetCombosByDomain: Map<Domain, FacetCombinationInsight[]> = isDetailed
     ? matchFacetCombinationInsights(facets, bandFor)
     : new Map<Domain, FacetCombinationInsight[]>();
-  const closing = isDetailed ? buildClosingSynthesis(factors) : null;
+  const closing = isDetailed ? buildClosingSynthesis(factors, facets) : null;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-10 px-6 py-12 print:max-w-none">
@@ -372,6 +377,20 @@ export default function ResultatPage() {
                 {f.label}
               </button>
             ))}
+            {closing && (
+              <button
+                type="button"
+                onClick={() => setActiveFactor("summary")}
+                aria-current={activeFactor === "summary" ? "page" : undefined}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  activeFactor === "summary"
+                    ? "bg-teal text-white"
+                    : "bg-warmgray text-ink hover:bg-warmgray/70 dark:bg-white/10 dark:text-warmgray dark:hover:bg-white/20"
+                }`}
+              >
+                Oppsummering
+              </button>
+            )}
           </nav>
 
           {factors.map((f) => {
@@ -500,11 +519,14 @@ export default function ResultatPage() {
             })}
 
           {closing && (
-            <section className="flex flex-col gap-4 border-t border-warmgray pt-8 dark:border-white/10">
+            <section
+              className={`flex flex-col gap-4 border-t border-warmgray pt-8 dark:border-white/10 ${
+                activeFactor === "summary" ? "" : "hidden print:flex"
+              }`}
+              aria-hidden={activeFactor !== "summary"}
+            >
               <h2 className="text-xl font-semibold text-ink dark:text-white">Hva betyr dette for deg?</h2>
-              <p className="text-ink/80 dark:text-warmgray/80">
-                {closing.career} {closing.relationships} {closing.personalDevelopment}
-              </p>
+              <p className="text-ink/80 dark:text-warmgray/80">{closing.text}</p>
             </section>
           )}
         </>

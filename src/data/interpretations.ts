@@ -51,7 +51,15 @@
  * er redesignet, som skjer etter at alle fem kategoriene er migrert.
  */
 
-import type { DisplayFactor, FactorResult } from "@/lib/scoring";
+import {
+  DISPLAY_FACTOR_LABELS_NO,
+  DOMAIN_TO_DISPLAY,
+  type DisplayFactor,
+  type FactorResult,
+  type FacetResult,
+} from "@/lib/scoring";
+import { matchCombinationInsights, matchFacetCombinationInsightsFlat } from "@/data/combinationInsights";
+import { FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
 
 export type Band = "low" | "mid" | "high";
 
@@ -89,6 +97,18 @@ export interface Interpretation {
    * Valgfritt inntil ALLE fem hovedkategorier er migrert -- se filhode.
    */
   synthesis?: string;
+  /**
+   * NYTT FELT (v2.22). Kort, fremadskuende "hva betyr dette for deg"-tekst
+   * (1-2 setninger) BRUKT KUN i den avsluttende profil-oppsummeringen (se
+   * buildClosingSynthesis under), aldri i selve hovedkategori-seksjonen.
+   * Skrevet med bevisst ANNET ordforråd og andre bilder enn
+   * overview/nuance/synthesis/careerNote/relationshipNote over, siden
+   * produkteier ba om at oppsummeringen ikke gjentar noe ordrett fra resten
+   * av rapporten. Dekker bevisst ULIKE livsområder på tvers av de 15
+   * tekstene (noen jobb, noen relasjoner, noen personlig utvikling) i stedet
+   * for å følge samme jobb+relasjon-mal hver gang.
+   */
+  closingHook: string;
 }
 
 type Copy = Record<DisplayFactor, Record<Band, Interpretation>>;
@@ -128,7 +148,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "I en kjæreste- eller samboerrelasjon setter du pris på faste rammer og et rolig tempo -- en partner som deler eller respekterer det, matcher deg som regel godt. Blant venner er det ofte de faste, langvarige vennskapene du verdsetter mest, fremfor stadig nye bekjentskaper.",
       synthesis:
-        "Det konkrete og velprøvde tiltrekker deg tydelig mer enn det uprøvde -- du velger gjerne metoder som allerede har vist seg å fungere, holder deg til en kjent rute på ferie, og bruker sjelden mye tid på kunst eller teori for teoriens skyld. Denne forankringen i det kjente gjør deg praktisk og forutsigbar å samarbeide med, siden andre som regel vet hvor de har deg -- men et prosjekt uten fasit, eller en omstilling du ikke har bedt om, krever gjerne en bevisst innsats for å legge vante løsninger til side. På jobben handler dette ofte om å få ting unnagjort fremfor å utforske alternativer først, og roller med tydelige rammer -- drift, forvaltning, fagområder med etablert praksis -- kjennes gjerne tryggere for deg enn en nyskapende rolle. I relasjoner veier stabilitet tyngre enn spenning: en partner som deler eller respekterer et rolig tempo passer deg som regel godt, og blant venner er det ofte de faste, langvarige vennskapene du verdsetter mest.",
+        "Det konkrete og velprøvde tiltrekker deg tydelig mer enn det uprøvde. Du velger gjerne metoder som allerede fungerer, holder deg til en kjent rute på ferie, og bruker sjelden mye tid på kunst eller teori for teoriens skyld. Denne forankringen gjør deg praktisk og forutsigbar å samarbeide med -- andre vet som regel hvor de har deg. Et prosjekt uten fasit, eller en omstilling du ikke har bedt om, krever derimot en bevisst innsats for å legge vante løsninger til side. På jobben handler dette ofte om å få ting unnagjort fremfor å utforske alternativer først. Roller med tydelige rammer -- drift, forvaltning, etablert praksis -- kjennes tryggere for deg enn en nyskapende rolle. I relasjoner veier stabilitet tyngre enn spenning: en partner som deler eller respekterer et rolig tempo passer deg godt, og blant venner er det gjerne de faste, langvarige vennskapene du setter høyest.",
+      closingHook:
+        "Din styrke ligger i å gjøre det som allerede virker, enda bedre -- ikke i å finne opp noe helt nytt. Bruk det bevisst: du er gjerne den som får et etablert system til å gå enda rundere.",
     },
     mid: {
       overview:
@@ -141,7 +163,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Sammen med en partner beveger du deg naturlig mellom det kjente og det nye, og tilpasser deg gjerne den andres behov for stabilitet eller variasjon underveis.",
       synthesis:
-        "Du beveger deg naturlig mellom det kjente og det nye -- byr en anledning seg, blir du gjerne med på noe nytt, uten at du aktivt søker det uprøvde hele tiden. Denne fleksibiliteten gjør deg tilpasningsdyktig i de fleste sammenhenger, men det kan være vanskelig å vite i farten om du egentlig lengter etter noe nytt, eller bare er vant til å tenke at du burde. Privat varierer interessene dine gjerne med hvem du er sammen med, og på jobben takler du rutinepregede og kreative oppgaver omtrent like godt -- en allsidighet som passer inn i mange typer roller, fra faste rammer til oppgaver som krever litt nytenkning underveis. Sammen med en partner beveger du deg på samme måte naturlig mellom det kjente og det nye, og tilpasser deg gjerne den andres behov for stabilitet eller variasjon underveis.",
+        "Du beveger deg naturlig mellom det kjente og det nye. Byr en anledning seg, blir du gjerne med på noe nytt -- uten at du aktivt søker det uprøvde hele tiden. Denne fleksibiliteten gjør deg tilpasningsdyktig i de fleste sammenhenger. Det kan likevel være vanskelig å vite i farten om du egentlig lengter etter noe nytt, eller bare er vant til å tenke at du burde. Privat varierer interessene dine gjerne med hvem du er sammen med. På jobben takler du rutinepregede og kreative oppgaver omtrent like godt -- en allsidighet som passer inn i mange typer roller. Sammen med en partner tilpasser du deg gjerne den andres behov for stabilitet eller variasjon.",
+      closingHook:
+        "Du har begge modiene tilgjengelig, og det gir deg et reelt valg -- ikke bare en vane -- når noe nytt dukker opp. Verdt å legge merke til hvilke situasjoner som faktisk får deg til å velge det uprøvde.",
     },
     high: {
       overview:
@@ -154,7 +178,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "I en kjæreste- eller samboerrelasjon fungerer det som regel best med en partner som tåler, eller helst deler, interessen din for det nye og uprøvde -- trygghet handler mer om felles utforsking for deg enn om fast forutsigbarhet. Blant venner trekkes du mot dem som byr på nye perspektiver.",
       synthesis:
-        "Nye ideer, inntrykk og perspektiver tiltrekker deg tydelig -- det viser seg gjerne som interesse for kunst, en uvant idé, eller et sted du ikke kjenner fra før, og som en vane med å stille spørsmål ved det andre tar for gitt. Nysgjerrigheten din gjør deg kreativ og til en pådriver når noe faktisk trenger å tenkes nytt, men ren gjentakelse og stor forutsigbarhet er situasjoner der den samme trangen til det nye lett kan oppleves som utålmodighet, både for deg selv og andre rundt deg. På jobben er det ofte du som foreslår en annen løsning enn den vante, og roller som gir rom for nytenkning, utforsking eller kreativt arbeid passer deg godt -- sterkt rutinepregede stillinger kan over tid kjennes lite stimulerende. I en kjæreste- eller samboerrelasjon fungerer det som regel best med en partner som tåler, eller helst deler, interessen din for det nye og uprøvde, og blant venner trekkes du gjerne mot dem som byr på nye perspektiver.",
+        "Nye ideer, inntrykk og perspektiver tiltrekker deg tydelig. Det viser seg gjerne som interesse for kunst, en uvant idé, eller et sted du ikke kjenner fra før -- og som en vane med å stille spørsmål ved det andre tar for gitt. Nysgjerrigheten din gjør deg kreativ, og en pådriver når noe faktisk trenger å tenkes nytt. Ren gjentakelse og stor forutsigbarhet kan derimot fort oppleves som utålmodighet, både for deg selv og andre. På jobben er det ofte du som foreslår en annen løsning enn den vante -- roller med rom for nytenkning eller kreativt arbeid passer deg godt, mens sterkt rutinepregede stillinger kan kjennes lite stimulerende over tid. I en kjæreste- eller samboerrelasjon fungerer det som regel best med en partner som tåler, eller helst deler, interessen din for det nye. Blant venner trekkes du gjerne mot dem som byr på nye perspektiver.",
+      closingHook:
+        "Ideene dine har mest verdi når de faktisk lander et sted -- en skisse, et prosjekt, en samtale som går videre. Uten det blir nysgjerrigheten fort en serie løse tråder.",
     },
   },
   conscientiousness: {
@@ -169,7 +195,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "En partner eller nære venner opplever deg gjerne som avslappet og fleksibel å være sammen med, men også som noe mindre forutsigbar når det gjelder avtaler og oppfølging. Tydelig kommunikasjon om hva du faktisk kan love, er ekstra nyttig i nære relasjoner.",
       synthesis:
-        "Faste rutiner og detaljerte planer styrer sjelden hverdagen din -- du forholder deg heller til det som dukker opp, og improviserer når noe endrer seg. Det gjør deg fleksibel når planer legges om på kort varsel, men kan gjøre det tyngre å holde fokus på noe som krever tett oppfølging over lang tid, som et stort prosjekt eller en avtale langt frem i tid. Denne friheten fra faste rammer preger både jobb og relasjoner: du trives best i roller med rom for å tenke underveis fremfor lange løp med faste milepæler, og en partner eller nære venner opplever deg gjerne som avslappet å være sammen med -- men også som noe mindre forutsigbar når det gjelder avtaler, så tydelighet om hva du faktisk kan love er ekstra nyttig.",
+        "Faste rutiner og detaljerte planer styrer sjelden hverdagen din. Du forholder deg heller til det som dukker opp, og improviserer når noe endrer seg. Det gjør deg fleksibel når planer legges om på kort varsel. Det kan derimot gjøre det tyngre å holde fokus på noe som krever tett oppfølging over lang tid, som et stort prosjekt eller en avtale langt frem i tid. Du trives best i roller med rom for å tenke underveis, fremfor lange løp med faste milepæler. En partner eller nære venner opplever deg gjerne som avslappet å være sammen med -- men også som noe mindre forutsigbar når det gjelder avtaler. Tydelighet om hva du faktisk kan love er derfor ekstra nyttig.",
+      closingHook:
+        "Du er sjelden den som bremser noe med for mye planlegging -- den fleksibiliteten er en reell ressurs når ting endrer seg raskt. Skriv ned det du faktisk har lovet noen, så det ikke bare lever i hodet ditt.",
     },
     mid: {
       overview:
@@ -182,7 +210,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Du tilpasser graden av planlegging etter hva situasjonen og relasjonen krever, uten at det ene alltid dominerer overfor en partner eller nære venner.",
       synthesis:
-        "Struktur kommer og går etter behov hos deg -- du lager gjerne en liste til det viktigste, men ikke til alt, og både følger og avviker fra en plan uten at det stresser deg nevneverdig. Det gjør deg tilpasningsdyktig i de fleste sammenhenger, men det er ikke alltid opplagt -- verken for deg selv eller andre -- hvor mye struktur en gitt oppgave faktisk krever. Denne vekslingen gjør deg til en fleksibel kollega som takler både stramt strukturerte og friere arbeidsformer omtrent like godt, og i nære relasjoner tilpasser du gjerne graden av planlegging etter hva situasjonen faktisk ber om, uten at det ene alltid dominerer.",
+        "Struktur kommer og går etter behov hos deg. Du lager gjerne en liste til det viktigste, men ikke til alt, og både følger og avviker fra en plan uten at det stresser deg nevneverdig. Det gjør deg tilpasningsdyktig i de fleste sammenhenger. Det er derimot ikke alltid opplagt -- verken for deg selv eller andre -- hvor mye struktur en gitt oppgave faktisk krever. Denne vekslingen gjør deg til en fleksibel kollega, som takler både stramt strukturerte og friere arbeidsformer omtrent like godt. I nære relasjoner tilpasser du gjerne graden av planlegging etter hva situasjonen faktisk ber om.",
+      closingHook:
+        "Du velger struktur der den faktisk trengs, i stedet for å bruke den overalt av vane. Det er en undervurdert ferdighet -- mange bruker enten for mye eller for lite tid på planlegging, uansett situasjon.",
     },
     high: {
       overview:
@@ -195,7 +225,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "En partner eller nære venner stoler gjerne på at du følger opp det du sier -- en styrke i nære relasjoner. Egne høye standarder kan likevel av og til smitte over på forventningene du har til dem.",
       synthesis:
-        "Grundighet og sans for detaljer peker seg tydelig ut hos deg -- du dobbeltsjekker gjerne arbeid før du leverer det, og lover sjelden noe du ikke faktisk følger opp. Den påliteligheten er en klar styrke når noe krever nøyaktighet eller langsiktig oppfølging, men rask og uforutsigbar endring kan kreve at du bevisst gir deg selv -- og andre -- litt mer rom for at ting ikke går helt som planlagt. På jobben gjør denne påliteligheten at andre gjerne gir deg ansvar uten å måtte følge opp i detalj, og i nære relasjoner er det samme mønsteret en styrke -- en partner eller nære venner vet at du følger opp det du sier. Vær samtidig oppmerksom på at egne høye krav lett kan smitte over på forventningene du har til andre, både hjemme og på jobb.",
+        "Grundighet og sans for detaljer peker seg tydelig ut hos deg. Du dobbeltsjekker gjerne arbeid før du leverer det, og lover sjelden noe du ikke faktisk følger opp. Den påliteligheten er en klar styrke når noe krever nøyaktighet eller langsiktig oppfølging. Rask og uforutsigbar endring kan derimot kreve at du bevisst gir deg selv -- og andre -- litt mer rom for at ting ikke går helt som planlagt. På jobben gjør påliteligheten din at andre gjerne gir deg ansvar uten å måtte følge opp i detalj. I nære relasjoner er det samme mønsteret en styrke -- en partner eller nære venner vet at du følger opp det du sier. Vær samtidig oppmerksom på at egne høye krav lett kan smitte over på forventningene du har til andre, både hjemme og på jobb.",
+      closingHook:
+        "Ordet ditt veier tungt for folk rundt deg, nettopp fordi du sjelden bryter det. Pass på at den samme påliteligheten ikke stille blir en forventning du legger på deg selv i alt du gjør.",
     },
   },
   extraversion: {
@@ -210,7 +242,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Du trives best med noen få nære relasjoner fremfor et stort nettverk. En partner som respekterer behovet ditt for egen tid, og venner som forstår at du trenger ro innimellom, passer deg som regel godt.",
       synthesis:
-        "Ro og egen tid gir deg mer energi enn store forsamlinger av mennesker -- du foretrekker én-til-én-samtaler fremfor store selskaper, og trenger tid alene for å lade opp etter en sosial dag. Denne preferansen for ro gir deg godt fokus og evne til dypere konsentrasjon uten å bli avledet av det som skjer rundt deg, men mye sosial energi over tid -- nettverksbygging, store arrangementer -- kan kjennes tyngre å holde ut i enn for andre. På jobben presterer du gjerne best med færre avbrytelser og mer skjermet tid, og roller med selvstendig arbeid og dybdefokus passer deg bedre enn åpne kontorlandskap eller mye uforutsigbar sosial kontakt. Du trives best med noen få nære relasjoner fremfor et stort nettverk -- en partner som respekterer behovet ditt for egen tid, og venner som forstår at du trenger ro innimellom, passer deg som regel godt.",
+        "Ro og egen tid gir deg mer energi enn store forsamlinger av mennesker. Du foretrekker én-til-én-samtaler fremfor store selskaper, og trenger tid alene for å lade opp etter en sosial dag. Denne preferansen gir deg godt fokus og evne til dypere konsentrasjon, uten å bli avledet av det som skjer rundt deg. Mye sosial energi over tid -- nettverksbygging, store arrangementer -- kan derimot kjennes tyngre å holde ut i enn for andre. På jobben presterer du gjerne best med færre avbrytelser og mer skjermet tid. Roller med selvstendig arbeid og dybdefokus passer deg bedre enn åpne kontorlandskap. Du trives best med noen få nære relasjoner fremfor et stort nettverk -- en partner som respekterer behovet ditt for egen tid, og venner som forstår at du trenger ro innimellom, passer deg som regel godt.",
+      closingHook:
+        "Energien din er en ressurs som må forvaltes bevisst, ikke brukes opp automatisk i enhver sosial sammenheng. Å velge bort noe sosialt er ikke et tegn på at noe er galt -- det er ofte riktig prioritering for deg.",
     },
     mid: {
       overview:
@@ -223,7 +257,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Sosial energi varierer fra dag til dag for deg, og du finner som regel selv en rimelig balanse mellom samvær med partner og venner, og egen tid.",
       synthesis:
-        "Sosialt selskap og egen tid deler plassen ganske jevnt i livet ditt, uten at det ene klart dominerer -- du blir gjerne med på sosiale ting, men setter også pris på en kveld helt alene uten at det føles som noe savn. Denne vekslingen gjør deg fleksibel i de fleste sosiale situasjoner, men det kan være vanskelig å kjenne etter i farten om det egentlig er ro eller selskap du trenger mest. Privat varierer energien din en del fra dag til dag; på jobben fungerer du godt både i team og med selvstendig arbeid, og tilpasser deg dermed ulike arbeidsmiljøer uten at det ene tapper deg mer enn det andre. Sosial energi varierer på samme måte fra dag til dag i relasjonene dine, og du finner som regel selv en rimelig balanse mellom samvær med partner og venner, og egen tid.",
+        "Sosialt selskap og egen tid deler plassen ganske jevnt i livet ditt, uten at det ene klart dominerer. Du blir gjerne med på sosiale ting, men setter også pris på en kveld helt alene uten at det føles som noe savn. Denne vekslingen gjør deg fleksibel i de fleste sosiale situasjoner. Det kan likevel være vanskelig å kjenne etter i farten om det egentlig er ro eller selskap du trenger mest. Energien din varierer en del fra dag til dag. På jobben fungerer du godt både i team og med selvstendig arbeid, og tilpasser deg dermed ulike arbeidsmiljøer. I relasjonene dine finner du som regel selv en rimelig balanse mellom samvær med partner og venner, og egen tid.",
+      closingHook:
+        "Du trenger sjelden ekstreme løsninger for å ha det bra sosialt -- verken mye alenetid eller mye selskap over lang tid. Den fleksibiliteten er lett å overse som en styrke, nettopp fordi den ikke skaper problemer.",
     },
     high: {
       overview:
@@ -236,7 +272,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Du trives som regel best når det skjer noe sammen med andre -- en middag med venner, en tur, en spontan plan. En partner som setter pris på, eller i det minste forstår, behovet ditt for et aktivt sosialt liv, passer deg godt. Venner og familie er ofte en viktig kilde til energi og gode opplevelser for deg.",
       synthesis:
-        "Du får tydelig energi av mennesker, og merker det raskt når det skjer noe rundt deg -- det faller naturlig for deg å ta kontakt først, presentere deg for noen du ikke kjenner, eller foreslå at gruppen gjør noe sammen i stedet for å vente og se. Den sosiale energien din smitter lett over på andre, og du blir ofte den som drar i gang driv og stemning i en gruppe -- baksiden er at det kan bli fristende å fylle kalenderen litt for mye, og en helg uten planer kan kjennes tommere for deg enn for mange andre. På jobben bidrar du ofte til liv, fremdrift og engasjement i møter og prosjekter, og arbeid der du får møte mennesker, samarbeide eller formidle -- som salg, prosjektledelse eller kundekontakt -- gir deg gjerne energi i stedet for å tappe deg. Du trives som regel best når det skjer noe sammen med andre, enten det er en middag med venner eller en spontan plan, og en partner som setter pris på -- eller i det minste forstår -- behovet ditt for et aktivt sosialt liv, passer deg godt.",
+        "Du får tydelig energi av mennesker, og merker det raskt når det skjer noe rundt deg. Det faller naturlig for deg å ta kontakt først, presentere deg for noen du ikke kjenner, eller foreslå at gruppen gjør noe sammen i stedet for å vente og se. Den sosiale energien din smitter lett over på andre -- du blir ofte den som drar i gang driv og stemning i en gruppe. Baksiden er at det kan bli fristende å fylle kalenderen litt for mye; en helg uten planer kan kjennes tommere for deg enn for mange andre. På jobben bidrar du ofte til liv, fremdrift og engasjement i møter og prosjekter. Arbeid der du får møte mennesker, samarbeide eller formidle -- som salg, prosjektledelse eller kundekontakt -- gir deg gjerne energi i stedet for å tappe deg. Du trives som regel best når det skjer noe sammen med andre, og en partner som setter pris på -- eller i det minste forstår -- behovet ditt for et aktivt sosialt liv, passer deg godt.",
+      closingHook:
+        "Andre merker fort når du er i rommet, og det gir deg en reell innflytelse på stemningen rundt deg. Bruk den bevisst -- den samme energien kan løfte en gruppe, eller ta unødvendig mye plass.",
     },
   },
   agreeableness: {
@@ -251,7 +289,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Du setter grenser tydelig overfor en partner eller venner, noe som kan være en styrke. Nære relasjoner trenger likevel av og til at du bevisst viser fram at du bryr deg, ikke bare at du har rett.",
       synthesis:
-        "Egne vurderinger veier tungt hos deg, også når de støter mot det andre mener -- du sier tydelig fra når du er uenig, og forhandler hardt når det trengs. Denne tydeligheten gjør deg god til å sette grenser og stå støtt i konflikt når det faktisk er nødvendig, men tett samarbeid kan dra nytte av at du bevisst løfter frem den andre partens perspektiv, selv når du er trygg på ditt eget. På jobben er det ofte du som utfordrer beslutninger andre ikke våger å stille spørsmål ved, og roller som krever tøffe forhandlinger eller tydelige beslutninger passer deg derfor godt. Du setter grenser tydelig overfor en partner eller venner, noe som kan være en styrke i seg selv -- men nære relasjoner trenger av og til at du bevisst viser at du bryr deg, ikke bare at du har rett.",
+        "Egne vurderinger veier tungt hos deg, også når de støter mot det andre mener. Du sier tydelig fra når du er uenig, og forhandler hardt når det trengs. Denne tydeligheten gjør deg god til å sette grenser og stå støtt i konflikt når det faktisk er nødvendig. Tett samarbeid kan derimot dra nytte av at du bevisst løfter frem den andre partens perspektiv, selv når du er trygg på ditt eget. På jobben er det ofte du som utfordrer beslutninger andre ikke våger å stille spørsmål ved -- roller som krever tøffe forhandlinger eller tydelige beslutninger passer deg derfor godt. Du setter grenser tydelig overfor en partner eller venner, noe som kan være en styrke i seg selv. Nære relasjoner trenger likevel av og til at du bevisst viser at du bryr deg, ikke bare at du har rett.",
+      closingHook:
+        "Du er sjelden den som lar andre bestemme premissene for deg -- det er en styrke i forhandlinger og pressede situasjoner. Vurder likevel innimellom om saken faktisk er verdt like mye som prinsippet.",
     },
     mid: {
       overview:
@@ -264,7 +304,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Du gir og tar omtrent i lik grad i relasjoner, avhengig av situasjonen -- en balansert stil som en partner eller venner som regel opplever som rimelig.",
       synthesis:
-        "Egne og andres behov teller omtrent likt for deg, avhengig av situasjonen du står i -- du gir deg gjerne i en diskusjon den ene dagen og holder på ditt den neste, uten noe fast mønster. Denne jevne vektingen gjør deg til en forutsigbar og rettferdig samarbeidspartner, men utfordringen kan være å skjønne i farten når du egentlig burde sette deg selv først -- eller omvendt. På jobben tilpasser du samarbeidsstilen din etter hvem du jobber med, og fungerer derfor rimelig godt i de fleste team -- verken for ettergivende eller for konfronterende. Du gir og tar omtrent i lik grad i relasjoner også, avhengig av situasjonen -- en balansert stil som en partner eller venner som regel opplever som rimelig.",
+        "Egne og andres behov teller omtrent likt for deg, avhengig av situasjonen du står i. Du gir deg gjerne i en diskusjon den ene dagen, og holder på ditt den neste, uten noe fast mønster. Denne jevne vektingen gjør deg til en forutsigbar og rettferdig samarbeidspartner. Utfordringen kan være å skjønne i farten når du egentlig burde sette deg selv først -- eller omvendt. På jobben tilpasser du samarbeidsstilen din etter hvem du jobber med, og fungerer derfor rimelig godt i de fleste team. Du gir og tar omtrent i lik grad i relasjoner også -- en balansert stil som en partner eller venner som regel opplever som rimelig.",
+      closingHook:
+        "Du velger sjelden side automatisk -- verken alltid deg selv eller alltid andre. Den dømmekraften er lettere å ta for gitt enn den burde være.",
     },
     high: {
       overview:
@@ -277,7 +319,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "En partner eller venner lener seg gjerne på deg som en varm og støttende person å ha rundt seg. Pass på at det ikke går på bekostning av dine egne behov i det lange løp.",
       synthesis:
-        "Andres behov opptar en stor plass hos deg, og du finner ofte glede i å hjelpe -- du sier gjerne ja når noen ber om hjelp, selv når det koster deg noe, og velger heller å unngå konflikt enn å skape uenighet. Andre lener seg gjerne på deg som en varm, tillitsvekkende samarbeidspartner nettopp derfor, men å sette grenser kan bli vanskeligere med det samme trekket, selv når det går ut over deg selv. På jobben tar du ofte på deg mer enn du burde for å hjelpe andre, og selv om du er en verdsatt samarbeidspartner i team, kan bevisst grensesetting derfor være ekstra viktig for deg. Privat bruker du mye energi på å unngå at noen blir skuffet, og en partner eller venner lener seg gjerne på deg som en varm og støttende person å ha rundt seg -- pass på at det ikke går på bekostning av dine egne behov i det lange løp.",
+        "Andres behov opptar en stor plass hos deg, og du finner ofte glede i å hjelpe. Du sier gjerne ja når noen ber om hjelp, selv når det koster deg noe, og velger heller å unngå konflikt enn å skape uenighet. Andre lener seg gjerne på deg som en varm, tillitsvekkende samarbeidspartner nettopp derfor. Å sette grenser kan derimot bli vanskeligere med det samme trekket, selv når det går ut over deg selv. På jobben tar du ofte på deg mer enn du burde for å hjelpe andre -- bevisst grensesetting kan derfor være ekstra viktig for deg, selv som en verdsatt samarbeidspartner i team. Privat bruker du mye energi på å unngå at noen blir skuffet. En partner eller venner lener seg gjerne på deg som en varm og støttende person å ha rundt seg -- pass på at det ikke går på bekostning av dine egne behov i det lange løp.",
+      closingHook:
+        "Du er sjelden den som skaper en konflikt, men vær obs på hvor ofte du unngår en du faktisk burde tatt. Noen ganger er det mest omsorgsfulle å si tydelig fra.",
     },
   },
   stability: {
@@ -292,7 +336,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Forutsigbarhet og tydelig kommunikasjon fra en partner og nære venner hjelper deg å kjenne deg trygg. Det kan være verdt å være åpen om hva som skaper uro for deg, slik at de rundt deg kan møte det.",
       synthesis:
-        "Bekymring, uro og humørsvingninger rammer deg noe hardere enn mange andre i perioder -- smått kan vokse seg stort i tankene dine, og humøret ditt kan svinge en del i løpet av én og samme dag. Denne følsomheten betyr også at du er følelsesmessig oppmerksom og legger merke til nyanser i stemninger som andre overser, men i stressende perioder er det ekstra viktig for deg å ha noen faste holdepunkter -- rutiner, mennesker eller steder -- som hjelper deg å roe deg selv ned. På jobben kjennes press og tidsfrister ofte tyngre enn de ser ut til for andre, og roller med noe mer forutsigbarhet, sammen med støtte fra kolleger eller leder, kan gjøre stor forskjell. Forutsigbarhet og tydelig kommunikasjon fra en partner og nære venner hjelper deg å kjenne deg trygg, og det kan være verdt å være åpen om hva som skaper uro for deg, slik at de rundt deg kan møte det.",
+        "Bekymring, uro og humørsvingninger rammer deg noe hardere enn mange andre i perioder. Smått kan vokse seg stort i tankene dine, og humøret ditt kan svinge en del i løpet av én og samme dag. Denne følsomheten betyr også at du er følelsesmessig oppmerksom, og legger merke til nyanser i stemninger som andre overser. I stressende perioder er det ekstra viktig for deg å ha noen faste holdepunkter -- rutiner, mennesker eller steder -- som hjelper deg å roe deg selv ned. På jobben kjennes press og tidsfrister ofte tyngre enn de ser ut til for andre. Roller med noe mer forutsigbarhet, sammen med støtte fra kolleger eller leder, kan gjøre stor forskjell. Forutsigbarhet og tydelig kommunikasjon fra en partner og nære venner hjelper deg å kjenne deg trygg. Det kan være verdt å være åpen om hva som skaper uro for deg, slik at de rundt deg kan møte det.",
+      closingHook:
+        "Følsomheten din er ikke bare noe å håndtere -- den gjør deg også i stand til å fange opp ting andre går glipp av. Faste holdepunkter hjelper deg mer enn viljestyrke gjør, når presset øker.",
     },
     mid: {
       overview:
@@ -305,7 +351,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Du er som regel den nokså rolige i opp- og nedturer sammen med en partner eller venner, uten at det betyr at ingenting berører deg.",
       synthesis:
-        "Livets opp- og nedturer håndteres med en ganske jevn linje hos deg -- du blir litt stresset eller nedfor når noe faktisk er krevende, men det tar sjelden overhånd eller varer unødvendig lenge. Denne jevne linjen gir deg en solid, stabil grunnmur å møte hverdagen fra, men er flere ting krevende samtidig, eller varer presset lenge, kan det likevel være nyttig å ha noen faste rutiner å støtte deg på. På jobben tåler du et visst arbeidspress uten at det går nevneverdig utover deg, selv om flere krevende ting samtidig kan kjennes tyngre -- faste rutiner kan da være en nyttig støtte i travle perioder. Du er som regel den nokså rolige i opp- og nedturer sammen med en partner eller venner også, uten at det betyr at ingenting berører deg.",
+        "Livets opp- og nedturer håndteres med en ganske jevn linje hos deg. Du blir litt stresset eller nedfor når noe faktisk er krevende, men det tar sjelden overhånd eller varer unødvendig lenge. Denne jevne linjen gir deg en solid, stabil grunnmur å møte hverdagen fra. Er flere ting krevende samtidig, eller varer presset lenge, kan det likevel være nyttig å ha noen faste rutiner å støtte deg på. På jobben tåler du et visst arbeidspress uten at det går nevneverdig utover deg -- faste rutiner kan være en nyttig støtte i travle perioder. Du er som regel den nokså rolige i opp- og nedturer sammen med en partner eller venner også, uten at det betyr at ingenting berører deg.",
+      closingHook:
+        "Du trenger sjelden store grep for å holde deg noenlunde stødig -- roen din kommer stort sett av seg selv. Det gjør det lett å glemme å bygge opp reserver før en faktisk krevende periode kommer.",
     },
     high: {
       overview:
@@ -318,7 +366,9 @@ export const INTERPRETATIONS: Copy = {
       relationshipNote:
         "Du er gjerne den stødige når en partner eller venner går gjennom noe vanskelig. Pass på at de som reagerer sterkere enn deg, ikke opplever at bekymringene deres blir avfeid.",
       synthesis:
-        "Stress og motgang preller lettere av deg enn hos mange andre, selv når mye skjer samtidig -- andre kommer gjerne til deg når noe er vanskelig, fordi du sjelden virker overveldet, og kritikk tar sjelden tak i deg over lang tid. Roen din gjør deg til en stødig støtte for andre i krevende situasjoner, og gir deg selv ro til å tenke klart under press, men reell risiko og tidlige varselsignaler er noe det samme trekket kan gjøre deg mindre oppmerksom på. På jobben er du gjerne den som holder hodet kaldt når andre stresser, og du takler press og uforutsigbarhet bedre enn mange andre -- en egenskap som kan gjøre deg til en verdifull ressurs i krevende eller krisepregede roller, så lenge du er bevisst på at folk rundt deg noen ganger må si tydelig ifra før du fanger opp at noe er galt. Du er gjerne den stødige når en partner eller venner går gjennom noe vanskelig -- pass på at de som reagerer sterkere enn deg, ikke opplever at bekymringene deres blir avfeid.",
+        "Stress og motgang preller lettere av deg enn hos mange andre, selv når mye skjer samtidig. Andre kommer gjerne til deg når noe er vanskelig, fordi du sjelden virker overveldet. Kritikk tar sjelden tak i deg over lang tid. Roen din gjør deg til en stødig støtte for andre i krevende situasjoner, og gir deg selv ro til å tenke klart under press. Reell risiko og tidlige varselsignaler er derimot noe det samme trekket kan gjøre deg mindre oppmerksom på. På jobben er du gjerne den som holder hodet kaldt når andre stresser -- en egenskap som kan gjøre deg til en verdifull ressurs i krevende eller krisepregede roller. Vær bevisst på at folk rundt deg noen ganger må si tydelig ifra før du fanger opp at noe er galt. Du er gjerne den stødige når en partner eller venner går gjennom noe vanskelig -- pass på at de som reagerer sterkere enn deg ikke opplever at bekymringene deres blir avfeid.",
+      closingHook:
+        "Roen din er en ressurs andre merker og lener seg på, kanskje mer enn du selv legger merke til. Spør innimellom hvordan de faktisk har det -- den samme roen kan gjøre deg vanskelig å lese for dem.",
     },
   },
 };
@@ -327,53 +377,99 @@ export const NON_DIAGNOSTIC_NOTICE =
   "Dette er ikke en diagnose eller en fasit på hvem du er. Resultatet viser tendenser på et gitt tidspunkt, tolket i lys av offentlig tilgjengelig forskning på femfaktormodellen -- ikke en klinisk vurdering.";
 
 export interface ClosingSynthesis {
-  career: string;
-  relationships: string;
-  personalDevelopment: string;
+  text: string;
 }
 
+const CLOSING_LINE =
+  "Ingen deler av profilen din er faste eller uforanderlige -- de beskriver tendenser nå, ikke et endelig tak for hvem du kan bli.";
+
 const CLOSING_FALLBACK: ClosingSynthesis = {
-  career:
-    "Profilen din er nokså jevn på tvers av de fem faktorene, uten noen sterkt fremtredende retning -- det gir gjerne fleksibilitet til å fungere godt i mange ulike typer roller, uten at én bestemt arbeidsform peker seg klart ut.",
-  relationships:
-    "Uten noen sterkt fremtredende faktor er det vanskelig å peke på ett bestemt relasjonsmønster hos deg -- du beveger deg trolig naturlig mellom flere ulike måter å møte andre på, avhengig av hvem du er sammen med og situasjonen du står i.",
-  personalDevelopment:
-    "Det kan være verdt å utforske alle fem faktorene noe likt videre, siden ingen av dem peker seg klart ut som mest fremtredende akkurat nå. Profilen din beskriver uansett tendenser på et gitt tidspunkt, ikke et endelig tak for hvem du kan bli.",
+  text:
+    `Profilen din er nokså jevn på tvers av de fem hovedkategoriene, uten at noen av dem peker seg klart ut. Det gir deg trolig en bred fleksibilitet -- du beveger deg naturlig mellom flere ulike måter å møte jobb, folk og oppgaver på, avhengig av situasjonen, i stedet for å falle tilbake på ett fast mønster. ${CLOSING_LINE}`,
 };
 
+type ExtremeBand = "low" | "high";
+const BAND_ADJECTIVE: Record<ExtremeBand, string> = { low: "lav", high: "høy" };
+
+function formatFactorPhrase(factor: DisplayFactor, band: ExtremeBand): string {
+  return `${BAND_ADJECTIVE[band]} ${DISPLAY_FACTOR_LABELS_NO[factor]}`;
+}
+
 /**
- * Setter sammen en avsluttende oppsummering om jobb, relasjoner og personlig
- * utvikling -- lagt til v2.3 etter produkteiers ønske ("helt til slutt bør
- * det stå noe tekstlig om hva resultatet kan ha å si for jobb, relasjoner og
- * personlig utvikling"). Bygges av de 1-2 mest FREMTREDENDE faktorene (størst
- * avstand fra midtpunktet 50) sitt allerede skrevne careerNote/
- * relationshipNote/reflection -- ikke ny, uavhengig fritekst -- slik at
- * innholdet forblir forankret i faktisk gjennomgått og godkjent tekst.
+ * Setter sammen en avsluttende, HELHETLIG profiloppsummering. Redesignet
+ * (v2.22) etter produkteiers tilbakemelding om at "Hva betyr dette for deg"
+ * (a) skal stå som et eget, avsluttende ark -- ikke gjentas etter hver
+ * hovedkategori, se resultat/page.tsx sin nye "summary"-fane -- og (b) skal
+ * se på tvers av ALLE fem hovedkategoriene og underkategoriene i
+ * kombinasjon, forklare HVORFOR en kombinasjon gir det den gir (høye
+ * enkeltskårer, eller et samspill mellom to spesifikke trekk), og ALDRI
+ * gjenta noe ordrett fra resten av rapporten.
+ *
+ * Bygger derfor IKKE lenger på careerNote/relationshipNote/reflection (v2.3-
+ * originalen) -- de tekstene er allerede vevd inn i hver hovedkategoris egen
+ * `synthesis`-tekst (v2.17) og ville gitt reell duplisering. Bruker i stedet:
+ *  1. Det ferske `closingHook`-feltet (se Interpretation over) -- egne,
+ *     kortere tekster skrevet med annet ordforråd og andre bilder enn resten
+ *     av rapporten, KUN brukt her.
+ *  2. En fersk, generisk koblingssetning til eventuelle KURATERTE
+ *     kombinasjonsfunn (data/combinationInsights.ts) som treffer minst ett
+ *     av de mest fremtredende trekkene -- navngir funnet på nytt i stedet
+ *     for å gjenbruke kortets egen `text`, og sier eksplisitt at det handler
+ *     om et SAMSPILL mellom to trekk (til forskjell fra en bred, jevnt høy/
+ *     lav profil, som får en annen, generisk forklaring).
  */
-export function buildClosingSynthesis(factors: FactorResult[]): ClosingSynthesis {
+export function buildClosingSynthesis(factors: FactorResult[], facets: FacetResult[]): ClosingSynthesis {
   const sorted = [...factors].sort((a, b) => Math.abs(b.score - 50) - Math.abs(a.score - 50));
-  const primary = sorted[0];
-  if (!primary) return CLOSING_FALLBACK;
+  const defining = sorted.filter((f) => bandFor(f.score) !== "mid").slice(0, 3);
+  if (defining.length === 0) return CLOSING_FALLBACK;
 
-  const primaryBand = bandFor(primary.score);
-  if (primaryBand === "mid") return CLOSING_FALLBACK; // ingen faktor er tydelig nok til en meningsfull oppsummering
+  const definingBands = new Map<DisplayFactor, ExtremeBand>(
+    defining.map((f) => [f.factor, bandFor(f.score) as ExtremeBand])
+  );
 
-  const primaryCopy = INTERPRETATIONS[primary.factor][primaryBand];
+  const phrases = defining.map((f) => formatFactorPhrase(f.factor, definingBands.get(f.factor)!));
+  const opener =
+    phrases.length === 1
+      ? `Det som peker seg tydeligst ut i profilen din, er ${phrases[0]}.`
+      : `Det som peker seg tydeligst ut i profilen din, er kombinasjonen av ${phrases.slice(0, -1).join(", ")} og ${phrases[phrases.length - 1]}.`;
 
-  const secondary = sorted[1];
-  const secondaryBand = secondary ? bandFor(secondary.score) : "mid";
-  const secondaryCopy = secondary && secondaryBand !== "mid" ? INTERPRETATIONS[secondary.factor][secondaryBand] : null;
+  const hooks = defining
+    .map((f) => INTERPRETATIONS[f.factor][definingBands.get(f.factor)!].closingHook)
+    .filter((h): h is string => Boolean(h));
 
-  const closingLine =
-    "Ingen deler av profilen din er faste eller uforanderlige -- de beskriver tendenser nå, ikke et endelig tak for hvem du kan bli.";
+  // Kuraterte kombinasjonsfunn (hovedfaktor- og fasettnivå) som involverer
+  // minst ett av de mest fremtredende trekkene -- fasettnivå først, siden
+  // det gir en mer PRESIS "hvorfor"-forklaring enn hovedfaktornivå alene.
+  const definingFactors = new Set(defining.map((f) => f.factor));
+  const matchedFacetCombos = matchFacetCombinationInsightsFlat(facets, bandFor).filter((c) => {
+    const domainA = FACET_INTERPRETATIONS[c.facetA]?.domain;
+    const domainB = FACET_INTERPRETATIONS[c.facetB]?.domain;
+    return (domainA && definingFactors.has(DOMAIN_TO_DISPLAY[domainA])) || (domainB && definingFactors.has(DOMAIN_TO_DISPLAY[domainB]));
+  });
+  const matchedDomainCombos = matchCombinationInsights(factors, bandFor).filter(
+    (c) => definingFactors.has(c.factorA) || definingFactors.has(c.factorB)
+  );
+
+  const comboSentences: string[] = [];
+  for (const c of matchedFacetCombos.slice(0, 1)) {
+    const labelA = FACET_INTERPRETATIONS[c.facetA]?.label ?? c.facetA;
+    const labelB = FACET_INTERPRETATIONS[c.facetB]?.label ?? c.facetB;
+    comboSentences.push(
+      `Ser man nærmere på underkategoriene, er det særlig samspillet mellom ${labelA} og ${labelB} som forklarer noe av dette -- en mer presis forklaring enn hovedkategoriene alene gir.`
+    );
+  }
+  for (const c of matchedDomainCombos.slice(0, Math.max(0, 2 - comboSentences.length))) {
+    comboSentences.push(
+      `Kombinasjonen av ${formatFactorPhrase(c.factorA, c.bandA)} og ${formatFactorPhrase(c.factorB, c.bandB)} peker seg spesielt ut hos deg -- her handler resultatet om samspillet mellom to trekk, ikke bare høye eller lave enkeltskårer hver for seg.`
+    );
+  }
+  if (comboSentences.length === 0) {
+    comboSentences.push(
+      "Dette ser ikke ut til å være drevet av én enkelt uvanlig kombinasjon, men av et gjennomgående mønster på tvers av underkategoriene -- et bredt, konsistent trekk snarere enn ett enkelt utslag."
+    );
+  }
 
   return {
-    career: secondaryCopy ? `${primaryCopy.careerNote} ${secondaryCopy.careerNote}` : primaryCopy.careerNote,
-    relationships: secondaryCopy
-      ? `${primaryCopy.relationshipNote} ${secondaryCopy.relationshipNote}`
-      : primaryCopy.relationshipNote,
-    personalDevelopment: secondaryCopy
-      ? `${primaryCopy.reflection} ${secondaryCopy.reflection} ${closingLine}`
-      : `${primaryCopy.reflection} ${closingLine}`,
+    text: [opener, ...hooks, ...comboSentences, CLOSING_LINE].join(" "),
   };
 }

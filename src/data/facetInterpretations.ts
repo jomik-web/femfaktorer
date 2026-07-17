@@ -91,7 +91,7 @@ export const FACET_INTERPRETATIONS: Record<string, FacetInterpretation> = {
     high: "Du har et solid grep om egne impulser. Der andre griper det som frister der og da, klarer du lettere å vente, tenke og velge -- selv når fristelsen er sterk.",
   },
   N6: {
-    label: "Sårbarhet under press",
+    label: "Sårbarhet / robusthet under press",
     domain: "N",
     description: "Evne til å tenke og handle når belastningen blir høy.",
     low: "Når flere ting krever noe av deg samtidig, kjenner du det raskt. Kapasiteten kan føles tynnere enn hos andre, og under høyt press er det lett å miste oversikten et øyeblikk.",
