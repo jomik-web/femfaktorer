@@ -26,6 +26,7 @@ import {
   INTERPRETATIONS,
   DOMAIN_DEFINITIONS,
   NON_DIAGNOSTIC_NOTICE,
+  CRISIS_NOTICE,
   bandFor,
   buildClosingSynthesis,
 } from "@/data/interpretations";
@@ -314,6 +315,7 @@ export default function ResultatPage() {
           )}
         </div>
         <p className="text-sm text-ink/70 dark:text-warmgray/70">{NON_DIAGNOSTIC_NOTICE}</p>
+        <p className="text-sm text-ink/70 dark:text-warmgray/70">{CRISIS_NOTICE}</p>
         {tier === "free" && (
           <p className="text-sm text-ink/60 dark:text-warmgray/60">
             Dette er et foreløpig resultat, basert på de første 50 av 120 spørsmål.

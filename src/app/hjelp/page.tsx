@@ -43,10 +43,32 @@ export default function HjelpPage() {
       </section>
 
       <section className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
-        <h2 className="font-semibold text-ink dark:text-white">Ved akutt behov for hjelp</h2>
+        <h2 className="font-semibold text-ink dark:text-white">Trenger du å snakke med noen?</h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Spir er ikke en akuttjeneste. Ved fare for liv eller helse må du kontakte relevante
-          nødtjenester eller helsepersonell.
+          FemFaktorer og Spir er ikke en helsetjeneste og kan ikke gi deg hjelp med vanskelige
+          tanker eller følelser. Kjenner du på mye vondt, håpløshet eller vanskelige tanker om deg
+          selv, finnes det folk som kan hjelpe:
+        </p>
+        <ul className="flex flex-col gap-1.5 text-ink/80 dark:text-warmgray/80">
+          <li>
+            <span className="font-medium">Hjelpetelefonen (Mental Helse): 116 123</span> -- gratis,
+            døgnåpen og anonym, for alle som trenger noen å snakke med. Foretrekker du å skrive:{" "}
+            <a href="https://sidetmedord.no" className="text-teal underline underline-offset-2">
+              sidetmedord.no
+            </a>
+            .
+          </li>
+          <li>
+            <span className="font-medium">Legevakt: 116 117</span> -- når noe ikke kan vente til
+            fastlegen er tilgjengelig, men ikke er akutt livstruende.
+          </li>
+          <li>
+            <span className="font-medium">Nødnummer: 113</span> -- ved akutt fare for liv eller
+            helse.
+          </li>
+        </ul>
+        <p className="text-sm text-ink/60 dark:text-warmgray/60">
+          Fastlegen din kan også henvise deg videre til psykolog eller psykisk helsevern.
         </p>
       </section>
     </main>

@@ -1,6 +1,16 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 17.07.2026
+Sist oppdatert: 18.07.2026
+
+## Nytt: tydelig henvisning til hjelp ved vanskelige tanker (v2.24, 18.07.2026)
+
+Etter ditt ønske: FemFaktorer henviste tidligere kun vagt til "nødtjenester eller helsepersonell" ved akutt behov (på hjelp-siden), uten konkrete numre eller lavterskeltilbud -- og ingenting av dette fantes på selve resultatsiden eller i Spir. Lagt til tre steder, med numre verifisert mot Helsenorges offisielle sider:
+
+- **Resultatsiden**: en kort, lavmælt linje rett ved den eksisterende "ikke en diagnose"-teksten, som alltid vises (uansett skår) -- Hjelpetelefonen (116 123, gratis/døgnåpen) og nødnummer 113.
+- **Hjelp-siden**: den tidligere vage "ved akutt behov"-boksen er skrevet om til en konkret seksjon ("Trenger du å snakke med noen?") med Hjelpetelefonen, legevakt (116 117) og nødnummer (113), samt at fastlegen kan henvise videre.
+- **Spir**: en ny regel i de delte toneregler (gjelder både fri samtale og guidet gjennomgang) -- dersom brukeren gir uttrykk for sterk nød eller tanker om å skade seg selv, legger Spir personlighetsanalysen til side, viser omsorg med få ord, og viser videre til Hjelpetelefonen/nødnummer. Spir er tydelig på at den selv ikke er en krisetjeneste.
+
+Verifisert at de delte tonereglene fortsatt er ord-for-ord like i begge Spir-samtaleformene etter endringen (samme sjekk som ved v2.19). Ingen handling kreves -- husk `git push`.
 
 ## Nytt: fremdriftslinje med "rask start, sakte slutt" + rettet leseretning på underkategorier + tre språkfeil (v2.23, 17.07.2026)
 

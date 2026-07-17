@@ -376,6 +376,15 @@ export const INTERPRETATIONS: Copy = {
 export const NON_DIAGNOSTIC_NOTICE =
   "Dette er ikke en diagnose eller en fasit på hvem du er. Resultatet viser tendenser på et gitt tidspunkt, tolket i lys av offentlig tilgjengelig forskning på femfaktormodellen -- ikke en klinisk vurdering.";
 
+/**
+ * v2.24 (produkteiers ønske 18.07.2026): lavmælt, men tydelig henvisning til
+ * reell hjelp -- vises uansett resultat, ikke bare ved bestemte skårer,
+ * siden vi ikke skal (og ikke kan) bruke testresultatet til å avgjøre hvem
+ * som trenger å se den. Tall verifisert mot Helsenorges offisielle sider.
+ */
+export const CRISIS_NOTICE =
+  'Kjenner du på mye vondt eller vanskelige tanker om deg selv? Dette resultatet er ikke stedet for å håndtere det. Hjelpetelefonen (Mental Helse) er gratis og døgnåpen: 116 123, eller chat på sidetmedord.no. I en akutt situasjon: ring 113.';
+
 export interface ClosingSynthesis {
   text: string;
 }
