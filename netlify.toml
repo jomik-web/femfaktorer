@@ -7,3 +7,16 @@
 
 # Netlify sitt offisielle Next.js-runtime-plugin oppdages og aktiveres
 # automatisk for Next.js-prosjekter -- ingen ekstra plugin-oppføring nødvendig.
+
+# Sikkerhetsheadere, satt på alle sider. Bevisst IKKE inkludert:
+# Content-Security-Policy -- krever levende testing i nettleser (Next.js sin
+# hydrering, WebAuthn/passkey-innlogging i admin, Spir-samtalen) for å unngå
+# å blokkere noe som faktisk skal fungere. Vurder som egen, testet oppgave.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains"
