@@ -179,6 +179,12 @@ export default function TestPage() {
         <p className="text-ink/80 dark:text-warmgray/80">
           FemFaktorer er i denne versjonen laget for personer over 18 år.
         </p>
+        <p className="text-sm text-ink/70 dark:text-warmgray/70">
+          Litt om hvordan du svarer: bruk det første som faller deg inn, uten å tenke for lenge på
+          hvert spørsmål -- det finnes ikke noe "riktig" svar å lete etter. Tenk på hvordan du
+          vanligvis er på tvers av ulike sammenhenger (jobb, hjemme, sammen med venner), ikke bare
+          hvordan du er akkurat i dag eller i én bestemt situasjon.
+        </p>
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <button
             type="button"

@@ -15,6 +15,37 @@ function zoneIndexFor(score: number): number {
   return Math.min(4, Math.max(0, Math.floor(score / 20)));
 }
 
+/**
+ * v2.23 (produkteiers tilbakemelding 17.07.2026): for bipolare fasettnavn
+ * ("Bekymring / ro") leser folk naturlig det FØRSTE ordet som det tallet
+ * gjelder -- "Svært høyt" ved siden av "Bekymring / ro" leses lett som "mye
+ * bekymring", selv om høy skår her (per konvensjonen i scoring.ts) alltid
+ * betyr mer av det SISTE ordet. Løsning: naming direkte hvilket ord skåren
+ * gjelder ("Svært høy grad av ro"), i stedet for en løsrevet intensitet som
+ * krever at leseren allerede kjenner konvensjonen. Gjelder kun fasetter med
+ * et bipolart navn (inneholder " / ") -- de 24 andre fasettene og alle fem
+ * hovedfaktorene har ett entydig navn og trenger ikke denne behandlingen.
+ */
+function poleWords(label: string): { low: string; high: string } | null {
+  const parts = label.split(" / ");
+  if (parts.length !== 2) return null;
+  const [low, high] = parts;
+  if (!low || !high) return null;
+  return { low: low.trim(), high: high.trim() };
+}
+
+function lowerFirst(word: string): string {
+  return word.length > 0 ? word.charAt(0).toLowerCase() + word.slice(1) : word;
+}
+
+function zoneLabelFor(label: string, zoneIndex: number): string {
+  const poles = poleWords(label);
+  if (!poles || zoneIndex === 2) return ZONE_LABELS[zoneIndex] ?? "Middels";
+  const intensity = zoneIndex === 0 || zoneIndex === 4 ? "Svært høy" : "Høy";
+  const word = zoneIndex >= 3 ? poles.high : poles.low;
+  return `${intensity} grad av ${lowerFirst(word)}`;
+}
+
 interface RoughFactorIndicatorProps {
   factor: DisplayFactor;
   label: string;
@@ -40,10 +71,7 @@ interface RoughFactorIndicatorProps {
  */
 export function RoughFactorIndicator({ factor, label, score }: RoughFactorIndicatorProps) {
   const zoneIndex = zoneIndexFor(score);
-  // zoneIndexFor() klemmer alltid til [0, 4], så indekseringen er alltid
-  // gyldig i praksis -- fallbacken er kun for å tilfredsstille TypeScripts
-  // strenge indekssjekk (noUncheckedIndexedAccess), ikke fordi den kan skje.
-  const zoneLabel = ZONE_LABELS[zoneIndex] ?? "Middels";
+  const zoneLabel = zoneLabelFor(label, zoneIndex);
 
   return (
     <div className="flex flex-col gap-1.5">

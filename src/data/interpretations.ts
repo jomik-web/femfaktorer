@@ -395,6 +395,11 @@ function formatFactorPhrase(factor: DisplayFactor, band: ExtremeBand): string {
   return `${BAND_ADJECTIVE[band]} ${DISPLAY_FACTOR_LABELS_NO[factor]}`;
 }
 
+/** v2.23: gjør et fasettnavn ("Bekymring / ro") naturlig midt i en setning -- unngår at det leses som et feilplassert egennavn. */
+function lowerFirst(word: string): string {
+  return word.length > 0 ? word.charAt(0).toLowerCase() + word.slice(1) : word;
+}
+
 /**
  * Setter sammen en avsluttende, HELHETLIG profiloppsummering. Redesignet
  * (v2.22) etter produkteiers tilbakemelding om at "Hva betyr dette for deg"
@@ -452,10 +457,10 @@ export function buildClosingSynthesis(factors: FactorResult[], facets: FacetResu
 
   const comboSentences: string[] = [];
   for (const c of matchedFacetCombos.slice(0, 1)) {
-    const labelA = FACET_INTERPRETATIONS[c.facetA]?.label ?? c.facetA;
-    const labelB = FACET_INTERPRETATIONS[c.facetB]?.label ?? c.facetB;
+    const labelA = lowerFirst(FACET_INTERPRETATIONS[c.facetA]?.label ?? c.facetA);
+    const labelB = lowerFirst(FACET_INTERPRETATIONS[c.facetB]?.label ?? c.facetB);
     comboSentences.push(
-      `Ser man nærmere på underkategoriene, er det særlig samspillet mellom ${labelA} og ${labelB} som forklarer noe av dette -- en mer presis forklaring enn hovedkategoriene alene gir.`
+      `Underkategoriene gir et mer presist bilde her: samspillet mellom «${labelA}» og «${labelB}» forklarer noe av dette.`
     );
   }
   for (const c of matchedDomainCombos.slice(0, Math.max(0, 2 - comboSentences.length))) {

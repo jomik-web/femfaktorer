@@ -64,7 +64,7 @@ export const FACET_INTERPRETATIONS: Record<string, FacetInterpretation> = {
     description: "Tilbøyelighet til irritasjon, frustrasjon og sinne.",
     low: "Terskelen din for irritasjon er lav, og det merkes: en kø som ikke beveger seg, en kollega som avbryter, en plan som endres i siste liten -- frustrasjonen kommer raskt, og den er ekte når den kommer.",
     mid: "Noen ting får deg opp i flammene på sekundet. Andre ganger undrer folk seg over hvor tålmodig du klarer å være. Det er ikke alltid lett å forutsi hvilken versjon som møter dagen.",
-    high: "Du har en ro som få rokker ved. Der andre eksploderer over småting, biter du sjelden på. Hodet ditt holder kaldt selv når temperaturen rundt deg stiger.",
+    high: "Du har en ro som få rokker ved. Der andre eksploderer over småting, biter du sjelden på. Du holder hodet kaldt selv når temperaturen rundt deg stiger.",
   },
   N3: {
     label: "Nedstemthet / motstandskraft",
@@ -72,7 +72,7 @@ export const FACET_INTERPRETATIONS: Record<string, FacetInterpretation> = {
     description: "Tilbøyelighet til nedstemthet, håpløshet og lavt stemningsleie.",
     low: "Motgang setter dypere spor hos deg enn hos mange. En dårlig dag kan fort bli en dårlig uke, og den indre stemmen som vurderer deg selv, er ikke alltid vennlig.",
     mid: "Humøret ditt svinger med livet -- opp når ting går bra, ned når det butter. Det er verken en konstant sky eller en konstant sol, bare vær som skifter.",
-    high: "Du har en solid bunn å stå på. Motgang tar deg ikke lett av kurs, og du finner tilbake til deg selv raskere enn de fleste når noe har gjort vondt.",
+    high: "Du har en solid grunn å stå på. Motgang tar deg ikke lett av kurs, og du finner tilbake til deg selv raskere enn de fleste når noe har gjort vondt.",
   },
   N4: {
     label: "Sosial selvbevissthet / trygghet",

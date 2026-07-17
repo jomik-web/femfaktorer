@@ -2,6 +2,27 @@
 
 Sist oppdatert: 17.07.2026
 
+## Nytt: fremdriftslinje med "rask start, sakte slutt" + rettet leseretning på underkategorier + tre språkfeil (v2.23, 17.07.2026)
+
+Fire mindre, men merkbare endringer etter dagens tilbakemeldinger:
+
+- **Fremdriftslinjen i spørreskjemaet** følger nå en kurve i stedet for en rett linje: den fylles raskt i starten og bremser mot slutten (f.eks. viser ~65 % når du reelt er halvveis). Selve teksten under linjen ("Spørsmål X av Y") er fortsatt ekte og ærlig -- det er kun den visuelle følelsen av fremgang som er justert for å holde motivasjonen oppe gjennom et langt skjema.
+- **Underkategori-resultatene** ("Bekymring / ro", "Nedstemthet / motstandskraft" osv.) viste tidligere en løsrevet "Svært høyt/lavt" ved siden av navnet -- lett å mistolke, siden det første ordet i navnet er det negative (man leser fort "svært høy bekymring" når det faktisk betyr svært høy ro). Viser nå eksplisitt hvilket ord skåren gjelder, f.eks. "Svært høy grad av ro", uten at man må lese forklaringsteksten under for å forstå det riktig.
+- **To setninger med språkfeil er rettet**: "Hodet ditt holder kaldt" -> "Du holder hodet kaldt" (riktig norsk uttrykk), og "solid bunn å stå på" -> "solid grunn å stå på" (riktig ord). Én automatisk generert setning i den avsluttende oppsummeringen er også omskrevet til å lyde mer naturlig.
+- **Ny kort veiledning før testen starter**: samme skjerm som aldersbekreftelsen forklarer nå kort hvordan man bør svare (første innskytelse, ikke tenke for lenge, svare ut fra hvordan man vanligvis er på tvers av situasjoner) -- omtrent det en psykolog ville sagt før en administrerte en test.
+
+Ingen handling kreves fra deg -- husk bare `git push` som vanlig.
+
+**Ikke avgjort ennå**: skal den avsluttende oppsummeringen også antyde utviklingsmuligheter der potensial avdekkes, og i så fall hvor direkte (kun refleksjonsspørsmål vs. konkrete tips)? Ligger som et åpent spørsmål til deg -- se selve samtalen.
+
+## Nytt: kortere setninger og en helt redesignet avslutning (v2.22, 17.07.2026)
+
+Tre ting etter tilbakemelding: (1) alle 15 lange analysetekstene for hovedkategoriene er skrevet om til kortere, mer presise setninger -- samme innhold, mindre "kommastress". (2) N6 (sårbarhet under press) har fått samme behandling. (3) "Hva betyr dette for deg" er flyttet fra å gjentas under hver hovedkategori-fane til et eget, avsluttende ark til slutt i gjennomgangen, med en ny fane i navigasjonen ("Oppsummering"). Innholdet der er også helt omskrevet: det ser nå på tvers av ALLE kategoriene samlet, forklarer hvorfor bestemte kombinasjoner av høye/lave skårer henger sammen, og vever inn jobb/relasjoner der det er naturlig -- uten å gjenta noe ordrett fra resten av rapporten. Ingen handling kreves -- husk `git push`.
+
+## Fikset: to reelle feil i tolkningsdataene + gjentakende Spir-feilmelding (v2.20-v2.21, 17.07.2026)
+
+Etter din tilbakemelding om at Spir beskrev en høy score (92/100) på "Bekymring / ro" som "svært sensitiv for bekymring" -- motsatt av riktig betydning. Roten var at Spir fikk det engelske IPIP-fasettnavnet ("Anxiety") sammen med det allerede snudde tallet, og dermed la til grunn feil retning. Rettet i selve systemprompten, pluss en eksplisitt regel som ber Spir se bort fra egen bakgrunnskunnskap om vanlig skala-retning. Jeg gjennomgikk deretter ALLE 29 fasettekster og alle kombinasjonstekster for samme type feil -- fant og rettet én til (en kombinasjonstekst om åpenhet og bekymring/ro hadde riktig tekst, men feil merkelapp). Samtidig rettet jeg den gjentakende feilmeldingen i fri Spir-samtale ("jeg klarte ikke å formulere et svar") -- den skyldtes at tonesjekken feiltolket vanlige, forsiktige uttrykk som "det er ikke alltid lett" som bastante påstander. Ingen handling kreves -- husk `git push`.
+
 ## Nytt: guidet, personlig gjennomgang med Spir -- underkategori for underkategori (v2.19, 17.07.2026)
 
 Etter ditt ønske om at Spir skal kunne gi et ekte personlig svar i stedet for kun standardtekstene: `/spir` spør nå først hvordan du vil snakke med Spir. "Fri samtale" er som før. Det nye alternativet, "Gå gjennom resultatet steg for steg", går sammen med deg gjennom alle de 29 underkategoriene, én om gangen, i samme rekkefølge som i selve rapporten (domene for domene). For hver underkategori åpner Spir med en kort, personlig tolkning av akkurat DITT tall der -- ikke en gjenbrukt standardsetning -- og stiller 1-2 utdypende spørsmål. Du svarer, kan stille flere spørsmål tilbake til analysen, og går videre til neste underkategori med en egen knapp når du selv er klar (Spir hopper aldri videre selv). Etter siste underkategori kan du enten gå tilbake til resultatsiden eller fortsette i fri samtale, med hele gjennomgangen som Spir fortsatt husker.
