@@ -13,7 +13,7 @@ Fire mindre, men merkbare endringer etter dagens tilbakemeldinger:
 
 Ingen handling kreves fra deg -- husk bare `git push` som vanlig.
 
-**Ikke avgjort ennå**: skal den avsluttende oppsummeringen også antyde utviklingsmuligheter der potensial avdekkes, og i så fall hvor direkte (kun refleksjonsspørsmål vs. konkrete tips)? Ligger som et åpent spørsmål til deg -- se selve samtalen.
+**Avgjort (17.07.2026)**: den avsluttende oppsummeringen forblir som i dag -- forklarer mønstre og "hvorfor", men gir ingen utviklingsråd eller refleksjonsspørsmål utover det som allerede ligger i de eksisterende `closingHook`-tekstene. Ingen kodeendring gjort.
 
 ## Nytt: kortere setninger og en helt redesignet avslutning (v2.22, 17.07.2026)
 
