@@ -10,7 +10,7 @@
  * Uten et verifisert domene kan `RESEND_FROM_ADDRESS` kun sende til
  * e-postadressen som er registrert på selve Resend-kontoen din -- altså vil
  * innlogging fungere for DEG under testing, men ikke for andre brukere før
- * du har verifisert et domene (f.eks. femfaktorer.no) i Resend sitt
+ * du har verifisert et domene (f.eks. dinefasetter.no) i Resend sitt
  * dashbord og pekt DNS-oppføringer dit.
  */
 
@@ -43,10 +43,10 @@ export async function sendLoginCodeEmail(email: string, code: string): Promise<S
         to: email,
         subject: `Din innloggingskode: ${code}`,
         html:
-          `<p>Innloggingskoden din til FemFaktorer er:</p>` +
+          `<p>Innloggingskoden din til Dine Fasetter er:</p>` +
           `<p style="font-size:28px;font-weight:bold;letter-spacing:6px;">${code}</p>` +
           `<p>Koden er gyldig i 10 minutter. Har du ikke bedt om denne, kan du se bort fra e-posten -- ingen konto opprettes uten at koden brukes.</p>`,
-        text: `Innloggingskoden din til FemFaktorer er: ${code}\n\nKoden er gyldig i 10 minutter. Har du ikke bedt om denne, kan du se bort fra e-posten -- ingen konto opprettes uten at koden brukes.`,
+        text: `Innloggingskoden din til Dine Fasetter er: ${code}\n\nKoden er gyldig i 10 minutter. Har du ikke bedt om denne, kan du se bort fra e-posten -- ingen konto opprettes uten at koden brukes.`,
       }),
     });
 

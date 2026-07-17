@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FemFaktorer -- forstå personligheten din",
+  title: "Dine Fasetter -- Flere sider av deg",
   description:
     "Bli litt klokere på hvem du egentlig er. En norsk personlighetstest basert på offentlig tilgjengelig forskning på femfaktormodellen (Big Five).",
 };

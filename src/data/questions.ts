@@ -1,5 +1,5 @@
 /**
- * De 120 spørsmålene i FemFaktorer, jf. Dokument 03 (Teststruktur, skåring
+ * De 120 spørsmålene i Dine Fasetter, jf. Dokument 03 (Teststruktur, skåring
  * og resultatformidling) og beslutningen om full IPIP-NEO-120-utvidelse
  * (v0.4/v2.0 -- se endringslogg i Grunnlagsdokumentet og Dokument 06).
  *

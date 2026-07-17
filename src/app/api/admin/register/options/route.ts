@@ -25,7 +25,7 @@ export async function GET() {
   }
 
   const options = await generateRegistrationOptions({
-    rpName: process.env.ADMIN_PASSKEY_RP_NAME || "FemFaktorer Admin",
+    rpName: process.env.ADMIN_PASSKEY_RP_NAME || "Dine Fasetter Admin",
     rpID: getRpId(),
     userName: "produkteier",
     attestationType: "none",

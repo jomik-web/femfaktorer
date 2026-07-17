@@ -23,7 +23,7 @@ export function SiteNav() {
     <header className="sticky top-0 z-10 border-b border-warmgray bg-white/90 backdrop-blur dark:border-white/10 dark:bg-ink/90">
       <nav className="mx-auto flex max-w-2xl items-center justify-between px-6 py-3">
         <Link href="/" className="font-semibold text-ink dark:text-white">
-          FemFaktorer
+          Dine Fasetter
         </Link>
         <ul className="flex gap-4 text-sm">
           {LINKS.map((link) => {

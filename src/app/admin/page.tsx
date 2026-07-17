@@ -93,7 +93,7 @@ export default function AdminPage() {
   if (screen === "register" || screen === "login") {
     return (
       <main className="mx-auto flex min-h-screen max-w-sm flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="text-xl font-semibold text-ink dark:text-white">FemFaktorer admin</h1>
+        <h1 className="text-xl font-semibold text-ink dark:text-white">Dine Fasetter admin</h1>
         {screen === "register" ? (
           <>
             <p className="text-sm text-ink/70 dark:text-warmgray/70">

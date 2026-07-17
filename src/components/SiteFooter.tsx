@@ -6,9 +6,9 @@ import { ACCOUNT_SAVE_ENABLED } from "@/lib/featureFlags";
 
 const LINKS = [
   // v2.5: /om-femfaktormodellen og /metode-og-kilder er slått sammen inn i
-  // /slik-fungerer ("Om FemFaktorer") -- se redirect-filene i de gamle
+  // /slik-fungerer ("Om Dine Fasetter") -- se redirect-filene i de gamle
   // mappene. Personvern flyttet til egen, fullstendig side.
-  { href: "/slik-fungerer", label: "Om FemFaktorer" },
+  { href: "/slik-fungerer", label: "Om Dine Fasetter" },
   { href: "/personvern", label: "Personvern" },
   { href: "/hjelp", label: "Hjelp" },
   // Lagret fullversjon-resultat (v2.4) -- gjelder kun fulltesten, se

@@ -328,7 +328,7 @@ export default function ResultatPage() {
         )}
         {tier === "extended" && (
           <p className="text-sm text-ink/60 dark:text-warmgray/60">
-            Basert på Utvidet versjon (alle 290 spørsmål) -- det mest presise resultatet FemFaktorer
+            Basert på Utvidet versjon (alle 290 spørsmål) -- det mest presise resultatet Dine Fasetter
             kan gi, med 10 spørsmål per underkategori i stedet for 4-5.
           </p>
         )}
@@ -558,7 +558,7 @@ export default function ResultatPage() {
         <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
           <h2 className="font-semibold text-ink dark:text-white">Betatest: ta vare på svarene dine</h2>
           <p className="text-sm text-ink/70 dark:text-warmgray/70">
-            Testen kan bli oppdatert innimellom mens vi jobber videre med FemFaktorer. Last ned
+            Testen kan bli oppdatert innimellom mens vi jobber videre med Dine Fasetter. Last ned
             svarene dine som en fil nå, så slipper du å svare på alt på nytt etter en oppdatering
             -- last filen opp igjen her for å se resultatet med én gang. Denne muligheten fjernes
             igjen når betatestingen er ferdig.
@@ -718,7 +718,7 @@ export default function ResultatPage() {
           <h2 className="font-semibold text-ink dark:text-white">Vil du gå enda dypere?</h2>
           <p className="text-sm text-ink/70 dark:text-warmgray/70">
             Utvidet versjon stiller 10 spørsmål per underkategori i stedet for 4-5 (290 spørsmål
-            totalt), og gir det mest presise resultatet FemFaktorer kan tilby. Resultatet ditt over
+            totalt), og gir det mest presise resultatet Dine Fasetter kan tilby. Resultatet ditt over
             er ikke ufullstendig fordi du velger å stoppe her -- de resterende spørsmålene gir bare
             en enda sikrere måling.
           </p>
@@ -751,7 +751,7 @@ export default function ResultatPage() {
         <p className="text-ink/60 dark:text-warmgray/60">
           {loggedInEmail
             ? "Svarene dine ligger i denne nettleseren, og et beregnet resultat er lagret på kontoen din."
-            : "Svarene dine er lagret bare i denne nettleseren, ikke hos FemFaktorer."}
+            : "Svarene dine er lagret bare i denne nettleseren, ikke hos Dine Fasetter."}
         </p>
         <button type="button" onClick={() => void handleDelete()} className="text-coral underline underline-offset-2">
           Slett mine data

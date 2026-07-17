@@ -8,7 +8,8 @@ export default function ForsidePage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 px-6 py-16 text-center">
-      <h1 className="text-3xl font-bold text-ink dark:text-white sm:text-4xl">FemFaktorer</h1>
+      <h1 className="text-3xl font-bold text-ink dark:text-white sm:text-4xl">Dine Fasetter</h1>
+      <p className="text-lg text-teal font-medium">Flere sider av deg</p>
       <p className="max-w-md text-ink/80 dark:text-warmgray/80">
         Bli litt klokere på hvem du egentlig er. En norsk personlighetstest basert på
         offentlig tilgjengelig forskning på femfaktormodellen (Big Five).

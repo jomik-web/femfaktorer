@@ -50,7 +50,7 @@ export default function OmFemfaktorerPage() {
     <main className="mx-auto flex max-w-2xl flex-col gap-10 px-6 py-16">
       <header className="flex flex-col gap-3">
         <h1 className="text-2xl font-semibold text-ink dark:text-white sm:text-3xl">
-          Om FemFaktorer
+          Om Dine Fasetter
         </h1>
         <p className="text-ink/80 dark:text-warmgray/80">
           Alt du trenger å vite for å forstå hva testen gjør, hva den bygger på, og hvordan vi
@@ -132,7 +132,7 @@ export default function OmFemfaktorerPage() {
       <section id="metode-og-kilder" className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold text-ink dark:text-white">Metode og kilder</h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          FemFaktorer bygger på IPIP-NEO-120 -- et offentlig tilgjengelig spørsmålssett utviklet
+          Dine Fasetter bygger på IPIP-NEO-120 -- et offentlig tilgjengelig spørsmålssett utviklet
           for å måle femfaktormodellen. Det er valgt fordi det er forskningsbasert, offentlig
           tilgjengelig og kan brukes uten kommersiell lisens.
         </p>
@@ -152,7 +152,7 @@ export default function OmFemfaktorerPage() {
           <h3 className="font-semibold text-ink dark:text-white">Hva resultatet ikke er</h3>
           <p className="text-ink/80 dark:text-warmgray/80">
             Resultatene beskriver sannsynlige personlighetstrekk og preferanser -- ikke
-            intelligens, psykisk helse, diagnoser eller menneskelig verdi. FemFaktorer er ikke et
+            intelligens, psykisk helse, diagnoser eller menneskelig verdi. Dine Fasetter er ikke et
             medisinsk eller diagnostisk verktøy.
           </p>
         </div>
@@ -170,7 +170,7 @@ export default function OmFemfaktorerPage() {
       <section id="personvern" className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5">
         <h2 className="text-xl font-semibold text-ink dark:text-white">Personvern</h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Svarene dine lagres bare i nettleseren din, ikke hos FemFaktorer, med mindre du selv
+          Svarene dine lagres bare i nettleseren din, ikke hos Dine Fasetter, med mindre du selv
           aktivt velger å snakke med Spir eller lagre resultatet på en konto. For den fullstendige
           oversikten -- inkludert cookies, hvilke tjenester som er involvert, og dine rettigheter --
           se personvernsiden.

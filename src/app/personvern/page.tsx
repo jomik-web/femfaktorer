@@ -37,10 +37,10 @@ export default function PersonvernPage() {
     <main className="mx-auto flex max-w-2xl flex-col gap-10 px-6 py-16">
       <header className="flex flex-col gap-3">
         <h1 className="text-2xl font-semibold text-ink dark:text-white sm:text-3xl">
-          Personvern hos FemFaktorer
+          Personvern hos Dine Fasetter
         </h1>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Dette er den fullstendige oversikten over hvordan FemFaktorer behandler opplysninger om
+          Dette er den fullstendige oversikten over hvordan Dine Fasetter behandler opplysninger om
           deg -- hva som skjer, og like viktig, hva som ikke skjer. Finner du ikke svar på det du
           lurer på her, kan du kontakte oss direkte (se nederst).
         </p>
@@ -84,7 +84,7 @@ export default function PersonvernPage() {
           Hvem er behandlingsansvarlig
         </h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          FemFaktorer.no drives per nå av Jomik Guldager, som privatperson. Registrering av et
+          Dine Fasetter drives per nå av Jomik Guldager, som privatperson. Registrering av et
           enkeltpersonforetak er under arbeid; organisasjonsnummer og fullstendig
           firmainformasjon legges inn her så snart det er på plass. Du når oss uansett på
           e-postadressen under kontaktpunktet nederst på siden.
@@ -96,7 +96,7 @@ export default function PersonvernPage() {
         <p className="text-ink/80 dark:text-warmgray/80">
           Svarene du gir i testen -- korttesten (50 spørsmål), fullversjonen (120) og Utvidet
           versjon (290) -- lagres utelukkende lokalt i nettleseren din (såkalt{" "}
-          <em>localStorage</em>). De sendes aldri til FemFaktorer sine servere som en del av selve
+          <em>localStorage</em>). De sendes aldri til Dine Fasetter sine servere som en del av selve
           testgjennomføringen. Fullfører du 120 eller 290 spørsmål, sendes de FERDIG BEREGNEDE
           skårene dine -- helt anonymt -- til et samlet statistikkgrunnlag; se eget avsnitt rett
           under.
@@ -111,7 +111,7 @@ export default function PersonvernPage() {
             eller ved å tømme nettleserdata for siden.
           </li>
           <li>
-            -- Sletting er permanent. FemFaktorer har ingen kopi å gjenopprette fra, med mindre du
+            -- Sletting er permanent. Dine Fasetter har ingen kopi å gjenopprette fra, med mindre du
             aktivt har lagret resultatet på en konto (se eget avsnitt under).
           </li>
         </ul>
@@ -122,7 +122,7 @@ export default function PersonvernPage() {
           Anonym normtall-statistikk
         </h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          FemFaktorer viser i dag resultatet som nivåbånd (f.eks. "Svært tydelig høy"), ikke som et
+          Dine Fasetter viser i dag resultatet som nivåbånd (f.eks. "Svært tydelig høy"), ikke som et
           eksakt tall -- blant annet fordi vi ennå ikke har et dokumentert normgrunnlag å sammenligne
           med (se metode-og-kilder-siden). For å kunne bygge et slikt normgrunnlag over tid, sender
           nettleseren din -- KUN når du fullfører fullversjonen (120 spørsmål) eller Utvidet versjon
@@ -219,7 +219,7 @@ export default function PersonvernPage() {
           Informasjonskapsler (cookies)
         </h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          FemFaktorer setter ingen sporings- eller annonsekapsler, og ingen forhåndsavkryssede
+          Dine Fasetter setter ingen sporings- eller annonsekapsler, og ingen forhåndsavkryssede
           samtykker eller skjulte avvisningsknapper brukes noe sted.
         </p>
         <ul className="flex flex-col gap-2 text-ink/80 dark:text-warmgray/80">
@@ -280,7 +280,7 @@ export default function PersonvernPage() {
           Hvem har tilgang til opplysningene dine
         </h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Disse tjenestene er involvert i driften av FemFaktorer og kan i ulik grad komme i
+          Disse tjenestene er involvert i driften av Dine Fasetter og kan i ulik grad komme i
           kontakt med opplysninger om deg. For hver av dem er det oppgitt hva slags opplysninger
           det gjelder, og hvilket rettslig grunnlag (behandlingsgrunnlag) behandlingen bygger på:
         </p>
@@ -406,7 +406,7 @@ export default function PersonvernPage() {
       <section id="aldersgrense" className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-ink dark:text-white">Aldersgrense</h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          FemFaktorer er i denne versjonen ment for personer over 18 år. Før testen starter, må du
+          Dine Fasetter er i denne versjonen ment for personer over 18 år. Før testen starter, må du
           selv bekrefte at du er over 18 -- en enkel, selvdeklarert bekreftelse, ikke en teknisk
           alderskontroll. Testen er ikke tilpasset mindreårige, verken språklig eller når det
           gjelder samtykke.
@@ -447,7 +447,7 @@ export default function PersonvernPage() {
       <section id="status" className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
         <h2 className="text-lg font-semibold text-ink dark:text-white">Status på denne siden</h2>
         <p className="text-ink/80 dark:text-warmgray/80">
-          Denne siden beskriver FemFaktorer slik løsningen faktisk fungerer i dag. Innholdet er
+          Denne siden beskriver Dine Fasetter slik løsningen faktisk fungerer i dag. Innholdet er
           foreløpig ikke kvalitetssikret av jurist, og vil bli gjennomgått og oppdatert før en
           eventuell bredere, offentlig lansering. Vi oppdaterer siden fortløpende når nye tjenester
           eller funksjoner tas i bruk. En personvernkonsekvensvurdering (DPIA) og signering av
@@ -471,7 +471,7 @@ export default function PersonvernPage() {
       </section>
 
       <Link href="/slik-fungerer" className="self-start text-sm text-teal underline underline-offset-2">
-        &larr; Tilbake til Om FemFaktorer
+        &larr; Tilbake til Om Dine Fasetter
       </Link>
     </main>
   );

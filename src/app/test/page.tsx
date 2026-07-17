@@ -157,7 +157,7 @@ export default function TestPage() {
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
         <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
-          FemFaktorer er foreløpig for voksne
+          Dine Fasetter er foreløpig for voksne
         </h1>
         <p className="text-ink/80 dark:text-warmgray/80">
           Denne versjonen av testen er laget for personer over 18 år. Ingenting er lagret eller
@@ -177,7 +177,7 @@ export default function TestPage() {
           Før du starter
         </h1>
         <p className="text-ink/80 dark:text-warmgray/80">
-          FemFaktorer er i denne versjonen laget for personer over 18 år.
+          Dine Fasetter er i denne versjonen laget for personer over 18 år.
         </p>
         <p className="text-sm text-ink/70 dark:text-warmgray/70">
           Litt om hvordan du svarer: bruk det første som faller deg inn, uten å tenke for lenge på
@@ -333,7 +333,7 @@ export default function TestPage() {
         </h1>
         <p className="text-ink/80 dark:text-warmgray/80">
           Vil du gå enda dypere? Utvidet versjon stiller 10 spørsmål per underkategori i stedet for
-          4-5, og gir dermed det mest presise resultatet FemFaktorer kan tilby -- til sammen 290
+          4-5, og gir dermed det mest presise resultatet Dine Fasetter kan tilby -- til sammen 290
           spørsmål.
         </p>
         <p className="text-sm text-ink/60 dark:text-warmgray/60">
