@@ -3,7 +3,11 @@ import { cookies } from "next/headers";
 import { readSession, ACCOUNT_SESSION_COOKIE_NAME } from "@/lib/account/session";
 import { accountStore } from "@/lib/account/blobs";
 import { isValidFactorResult, isValidFacetResult, isValidAccountTier } from "@/lib/account/validate";
-import type { StoredAccountResult } from "@/lib/account/types";
+import {
+  MAX_ACCOUNT_HISTORY_ENTRIES,
+  normalizeAccountHistory,
+  type StoredAccountResult,
+} from "@/lib/account/types";
 
 export const runtime = "nodejs";
 
@@ -59,11 +63,32 @@ export async function POST(request: Request) {
     savedAt: new Date().toISOString(),
   };
 
+  // v2.27: "extended" (Premium-nivå) bygger opp en historikk over tid, se
+  // types.ts sin doc-kommentar for begrunnelsen. "full" (Standard-nivå)
+  // erstatter alltid hele historikken med kun dette ene resultatet -- Standard
+  // er ikke ment å vise utvikling over tid, bare "siste resultat i skya".
+  let history: StoredAccountResult[];
+  if (record.tier === "extended") {
+    let existing: unknown = null;
+    try {
+      existing = await accountStore().get(session.email, { type: "json" });
+    } catch {
+      // Klarte ikke å hente eksisterende historikk -- fortsett med en tom
+      // liste fremfor å blokkere lagringen av det nye resultatet.
+    }
+    history = [...normalizeAccountHistory(existing), record];
+    if (history.length > MAX_ACCOUNT_HISTORY_ENTRIES) {
+      history = history.slice(history.length - MAX_ACCOUNT_HISTORY_ENTRIES);
+    }
+  } else {
+    history = [record];
+  }
+
   try {
-    await accountStore().setJSON(session.email, record);
+    await accountStore().setJSON(session.email, history);
   } catch {
     return NextResponse.json({ error: "Klarte ikke å lagre resultatet akkurat nå." }, { status: 503 });
   }
 
-  return NextResponse.json({ ok: true, savedAt: record.savedAt });
+  return NextResponse.json({ ok: true, savedAt: record.savedAt, historyCount: history.length });
 }

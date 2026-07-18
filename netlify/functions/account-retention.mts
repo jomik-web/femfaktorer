@@ -2,6 +2,7 @@ import { getStore } from "@netlify/blobs";
 import {
   computeAccountResultExpiry,
   ACCOUNT_RESULT_REMINDER_DAYS_BEFORE,
+  normalizeAccountHistory,
   type StoredAccountResult,
 } from "../../src/lib/account/types";
 
@@ -84,54 +85,80 @@ export default async () => {
   const store = accountStore();
   const now = new Date();
 
-  let deleted = 0;
+  let deletedEntries = 0;
+  let deletedAccounts = 0;
   let reminded = 0;
   let checked = 0;
 
+  // v2.27: en konto lagrer nå en HISTORIKK av resultater (eldst -> nyest),
+  // ikke bare ett -- se doc-kommentaren på normalizeAccountHistory() i
+  // types.ts. Hvert element i historikken utløper UAVHENGIG av de andre,
+  // 12 måneder etter sitt eget `savedAt` -- ikke etter historikkens siste
+  // oppføring. Kontoen (hele nøkkelen) slettes først når historikken blir tom.
   for await (const { blobs } of store.list({ paginate: true })) {
     for (const { key } of blobs) {
       checked += 1;
-      let record: StoredAccountResult | null = null;
+      let raw: unknown = null;
       try {
-        record = (await store.get(key, { type: "json" })) as StoredAccountResult | null;
+        raw = await store.get(key, { type: "json" });
       } catch {
         continue; // Korrupt/utilgjengelig post -- rør den ikke, prøv igjen neste kjøring.
       }
-      if (!record || typeof record.savedAt !== "string") continue;
 
-      const expiry = computeAccountResultExpiry(record.savedAt);
+      const history = normalizeAccountHistory(raw);
+      if (history.length === 0) continue;
 
-      if (now >= expiry) {
+      let changed = false;
+      const kept: StoredAccountResult[] = [];
+
+      for (const entry of history) {
+        const expiry = computeAccountResultExpiry(entry.savedAt);
+
+        if (now >= expiry) {
+          deletedEntries += 1;
+          changed = true;
+          continue; // denne oppføringen utgår -- tas ikke med videre
+        }
+
+        const reminderThreshold = new Date(expiry);
+        reminderThreshold.setDate(reminderThreshold.getDate() - ACCOUNT_RESULT_REMINDER_DAYS_BEFORE);
+
+        if (now >= reminderThreshold && !entry.reminderSentAt) {
+          const sent = await sendRetentionReminderEmail(key, expiry);
+          if (sent) {
+            kept.push({ ...entry, reminderSentAt: now.toISOString() });
+            changed = true;
+            reminded += 1;
+            continue;
+          }
+        }
+
+        kept.push(entry);
+      }
+
+      if (!changed) continue;
+
+      if (kept.length === 0) {
         try {
           await store.delete(key);
-          deleted += 1;
+          deletedAccounts += 1;
         } catch {
           // Prøv igjen neste kjøring.
         }
-        continue;
-      }
-
-      const reminderThreshold = new Date(expiry);
-      reminderThreshold.setDate(reminderThreshold.getDate() - ACCOUNT_RESULT_REMINDER_DAYS_BEFORE);
-
-      if (now >= reminderThreshold && !record.reminderSentAt) {
-        const sent = await sendRetentionReminderEmail(key, expiry);
-        if (sent) {
-          try {
-            await store.setJSON(key, { ...record, reminderSentAt: now.toISOString() });
-            reminded += 1;
-          } catch {
-            // E-posten er uansett sendt -- neste kjøring prøver å sette flagget på nytt,
-            // som i verste fall betyr én ekstra påminnelse. Ikke kritisk.
-          }
+      } else {
+        try {
+          await store.setJSON(key, kept);
+        } catch {
+          // Prøv igjen neste kjøring.
         }
       }
     }
   }
 
-  return new Response(JSON.stringify({ ok: true, checked, reminded, deleted }), {
-    headers: { "content-type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({ ok: true, checked, reminded, deletedEntries, deletedAccounts }),
+    { headers: { "content-type": "application/json" } }
+  );
 };
 
 export const config = { schedule: "@daily" };

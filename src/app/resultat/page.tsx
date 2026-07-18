@@ -37,7 +37,7 @@ import {
   type CombinationInsight,
   type FacetCombinationInsight,
 } from "@/data/combinationInsights";
-import { computeAccountResultExpiry } from "@/lib/account/types";
+import { computeAccountResultExpiry, type StoredAccountResult } from "@/lib/account/types";
 import { buildFacetDrivenOverview, buildFacetAwareNote } from "@/data/domainComposition";
 import { ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
@@ -75,6 +75,10 @@ export default function ResultatPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveInfo, setSaveInfo] = useState<string | null>(null);
+  // "Utvikling over tid" (v2.27) -- kun relevant for "extended" (Premium-
+  // nivå, 290 spm), se lib/account/types.ts sin doc-kommentar for hvorfor
+  // "full" (Standard) aldri bygger opp en flerpunkts-historikk.
+  const [history, setHistory] = useState<StoredAccountResult[]>([]);
 
   useEffect(() => {
     const stored = loadAnswers();
@@ -146,6 +150,25 @@ export default function ResultatPage() {
       cancelled = true;
     };
   }, [tier]);
+
+  // Hent lagret historikk for "Utvikling over tid" -- kun meningsfullt for
+  // extended-tier (Premium), og kun når vi vet brukeren faktisk er logget inn.
+  useEffect(() => {
+    if (!ACCOUNT_SAVE_ENABLED || tier !== "extended" || !loggedInEmail) return;
+    let cancelled = false;
+    fetch("/api/account/result")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        setHistory(Array.isArray(data.history) ? data.history : []);
+      })
+      .catch(() => {
+        // Ikke kritisk -- seksjonen vises da bare ikke ennå.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tier, loggedInEmail]);
 
   if (!hydrated) return null;
 
@@ -243,6 +266,20 @@ export default function ResultatPage() {
       }
       setSavedAt(data.savedAt);
       setSaveInfo("Resultatet ditt er lagret.");
+      // v2.27: oppdater "Utvikling over tid"-seksjonen med den ferske
+      // historikken med én gang, i stedet for at brukeren må laste siden på
+      // nytt for å se det nettopp lagrede resultatet i oversikten.
+      if (tier === "extended") {
+        try {
+          const historyRes = await fetch("/api/account/result");
+          if (historyRes.ok) {
+            const historyData = await historyRes.json();
+            setHistory(Array.isArray(historyData.history) ? historyData.history : []);
+          }
+        } catch {
+          // Ikke kritisk -- selve lagringen lyktes uansett.
+        }
+      }
     } catch {
       setSaveError("Fikk ikke kontakt med tjenesten. Sjekk nettforbindelsen og prøv igjen.");
     } finally {
@@ -703,6 +740,74 @@ export default function ResultatPage() {
           {saveError && <p className="text-sm text-coral">{saveError}</p>}
         </section>
       )}
+
+      {ACCOUNT_SAVE_ENABLED && tier === "extended" && loggedInEmail && history.length > 1 && (() => {
+        // Regn ut endring fra forrige lagring for hver hovedfaktor (nøytralt
+        // -- ALDRI farget eller omtalt som "bedre"/"verre", se den avgjorte
+        // holdningen til utviklingsråd, v2.23/17.07.2026: dette er et bilde
+        // av variasjon over tid, ikke en vurdering).
+        const withDeltas = history.map((entry, i) => {
+          const prev = i > 0 ? history[i - 1] : null;
+          const deltas = prev
+            ? entry.factors.map((f) => {
+                const prevScore = prev.factors.find((pf) => pf.factor === f.factor)?.score;
+                return prevScore === undefined ? null : Math.round(f.score) - Math.round(prevScore);
+              })
+            : null;
+          return { entry, deltas };
+        });
+        const columns = history[history.length - 1]?.factors ?? [];
+
+        return (
+          <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+            <h2 className="font-semibold text-ink dark:text-white">Utvikling over tid</h2>
+            <p className="text-sm text-ink/70 dark:text-warmgray/70">
+              Du har lagret {history.length} resultater av Utvidet versjon knyttet til denne
+              kontoen. Her ser du hvordan de fem hovedfaktorene har målt seg fra gang til gang --
+              ikke som en vurdering av om noe er "bedre" eller "verre", bare som et bilde av
+              hvordan svarene dine har variert over tid. Endringstall (i parentes) viser
+              differansen fra forrige lagrede resultat.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[480px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-ink/10 dark:border-white/10">
+                    <th className="py-2 pr-4 font-medium text-ink dark:text-white">Dato</th>
+                    {columns.map((f) => (
+                      <th key={f.factor} className="py-2 pr-4 font-medium text-ink dark:text-white">
+                        {f.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...withDeltas].reverse().map(({ entry, deltas }) => (
+                    <tr key={entry.savedAt} className="border-b border-ink/5 dark:border-white/5">
+                      <td className="py-2 pr-4 text-ink/70 dark:text-warmgray/70">
+                        {new Date(entry.savedAt).toLocaleDateString("no-NO")}
+                      </td>
+                      {entry.factors.map((f, i) => {
+                        const delta = deltas?.[i] ?? null;
+                        return (
+                          <td key={f.factor} className="py-2 pr-4 text-ink/80 dark:text-warmgray/80">
+                            {Math.round(f.score)}
+                            {delta !== null && (
+                              <span className="text-ink/50 dark:text-warmgray/50">
+                                {" "}
+                                ({delta > 0 ? `+${delta}` : delta === 0 ? "±0" : `−${Math.abs(delta)}`})
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        );
+      })()}
 
       {tier === "free" && (
         <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">

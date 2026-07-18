@@ -43,3 +43,46 @@ export function computeAccountResultExpiry(savedAt: string): Date {
   expiry.setMonth(expiry.getMonth() + ACCOUNT_RESULT_TTL_MONTHS);
   return expiry;
 }
+
+/**
+ * v2.27 (produkteiers ønske om "utvikling over tid" for Premium/utvidet
+ * versjon, se FemFaktorer_Forretnings-og-prismodell_v1.2.docx del 6.3): en
+ * konto lagrer nå en HISTORIKK av resultater (eldst -> nyest) i stedet for
+ * bare det siste. Reglene for hvordan historikken vokser ligger i
+ * api/account/save-result/route.ts, ikke her -- kort oppsummert: lagrer man
+ * et "extended"-resultat (290 spm, Premium-nivå), legges det til historikken;
+ * lagrer man et "full"-resultat (120 spm, Standard-nivå), erstattes HELE
+ * historikken med bare dét ene resultatet (Standard er bevisst ikke ment å
+ * bygge opp en utviklingshistorikk, kun "siste resultat i skya").
+ */
+export const MAX_ACCOUNT_HISTORY_ENTRIES = 24;
+
+/**
+ * Gjør om en rå, ikke-typesjekket blob-verdi til en gyldig historikkliste.
+ * Håndterer tre tilfeller: (1) allerede en liste (nytt format), (2) et enkelt
+ * gammelt kontoresultat lagret FØR historikk-endringen (v2.4-v2.26 -- hadde
+ * `factors` direkte på rot-objektet, ikke i en liste) -- pakkes inn som et
+ * ett-elements historikk, (3) `null`/ugyldig -- gir tom liste. Kaster ALDRI --
+ * ukjente/korrupte data gir bare en tom liste, aldri en krasj (samme prinsipp
+ * som resten av lagringskoden i prosjektet).
+ */
+export function normalizeAccountHistory(value: unknown): StoredAccountResult[] {
+  if (Array.isArray(value)) {
+    return value.filter(
+      (entry): entry is StoredAccountResult =>
+        typeof entry === "object" &&
+        entry !== null &&
+        typeof (entry as Record<string, unknown>).savedAt === "string" &&
+        Array.isArray((entry as Record<string, unknown>).factors)
+    );
+  }
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as Record<string, unknown>).savedAt === "string" &&
+    Array.isArray((value as Record<string, unknown>).factors)
+  ) {
+    return [value as StoredAccountResult];
+  }
+  return [];
+}

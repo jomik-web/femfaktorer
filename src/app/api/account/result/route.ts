@@ -2,11 +2,18 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { readSession, ACCOUNT_SESSION_COOKIE_NAME } from "@/lib/account/session";
 import { accountStore } from "@/lib/account/blobs";
-import type { StoredAccountResult } from "@/lib/account/types";
+import { normalizeAccountHistory } from "@/lib/account/types";
 
 export const runtime = "nodejs";
 
-/** Henter det innloggede resultatet (brukt av /logg-inn etter vellykket kodeverifisering). */
+/**
+ * Henter det innloggede resultatet (brukt av /logg-inn etter vellykket
+ * kodeverifisering, og av resultat/page.tsx sin "Utvikling over tid"-seksjon).
+ * `result` er alltid det SISTE lagrede resultatet (bakoverkompatibelt med
+ * eksisterende bruk); `history` er hele historikken, eldst -> nyest -- for
+ * "full"-nivå (Standard) inneholder den alltid bare det ene resultatet, for
+ * "extended" (Premium) kan den inneholde flere (v2.27).
+ */
 export async function GET() {
   const cookieStore = await cookies();
   const token = cookieStore.get(ACCOUNT_SESSION_COOKIE_NAME)?.value;
@@ -15,16 +22,18 @@ export async function GET() {
     return NextResponse.json({ error: "Du er ikke logget inn." }, { status: 401 });
   }
 
-  let record: StoredAccountResult | null;
+  let raw: unknown;
   try {
-    record = (await accountStore().get(session.email, { type: "json" })) as StoredAccountResult | null;
+    raw = await accountStore().get(session.email, { type: "json" });
   } catch {
     return NextResponse.json({ error: "Klarte ikke å hente resultatet akkurat nå." }, { status: 503 });
   }
 
-  if (!record) {
+  const history = normalizeAccountHistory(raw);
+  if (history.length === 0) {
     return NextResponse.json({ error: "Fant ikke noe lagret resultat for denne kontoen." }, { status: 404 });
   }
 
-  return NextResponse.json({ ok: true, result: record });
+  const record = history[history.length - 1];
+  return NextResponse.json({ ok: true, result: record, history });
 }

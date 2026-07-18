@@ -2,11 +2,22 @@
 
 Sist oppdatert: 18.07.2026
 
+## Nytt: "Utvikling over tid" for Premium-nivå (v2.27, 18.07.2026)
+
+Første av de tre gjenstående, større funksjonene fra 3-nivåmodellen (partnerkobling og delbare sosiale-medie-kort kommer som egne saker senere, én om gangen etter ditt ønske).
+
+- **Kontolagringen bygger nå opp en historikk i stedet for å bare huske det siste resultatet.** Tar du Utvidet versjon (290 spm, Premium-nivået) flere ganger og lagrer hver gang mens du er logget inn på samme e-post, beholdes tidligere resultater (inntil 24 lagringer) i stedet for at det forrige blir overskrevet. Tar du i stedet 120-spørsmålsversjonen (Standard), oppfører kontoen seg som før: kun ett lagret resultat om gangen, ingen historikk.
+- **Ny seksjon på resultatsiden: "Utvikling over tid."** Vises for deg som er logget inn med et Utvidet-nivå-resultat og har minst to lagrede resultater på kontoen. Viser dato og skår for hver av de fem hovedfaktorene per lagring, med endringstall i parentes fra forrige gang (f.eks. "68 (+5)"). Bevisst nøytralt -- ingen farger eller "bedre/verre"-språk, i tråd med den tidligere avgjørelsen om at nettsiden ikke skal gi utviklingsvurderinger (se punktet fra 17.07.2026 lenger ned).
+- **12-månederssletting og påminnelses-e-post gjelder nå per lagret resultat, ikke per konto.** Den planlagte slettejobben (`netlify/functions/account-retention.mts`) er oppdatert til å behandle hvert lagrede resultat i historikken uavhengig -- et resultat fra januar slettes 12 måneder etter januar, selv om du har lagret nyere resultater i mellomtiden. Kontoen (hele e-postoppføringen) slettes først når alle lagrede resultater på den er utløpt.
+- Rettet en liten feil i forrige changelog-oppføring (v2.26): innloggingskoden er 6 sifre, ikke 8 som det sto der.
+
+Testet med egne script (append/kutt ved 24, full-nivå nullstiller historikken, individuell utløpsberegning per oppføring) -- ingen ekte Netlify-miljø tilgjengelig i utviklingssandkassen til å teste selve Blobs-lagringen live, så hold litt ekstra øye med dette etter at det er i produksjon. Ingen handling kreves fra deg utover det -- husk `git push`.
+
 ## Nytt: 3-nivåmodellen er nå live -- helt uten betalingssperre (v2.26, 18.07.2026)
 
 Etter dine svar på oppfølgingsspørsmålene (Spir flyttes til Standard/Premium, gjenbruk eksisterende innlogging, "mellomting"-partnerdeling på Standard, og konkret innhold for Standard) og din siste beskjed om at du vil kunne prøve alt selv før du bestemmer deg for betaling, er følgende gjort:
 
-- **Kontolagring er gjenaktivert.** `ACCOUNT_SAVE_ENABLED` er satt til `true` i `src/lib/featureFlags.ts` -- innlogging med e-post + 8-sifret engangskode, og "Lagre resultatet mitt" på resultatsiden, virker igjen. Dette var satt på pause under betatesting (v2.16); nå er det en del av den vedtatte prismodellen (skylagring på Standard/Premium, se `FemFaktorer_Forretnings-og-prismodell_v1.2.docx` del 6.1).
+- **Kontolagring er gjenaktivert.** `ACCOUNT_SAVE_ENABLED` er satt til `true` i `src/lib/featureFlags.ts` -- innlogging med e-post + 6-sifret engangskode, og "Lagre resultatet mitt" på resultatsiden, virker igjen. Dette var satt på pause under betatesting (v2.16); nå er det en del av den vedtatte prismodellen (skylagring på Standard/Premium, se `FemFaktorer_Forretnings-og-prismodell_v1.2.docx` del 6.1).
 - **Ingen betalingssperre er lagt inn noe sted.** Jeg sjekket hele kodebasen for pris-/betalingstekst -- det finnes ingen i dag. Nivåene (gratis/Standard/Premium) styres allerede kun av hvor mange spørsmål som er besvart, ikke av betaling, så "prøv alt selv"-ønsket ditt er i praksis allerede oppfylt for testlengde, Spir-tilgang, PDF-nedlasting og analysedybde. Når dere faktisk vil ta betalt, er neste steg å legge til en ekte betalingsflyt foran de riktige knappene -- ikke å bygge om noe av det som er gjort nå.
 - **Nytt innhold: "Jobb" og "Kjærlighet" på gratisnivået.** Resultatsiden viser nå, under hver hovedkategori på gratisnivået, en kort "Jobb"-seksjon (styrker/utfordringer å kjenne til i jobbsammenheng) og en "Kjærlighet"-seksjon (samme for relasjoner, pluss et nytt avsnitt om hvilke typer personer som ofte er en god match -- alltid formulert som "ofte"/"som regel", aldri en garanti eller en fasit). Dette gjenbruker delvis tekst som allerede fantes i koden (`careerNote`, `relationshipNote`), pluss 15 helt nye tekster (`partnerNote`, én per hovedkategori × nivå).
 
