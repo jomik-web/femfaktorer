@@ -2,6 +2,20 @@
 
 Sist oppdatert: 18.07.2026
 
+## Nytt: 3-nivåmodellen er nå live -- helt uten betalingssperre (v2.26, 18.07.2026)
+
+Etter dine svar på oppfølgingsspørsmålene (Spir flyttes til Standard/Premium, gjenbruk eksisterende innlogging, "mellomting"-partnerdeling på Standard, og konkret innhold for Standard) og din siste beskjed om at du vil kunne prøve alt selv før du bestemmer deg for betaling, er følgende gjort:
+
+- **Kontolagring er gjenaktivert.** `ACCOUNT_SAVE_ENABLED` er satt til `true` i `src/lib/featureFlags.ts` -- innlogging med e-post + 8-sifret engangskode, og "Lagre resultatet mitt" på resultatsiden, virker igjen. Dette var satt på pause under betatesting (v2.16); nå er det en del av den vedtatte prismodellen (skylagring på Standard/Premium, se `FemFaktorer_Forretnings-og-prismodell_v1.2.docx` del 6.1).
+- **Ingen betalingssperre er lagt inn noe sted.** Jeg sjekket hele kodebasen for pris-/betalingstekst -- det finnes ingen i dag. Nivåene (gratis/Standard/Premium) styres allerede kun av hvor mange spørsmål som er besvart, ikke av betaling, så "prøv alt selv"-ønsket ditt er i praksis allerede oppfylt for testlengde, Spir-tilgang, PDF-nedlasting og analysedybde. Når dere faktisk vil ta betalt, er neste steg å legge til en ekte betalingsflyt foran de riktige knappene -- ikke å bygge om noe av det som er gjort nå.
+- **Nytt innhold: "Jobb" og "Kjærlighet" på gratisnivået.** Resultatsiden viser nå, under hver hovedkategori på gratisnivået, en kort "Jobb"-seksjon (styrker/utfordringer å kjenne til i jobbsammenheng) og en "Kjærlighet"-seksjon (samme for relasjoner, pluss et nytt avsnitt om hvilke typer personer som ofte er en god match -- alltid formulert som "ofte"/"som regel", aldri en garanti eller en fasit). Dette gjenbruker delvis tekst som allerede fantes i koden (`careerNote`, `relationshipNote`), pluss 15 helt nye tekster (`partnerNote`, én per hovedkategori × nivå).
+
+**Viktig -- én ting mangler ennå, og krever en Resend-innstilling fra din side før det virker for andre enn deg:** innloggings-e-postene sendes i dag kun til din egen registrerte Resend-adresse, siden domenet ikke er verifisert ennå. Dette er dokumentert tidligere i denne fila og er ikke noe jeg kan løse fra kodesiden alene.
+
+**Ikke bygget ennå (større arbeid, kommer som egen sak):** delbare bilder/kort for sosiale medier, partner-/venn-kobling (alle tre nivåvarianter), og "utvikling over tid"-visningen for flere lagrede tester. Disse er substansielle, ubygde funksjoner -- jeg legger fram et forslag til rekkefølge/omfang for dette som eget punkt, i stedet for å bygge alt uten en prioritering fra deg først.
+
+Ingen handling kreves fra deg for det som er gjort -- husk `git push`.
+
 ## Nytt: bekreftelse før du havner rett i resultatet igjen (v2.25, 18.07.2026)
 
 Fikset etter din tilbakemelding: hvis du allerede hadde fullført testen (høyeste nivå + den valgfrie tilleggsseksjonen) og trykket "test" eller "start testen" igjen, ble du sendt rett til resultatsiden uten noe mellomsteg. Nå får du i stedet en tydelig skjerm: "Du har allerede et resultat -- mente du å ta testen på nytt, eller vil du se resultatet du allerede har?", med to knapper. De to eksisterende sjekkpunktskjermene (etter 50 og etter 120 spørsmål) har også fått en liten ekstra lenke ("Trykket du hit ved en feiltakelse? Start testen helt på nytt"), i tilfelle noen har svart delvis og lurer på hvordan de starter helt på nytt.
@@ -10,9 +24,9 @@ Velger du å starte på nytt, blir det forrige svarsettet ditt arkivert lokalt i
 
 Ingen handling kreves -- husk `git push`.
 
-## Under arbeid: tre nivåer, tre priser, og konkurrentanalyse (startet 18.07.2026)
+## Avgjort: tre nivåer, tre priser, og konkurrentanalyse (18.07.2026, se v2.26 over)
 
-Du har skissert en fremtidig 3-nivå prismodell (gratis/20 kr/99 kr) med ulik lagring, funksjonalitet og en fremtidig partner-/kompatibilitetsfunksjon. Dette er STØRRE produktarbeid som ikke er bygget ennå -- jeg jobber med research og et forslag til tabell/dokument, og har noen oppfølgingsspørsmål før jeg fullfører det (se selve samtalen). Merk: dette representerer en endring fra en tidligere logget beslutning i denne fila ("Prisbeslutning", v2.8) om at 120- og 300-spørsmålsnivået skulle koste det samme -- den beslutningen erstattes nå av din nye 3-nivå-modell.
+Den fremtidige 3-nivå prismodellen (gratis/20 kr/99 kr) er nå ferdig utredet og dokumentert i `FemFaktorer_Forretnings-og-prismodell_v1.2.docx`, inkludert konkurrentanalyse og løsning på alle åpne spørsmål (Spir-plassering, innlogging, partnerdeling, Standard-innhold). Merk: dette representerer en endring fra en tidligere logget beslutning i denne fila ("Prisbeslutning", v2.8) om at 120- og 300-spørsmålsnivået skulle koste det samme -- den beslutningen er nå erstattet av 3-nivå-modellen.
 
 ## Nytt: tydelig henvisning til hjelp ved vanskelige tanker (v2.24, 18.07.2026)
 

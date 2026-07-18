@@ -12,8 +12,16 @@
  * bak flaggene, bare flipp verdien her når betatestingen er over.
  */
 
-/** Kontolagring (innlogging, "lagre resultatet mitt", /logg-inn) -- PÅ VENT under betatesting. */
-export const ACCOUNT_SAVE_ENABLED = false;
+/**
+ * Kontolagring (innlogging, "lagre resultatet mitt", /logg-inn) --
+ * GJENAKTIVERT 18.07.2026 (v2.26): produkteier har besluttet å gjenbruke og
+ * videreutvikle denne fremfor å bygge en ny løsning, som en del av
+ * 3-nivå-prismodellen (skylagring på Standard/Premium-nivå, se
+ * FemFaktorer_Forretnings-og-prismodell_v1.2.docx del 6.1). Ingen
+ * betalingssperre er lagt inn ennå -- funksjonen er tilgjengelig for alle,
+ * uavhengig av nivå, inntil en eventuell betalingsløsning bygges i fase 2.
+ */
+export const ACCOUNT_SAVE_ENABLED = true;
 
 /** Synlige last ned/last opp-knapper for svarsett på resultatsiden -- KUN for betatestperioden. */
 export const BETA_ANSWER_SET_TOOLS_ENABLED = true;

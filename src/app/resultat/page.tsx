@@ -351,6 +351,17 @@ export default function ResultatPage() {
                   <p className="text-ink/80 dark:text-warmgray/80">{copy.overview}</p>
                   <p className="text-ink/80 dark:text-warmgray/80">{copy.nuance}</p>
                   <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
+                  <div className="mt-3 flex flex-col gap-3 border-t border-ink/10 pt-3 dark:border-white/10">
+                    <div>
+                      <h3 className="text-sm font-medium text-ink dark:text-white">Jobb</h3>
+                      <p className="text-ink/80 dark:text-warmgray/80">{copy.careerNote}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-ink dark:text-white">Kjærlighet</h3>
+                      <p className="text-ink/80 dark:text-warmgray/80">{copy.relationshipNote}</p>
+                      <p className="mt-1 text-ink/80 dark:text-warmgray/80">{copy.partnerNote}</p>
+                    </div>
+                  </div>
                 </article>
               );
             })}
