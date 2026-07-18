@@ -39,14 +39,14 @@ export function ProgressBar({ current, total }: ProgressBarProps) {
         aria-valuemin={1}
         aria-valuemax={total}
         aria-label={`Spørsmål ${current} av ${total}`}
-        className="h-2 w-full overflow-hidden rounded-full bg-lavender-400 dark:bg-white/10"
+        className="h-2 w-full overflow-hidden rounded-full bg-warmgray dark:bg-white/10"
       >
         <div
-          className="h-full rounded-full bg-holo-sky transition-all"
+          className="h-full rounded-full bg-teal transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="mt-2 text-sm text-indigo/70 dark:text-lavender-400/70">
+      <p className="mt-2 text-sm text-ink/70 dark:text-warmgray/70">
         Spørsmål {current} av {total}
       </p>
     </div>

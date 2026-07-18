@@ -8,13 +8,13 @@
   }
 
   body {
-    @apply bg-white text-indigo dark:bg-indigo dark:text-lavender-100;
+    @apply bg-white text-ink dark:bg-ink dark:text-warmgray;
     font-feature-settings: "cv11", "ss01";
   }
 
   /* WCAG 2.2 AA: synlig fokusmarkør på alle interaktive elementer (Dokument 02 §20) */
   :focus-visible {
-    @apply outline outline-2 outline-offset-2 outline-holo-sky;
+    @apply outline outline-2 outline-offset-2 outline-teal;
   }
 
   /* Respekter redusert bevegelse (Dokument 02 §6.5) */
@@ -42,7 +42,7 @@
   html,
   body {
     background: #ffffff !important;
-    color: #14142b !important;
+    color: #0d3340 !important;
   }
 
   /* Unngå at en fasettboks eller kombinasjonsboks kappes midt over et sideskift. */

@@ -47,8 +47,8 @@ export default function SvardataVerktoyPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-8 px-6 py-16">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-indigo dark:text-white">Verktøy: svardata</h1>
-        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+        <h1 className="text-2xl font-semibold text-ink dark:text-white">Verktøy: svardata</h1>
+        <p className="text-sm text-ink/70 dark:text-warmgray/70">
           Kun for utvikling -- ikke en del av den vanlige tjenesten. Her kan du laste ned et fast
           svarsett (CSV) og laste det inn igjen senere, slik at du kan teste rapporten og
           Spir-samtalen mot et kjent, uforandret svarsett mens resten av tjenesten fortsatt endrer
@@ -57,14 +57,14 @@ export default function SvardataVerktoyPage() {
         </p>
       </header>
 
-      <section className="flex flex-col gap-3 rounded-lg border border-lavender-400 p-5 dark:border-white/20">
-        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+      <section className="flex flex-col gap-3 rounded-lg border border-warmgray p-5 dark:border-white/20">
+        <p className="text-sm text-ink/70 dark:text-warmgray/70">
           Svar lagret i DENNE nettleseren akkurat nå: {currentSummary ?? "laster …"}.
         </p>
         <AnswerSetCsvPanel afterImport="navigate" />
       </section>
 
-      <Link href="/" className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60">
+      <Link href="/" className="text-sm text-ink/60 underline underline-offset-2 dark:text-warmgray/60">
         Tilbake til forsiden
       </Link>
     </main>

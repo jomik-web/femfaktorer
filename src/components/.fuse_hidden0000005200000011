@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import LogoMark from "./LogoMark";
 
 const LINKS = [
   { href: "/", label: "Forside" },
@@ -21,10 +20,9 @@ export function SiteNav() {
   if (pathname?.startsWith("/admin")) return null;
 
   return (
-    <header className="sticky top-0 z-10 border-b border-lavender-400 bg-white/90 backdrop-blur dark:border-white/10 dark:bg-indigo/90">
+    <header className="sticky top-0 z-10 border-b border-warmgray bg-white/90 backdrop-blur dark:border-white/10 dark:bg-ink/90">
       <nav className="mx-auto flex max-w-2xl items-center justify-between px-6 py-3">
-        <Link href="/" className="flex items-center gap-2 font-display font-semibold text-indigo dark:text-white">
-          <LogoMark size={24} />
+        <Link href="/" className="font-semibold text-ink dark:text-white">
           Dine Fasetter
         </Link>
         <ul className="flex gap-4 text-sm">
@@ -37,8 +35,8 @@ export function SiteNav() {
                   aria-current={active ? "page" : undefined}
                   className={
                     active
-                      ? "font-medium text-holo-sky"
-                      : "text-indigo/70 hover:text-holo-sky dark:text-lavender-400/70"
+                      ? "font-medium text-teal"
+                      : "text-ink/70 hover:text-teal dark:text-warmgray/70"
                   }
                 >
                   {link.label}

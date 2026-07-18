@@ -76,8 +76,8 @@ export function RoughFactorIndicator({ factor, label, score }: RoughFactorIndica
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between">
-        <span className="font-medium text-indigo dark:text-white">{label}</span>
-        <span className="text-sm text-indigo/60 dark:text-lavender-400/60" aria-hidden="true">
+        <span className="font-medium text-ink dark:text-white">{label}</span>
+        <span className="text-sm text-ink/60 dark:text-warmgray/60" aria-hidden="true">
           {zoneLabel}
         </span>
       </div>
@@ -90,7 +90,7 @@ export function RoughFactorIndicator({ factor, label, score }: RoughFactorIndica
           <div
             key={i}
             className={`h-3 flex-1 rounded-full ${
-              i === zoneIndex ? FACTOR_COLOR_CLASS[factor] : "bg-lavender-400 dark:bg-white/10"
+              i === zoneIndex ? FACTOR_COLOR_CLASS[factor] : "bg-warmgray dark:bg-white/10"
             }`}
           />
         ))}

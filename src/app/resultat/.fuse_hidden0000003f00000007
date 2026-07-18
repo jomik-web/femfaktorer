@@ -41,22 +41,10 @@ import { computeAccountResultExpiry, type StoredAccountResult } from "@/lib/acco
 import { buildFacetDrivenOverview, buildFacetAwareNote } from "@/data/domainComposition";
 import { ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
-import { FactorIcon } from "@/components/FactorIcon";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { PageBackground } from "@/components/ui/PageBackground";
 
 const DISPLAY_TO_DOMAIN: Record<DisplayFactor, Domain> = Object.fromEntries(
   (Object.entries(DOMAIN_TO_DISPLAY) as [Domain, DisplayFactor][]).map(([domain, display]) => [display, domain])
 ) as Record<DisplayFactor, Domain>;
-
-// Klasser hentet 1:1 fra Button (variant="primary" size="md") -- Link kan
-// ikke bruke <Button> direkte (den er en <button>), men skal se identisk ut.
-const PRIMARY_MD_LINK_CLASSES =
-  "font-display font-semibold transition-all duration-150 inline-block " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-holo-sky focus-visible:ring-offset-2 " +
-  "bg-holo-gradient text-white shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98] " +
-  "px-6 py-3 text-base rounded-xl";
 
 export default function ResultatPage() {
   const [factors, setFactors] = useState<FactorResult[] | null>(null);
@@ -186,28 +174,26 @@ export default function ResultatPage() {
 
   if (incomplete || !factors) {
     return (
-      <PageBackground>
-        <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white">
-            Vi fant ikke et fullført resultat
-          </h1>
-          <p className="text-indigo/70 dark:text-lavender-400/70">
-            Det kan hende testen ikke er fullført ennå, eller at lagrede svar er slettet.
-          </p>
-          <Link href="/test" className={PRIMARY_MD_LINK_CLASSES}>
-            Gå til testen
-          </Link>
-          {BETA_ANSWER_SET_TOOLS_ENABLED && (
-            <div className="mt-4 flex w-full flex-col items-center gap-3 border-t border-lavender-400 pt-6 dark:border-white/10">
-              <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-                Har du tatt testen før og lastet ned svarene dine? Last dem opp for å se resultatet
-                med én gang, uten å svare på nytt.
-              </p>
-              <AnswerSetCsvPanel afterImport="reload" hideDownload />
-            </div>
-          )}
-        </main>
-      </PageBackground>
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
+        <h1 className="text-xl font-semibold text-ink dark:text-white">
+          Vi fant ikke et fullført resultat
+        </h1>
+        <p className="text-ink/70 dark:text-warmgray/70">
+          Det kan hende testen ikke er fullført ennå, eller at lagrede svar er slettet.
+        </p>
+        <Link href="/test" className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white">
+          Gå til testen
+        </Link>
+        {BETA_ANSWER_SET_TOOLS_ENABLED && (
+          <div className="mt-4 flex w-full flex-col items-center gap-3 border-t border-warmgray pt-6 dark:border-white/10">
+            <p className="text-sm text-ink/60 dark:text-warmgray/60">
+              Har du tatt testen før og lastet ned svarene dine? Last dem opp for å se resultatet
+              med én gang, uten å svare på nytt.
+            </p>
+            <AnswerSetCsvPanel afterImport="reload" hideDownload />
+          </div>
+        )}
+      </main>
     );
   }
 
@@ -349,33 +335,36 @@ export default function ResultatPage() {
   const closing = isDetailed ? buildClosingSynthesis(factors, facets) : null;
 
   return (
-    <PageBackground>
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-10 px-6 py-12 print:max-w-none">
+    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-10 px-6 py-12 print:max-w-none">
       <header className="flex flex-col gap-2">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <h1 className="font-display text-2xl font-semibold text-indigo dark:text-white sm:text-3xl">
+          <h1 className="text-2xl font-semibold text-ink dark:text-white sm:text-3xl">
             Din profil
           </h1>
           {isDetailed && (
-            <Button type="button" variant="secondary" size="sm" onClick={() => window.print()} className="print:hidden">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="rounded-lg border border-teal px-4 py-2 text-sm font-medium text-teal print:hidden"
+            >
               Last ned som PDF
-            </Button>
+            </button>
           )}
         </div>
-        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{NON_DIAGNOSTIC_NOTICE}</p>
-        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{CRISIS_NOTICE}</p>
+        <p className="text-sm text-ink/70 dark:text-warmgray/70">{NON_DIAGNOSTIC_NOTICE}</p>
+        <p className="text-sm text-ink/70 dark:text-warmgray/70">{CRISIS_NOTICE}</p>
         {tier === "free" && (
-          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+          <p className="text-sm text-ink/60 dark:text-warmgray/60">
             Dette er et foreløpig resultat, basert på de første 50 av 120 spørsmål.
           </p>
         )}
         {tier === "full" && (
-          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+          <p className="text-sm text-ink/60 dark:text-warmgray/60">
             Basert på fullversjonen (alle 120 spørsmål).
           </p>
         )}
         {tier === "extended" && (
-          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+          <p className="text-sm text-ink/60 dark:text-warmgray/60">
             Basert på Utvidet versjon (alle 290 spørsmål) -- det mest presise resultatet Dine Fasetter
             kan gi, med 10 spørsmål per underkategori i stedet for 4-5.
           </p>
@@ -394,26 +383,20 @@ export default function ResultatPage() {
             {factors.map((f) => {
               const copy = INTERPRETATIONS[f.factor][bandFor(f.score)];
               return (
-                <article
-                  key={f.factor}
-                  className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
-                >
-                  <div className="flex items-center gap-3">
-                    <FactorIcon factor={f.factor} size={40} />
-                    <h2 className="font-display font-semibold text-indigo dark:text-white">{f.label}</h2>
-                  </div>
-                  <p className="text-indigo/80 dark:text-lavender-400/80">{copy.overview}</p>
-                  <p className="text-indigo/80 dark:text-lavender-400/80">{copy.nuance}</p>
-                  <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
-                  <div className="mt-3 flex flex-col gap-3 border-t border-indigo/10 pt-3 dark:border-white/10">
+                <article key={f.factor} className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
+                  <h2 className="font-semibold text-ink dark:text-white">{f.label}</h2>
+                  <p className="text-ink/80 dark:text-warmgray/80">{copy.overview}</p>
+                  <p className="text-ink/80 dark:text-warmgray/80">{copy.nuance}</p>
+                  <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
+                  <div className="mt-3 flex flex-col gap-3 border-t border-ink/10 pt-3 dark:border-white/10">
                     <div>
-                      <h3 className="text-sm font-medium text-indigo dark:text-white">Jobb</h3>
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{copy.careerNote}</p>
+                      <h3 className="text-sm font-medium text-ink dark:text-white">Jobb</h3>
+                      <p className="text-ink/80 dark:text-warmgray/80">{copy.careerNote}</p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-indigo dark:text-white">Kjærlighet</h3>
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{copy.relationshipNote}</p>
-                      <p className="mt-1 text-indigo/80 dark:text-lavender-400/80">{copy.partnerNote}</p>
+                      <h3 className="text-sm font-medium text-ink dark:text-white">Kjærlighet</h3>
+                      <p className="text-ink/80 dark:text-warmgray/80">{copy.relationshipNote}</p>
+                      <p className="mt-1 text-ink/80 dark:text-warmgray/80">{copy.partnerNote}</p>
                     </div>
                   </div>
                 </article>
@@ -435,13 +418,12 @@ export default function ResultatPage() {
                 type="button"
                 onClick={() => setActiveFactor(f.factor)}
                 aria-current={activeFactor === f.factor ? "page" : undefined}
-                className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   activeFactor === f.factor
-                    ? "bg-holo-gradient text-white shadow-sm"
-                    : "bg-lavender-100 text-indigo hover:bg-lavender-400/40 dark:bg-white/10 dark:text-lavender-400 dark:hover:bg-white/20"
+                    ? "bg-teal text-white"
+                    : "bg-warmgray text-ink hover:bg-warmgray/70 dark:bg-white/10 dark:text-warmgray dark:hover:bg-white/20"
                 }`}
               >
-                <FactorIcon factor={f.factor} size={18} />
                 {f.label}
               </button>
             ))}
@@ -452,8 +434,8 @@ export default function ResultatPage() {
                 aria-current={activeFactor === "summary" ? "page" : undefined}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   activeFactor === "summary"
-                    ? "bg-holo-gradient text-white shadow-sm"
-                    : "bg-lavender-100 text-indigo hover:bg-lavender-400/40 dark:bg-white/10 dark:text-lavender-400 dark:hover:bg-white/20"
+                    ? "bg-teal text-white"
+                    : "bg-warmgray text-ink hover:bg-warmgray/70 dark:bg-white/10 dark:text-warmgray dark:hover:bg-white/20"
                 }`}
               >
                 Oppsummering
@@ -493,19 +475,14 @@ export default function ResultatPage() {
                   aria-hidden={!isActive}
                 >
                   <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                      <FactorIcon factor={f.factor} size={56} />
-                      <h2 className="font-display text-3xl font-bold text-indigo dark:text-white sm:text-4xl">
-                        {f.label}
-                      </h2>
-                    </div>
+                    <h2 className="text-3xl font-bold text-ink dark:text-white sm:text-4xl">{f.label}</h2>
                     <RoughFactorIndicator factor={f.factor} label={f.label} score={f.score} />
-                    <p className="text-sm text-indigo/60 dark:text-lavender-400/60">{DOMAIN_DEFINITIONS[f.factor]}</p>
+                    <p className="text-sm text-ink/60 dark:text-warmgray/60">{DOMAIN_DEFINITIONS[f.factor]}</p>
                   </div>
 
                   {facetsForDomain.length > 0 && (
                     <div className="flex flex-col gap-4">
-                      <h3 className="font-display font-semibold text-indigo dark:text-white">Underkategorier</h3>
+                      <h3 className="font-semibold text-ink dark:text-white">Underkategorier</h3>
                       <div className="flex flex-col gap-5">
                         {facetsForDomain.map((fa) => {
                           const meta = FACET_INTERPRETATIONS[fa.facet];
@@ -514,11 +491,11 @@ export default function ResultatPage() {
                             <div key={fa.facet} className="flex flex-col gap-1.5">
                               <RoughFactorIndicator factor={f.factor} label={meta?.label ?? fa.facet} score={fa.score} />
                               {meta?.description && (
-                                <p className="text-xs italic text-indigo/50 dark:text-lavender-400/50">
+                                <p className="text-xs italic text-ink/50 dark:text-warmgray/50">
                                   {meta.description}
                                 </p>
                               )}
-                              <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+                              <p className="text-sm text-ink/70 dark:text-warmgray/70">
                                 {facetInterpretationFor(fa.facet, facetBand)}
                               </p>
                             </div>
@@ -530,10 +507,10 @@ export default function ResultatPage() {
                           {facetCombos.map((c) => (
                             <article
                               key={c.id}
-                              className="flex flex-col gap-1.5 rounded-xl border border-lavender-400/20 bg-lavender-100/50 p-4 shadow-sm dark:border-white/10 dark:bg-white/5"
+                              className="flex flex-col gap-1.5 rounded-lg bg-mint/50 p-4 dark:bg-white/5"
                             >
-                              <h4 className="text-sm font-semibold text-indigo dark:text-white">{c.title}</h4>
-                              <p className="text-sm text-indigo/80 dark:text-lavender-400/80">{c.text}</p>
+                              <h4 className="text-sm font-semibold text-ink dark:text-white">{c.title}</h4>
+                              <p className="text-sm text-ink/80 dark:text-warmgray/80">{c.text}</p>
                             </article>
                           ))}
                         </div>
@@ -542,26 +519,26 @@ export default function ResultatPage() {
                   )}
 
                   {useNewLayout ? (
-                    <article className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{copy.synthesis}</p>
+                    <article className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
+                      <p className="text-ink/80 dark:text-warmgray/80">{copy.synthesis}</p>
                       {facetAwareNote && (
-                        <p className="text-indigo/80 dark:text-lavender-400/80">{facetAwareNote}</p>
+                        <p className="text-ink/80 dark:text-warmgray/80">{facetAwareNote}</p>
                       )}
-                      <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
+                      <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
                     </article>
                   ) : (
-                    <article className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{facetDrivenOverview}</p>
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{copy.nuance}</p>
-                      <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
-                      <div className="mt-3 flex flex-col gap-3 border-t border-indigo/10 pt-3 dark:border-white/10">
+                    <article className="flex flex-col gap-3 rounded-lg bg-mint/50 p-5 dark:bg-white/5">
+                      <p className="text-ink/80 dark:text-warmgray/80">{facetDrivenOverview}</p>
+                      <p className="text-ink/80 dark:text-warmgray/80">{copy.nuance}</p>
+                      <p className="mt-2 text-ink/80 dark:text-warmgray/80">{copy.reflection}</p>
+                      <div className="mt-3 flex flex-col gap-3 border-t border-ink/10 pt-3 dark:border-white/10">
                         <div>
-                          <h3 className="text-sm font-medium text-indigo dark:text-white">I jobbsammenheng</h3>
-                          <p className="text-indigo/80 dark:text-lavender-400/80">{copy.careerNote}</p>
+                          <h3 className="text-sm font-medium text-ink dark:text-white">I jobbsammenheng</h3>
+                          <p className="text-ink/80 dark:text-warmgray/80">{copy.careerNote}</p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-indigo dark:text-white">I relasjoner</h3>
-                          <p className="text-indigo/80 dark:text-lavender-400/80">{copy.relationshipNote}</p>
+                          <h3 className="text-sm font-medium text-ink dark:text-white">I relasjoner</h3>
+                          <p className="text-ink/80 dark:text-warmgray/80">{copy.relationshipNote}</p>
                         </div>
                       </div>
                     </article>
@@ -570,8 +547,8 @@ export default function ResultatPage() {
                   {domainCombos.length > 0 && (
                     <div className="flex flex-col gap-4">
                       <div>
-                        <h3 className="font-display font-semibold text-indigo dark:text-white">Spennende samspill</h3>
-                        <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+                        <h3 className="font-semibold text-ink dark:text-white">Spennende samspill</h3>
+                        <p className="text-sm text-ink/60 dark:text-warmgray/60">
                           Noen kombinasjoner av hovedfaktorer gir kjente, godt dokumenterte mønstre. Her er
                           de som passer med resultatet ditt.
                         </p>
@@ -579,10 +556,10 @@ export default function ResultatPage() {
                       {domainCombos.map((c) => (
                         <article
                           key={c.id}
-                          className="flex flex-col gap-2 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
+                          className="flex flex-col gap-2 rounded-lg bg-mint/50 p-5 dark:bg-white/5"
                         >
-                          <h4 className="font-display font-semibold text-indigo dark:text-white">{c.title}</h4>
-                          <p className="text-indigo/80 dark:text-lavender-400/80">{c.text}</p>
+                          <h4 className="font-semibold text-ink dark:text-white">{c.title}</h4>
+                          <p className="text-ink/80 dark:text-warmgray/80">{c.text}</p>
                         </article>
                       ))}
                     </div>
@@ -593,24 +570,24 @@ export default function ResultatPage() {
 
           {closing && (
             <section
-              className={`flex flex-col gap-4 border-t border-lavender-400 pt-8 dark:border-white/10 ${
+              className={`flex flex-col gap-4 border-t border-warmgray pt-8 dark:border-white/10 ${
                 activeFactor === "summary" ? "" : "hidden print:flex"
               }`}
               aria-hidden={activeFactor !== "summary"}
             >
-              <h2 className="font-display text-xl font-semibold text-indigo dark:text-white">Hva betyr dette for deg?</h2>
-              <p className="text-indigo/80 dark:text-lavender-400/80">{closing.text}</p>
+              <h2 className="text-xl font-semibold text-ink dark:text-white">Hva betyr dette for deg?</h2>
+              <p className="text-ink/80 dark:text-warmgray/80">{closing.text}</p>
             </section>
           )}
         </>
       )}
 
       {o6Score !== null && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-factor-stability/40 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">
+        <section className="flex flex-col gap-3 rounded-lg border border-coral/40 p-5 print:hidden">
+          <h2 className="font-semibold text-ink dark:text-white">
             Tilleggsseksjon: politiske og verdimessige holdninger
           </h2>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
             Dette er et helt eget, valgfritt tillegg du samtykket til separat -- det er IKKE en del
             av de fem hovedfaktorene over, og teller ikke med i noen av dem. Skåren din her er{" "}
             {o6Score} av 100.
@@ -618,7 +595,7 @@ export default function ResultatPage() {
           <button
             type="button"
             onClick={handleDeleteO6}
-            className="self-start text-sm text-factor-stability underline underline-offset-2"
+            className="self-start text-sm text-coral underline underline-offset-2"
           >
             Slett bare denne dataen
           </button>
@@ -626,9 +603,9 @@ export default function ResultatPage() {
       )}
 
       {BETA_ANSWER_SET_TOOLS_ENABLED && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">Betatest: ta vare på svarene dine</h2>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+        <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+          <h2 className="font-semibold text-ink dark:text-white">Betatest: ta vare på svarene dine</h2>
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
             Testen kan bli oppdatert innimellom mens vi jobber videre med Dine Fasetter. Last ned
             svarene dine som en fil nå, så slipper du å svare på alt på nytt etter en oppdatering
             -- last filen opp igjen her for å se resultatet med én gang. Denne muligheten fjernes
@@ -639,14 +616,14 @@ export default function ResultatPage() {
       )}
 
       {ACCOUNT_SAVE_ENABLED && isDetailed && accountChecked && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">Lagre resultatet ditt</h2>
+        <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+          <h2 className="font-semibold text-ink dark:text-white">Lagre resultatet ditt</h2>
           {isRestored && (
-            <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+            <p className="text-sm text-ink/60 dark:text-warmgray/60">
               Dette resultatet er hentet fra kontoen din.
             </p>
           )}
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
             Vil du slippe å ta testen på nytt for å se resultatet igjen -- på denne eller en annen
             enhet -- kan du lagre det knyttet til e-postadressen din. Vi lagrer da bare de ferdig
             beregnede skårene dine (fem hovedfaktorer og fasetter, og skåren fra den valgfrie
@@ -654,7 +631,7 @@ export default function ResultatPage() {
             med en engangskode sendt på e-post, ikke passord, og du kan slette det lagrede
             resultatet når som helst -- her, eller ved å logge inn på nytt.
           </p>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
             Resultatet lagres i 12 måneder fra siste lagring. I løpet av den perioden kan du logge
             inn så mange ganger du vil, se resultatet, ta testen på nytt for å oppdatere det, og
             snakke med Spir. Vi sender deg en e-postpåminnelse cirka en måned før 12-månedersfristen.
@@ -664,55 +641,69 @@ export default function ResultatPage() {
 
           {loggedInEmail ? (
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+              <p className="text-sm text-ink/70 dark:text-warmgray/70">
                 Innlogget som {loggedInEmail}
                 {savedAt ? ` -- sist lagret ${new Date(savedAt).toLocaleDateString("no-NO")}.` : "."}
               </p>
               {savedAt && (
-                <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+                <p className="text-sm text-ink/60 dark:text-warmgray/60">
                   Slettes automatisk {computeAccountResultExpiry(savedAt).toLocaleDateString("no-NO")}{" "}
                   med mindre du lagrer på nytt før den datoen. Vi sender deg en påminnelse på e-post
                   omtrent en måned før.
                 </p>
               )}
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="button" size="sm" onClick={() => void persistCurrentResult()} disabled={saveLoading}>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => void persistCurrentResult()}
+                  disabled={saveLoading}
+                  className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white disabled:opacity-50"
+                >
                   {saveLoading ? "Lagrer …" : "Lagre / oppdater resultatet"}
-                </Button>
+                </button>
                 <button
                   type="button"
                   onClick={() => void handleLogout()}
-                  className="self-start text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60"
+                  className="self-start text-sm text-ink/60 underline underline-offset-2 dark:text-warmgray/60"
                 >
                   Logg ut
                 </button>
               </div>
             </div>
           ) : saveStep === "closed" ? (
-            <Button type="button" size="sm" onClick={() => setSaveStep("email")} className="self-start">
+            <button
+              type="button"
+              onClick={() => setSaveStep("email")}
+              className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white"
+            >
               Lagre resultatet mitt
-            </Button>
+            </button>
           ) : saveStep === "email" ? (
             <form onSubmit={requestSaveCode} className="flex flex-col gap-2">
-              <label htmlFor="save-email" className="text-sm font-medium text-indigo dark:text-white">
+              <label htmlFor="save-email" className="text-sm font-medium text-ink dark:text-white">
                 E-postadresse
               </label>
-              <Input
+              <input
                 id="save-email"
                 type="email"
                 required
                 value={saveEmail}
                 onChange={(e) => setSaveEmail(e.target.value)}
                 placeholder="navn@eksempel.no"
+                className="rounded-lg border border-warmgray px-4 py-2 dark:border-white/20 dark:bg-transparent"
               />
-              <div className="flex items-center gap-3">
-                <Button type="submit" size="sm" disabled={saveLoading}>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={saveLoading}
+                  className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white disabled:opacity-50"
+                >
                   {saveLoading ? "Sender kode …" : "Send meg en kode"}
-                </Button>
+                </button>
                 <button
                   type="button"
                   onClick={() => setSaveStep("closed")}
-                  className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60"
+                  className="text-sm text-ink/60 underline underline-offset-2 dark:text-warmgray/60"
                 >
                   Avbryt
                 </button>
@@ -720,11 +711,11 @@ export default function ResultatPage() {
             </form>
           ) : (
             <form onSubmit={verifyAndSave} className="flex flex-col gap-2">
-              {saveInfo && <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{saveInfo}</p>}
-              <label htmlFor="save-code" className="text-sm font-medium text-indigo dark:text-white">
+              {saveInfo && <p className="text-sm text-ink/70 dark:text-warmgray/70">{saveInfo}</p>}
+              <label htmlFor="save-code" className="text-sm font-medium text-ink dark:text-white">
                 6-sifret kode
               </label>
-              <Input
+              <input
                 id="save-code"
                 type="text"
                 inputMode="numeric"
@@ -734,15 +725,19 @@ export default function ResultatPage() {
                 value={saveCode}
                 onChange={(e) => setSaveCode(e.target.value.replace(/\D/g, ""))}
                 placeholder="123456"
-                className="tracking-[0.3em]"
+                className="rounded-lg border border-warmgray px-4 py-2 tracking-[0.3em] dark:border-white/20 dark:bg-transparent"
               />
-              <Button type="submit" size="sm" disabled={saveLoading} className="self-start">
+              <button
+                type="submit"
+                disabled={saveLoading}
+                className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white disabled:opacity-50"
+              >
                 {saveLoading ? "Bekrefter …" : "Bekreft og lagre"}
-              </Button>
+              </button>
             </form>
           )}
 
-          {saveError && <p className="text-sm text-factor-stability">{saveError}</p>}
+          {saveError && <p className="text-sm text-coral">{saveError}</p>}
         </section>
       )}
 
@@ -764,9 +759,9 @@ export default function ResultatPage() {
         const columns = history[history.length - 1]?.factors ?? [];
 
         return (
-          <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-            <h2 className="font-display font-semibold text-indigo dark:text-white">Utvikling over tid</h2>
-            <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+          <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+            <h2 className="font-semibold text-ink dark:text-white">Utvikling over tid</h2>
+            <p className="text-sm text-ink/70 dark:text-warmgray/70">
               Du har lagret {history.length} resultater av Utvidet versjon knyttet til denne
               kontoen. Her ser du hvordan de fem hovedfaktorene har målt seg fra gang til gang --
               ikke som en vurdering av om noe er "bedre" eller "verre", bare som et bilde av
@@ -776,10 +771,10 @@ export default function ResultatPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[480px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-indigo/10 dark:border-white/10">
-                    <th className="py-2 pr-4 font-medium text-indigo dark:text-white">Dato</th>
+                  <tr className="border-b border-ink/10 dark:border-white/10">
+                    <th className="py-2 pr-4 font-medium text-ink dark:text-white">Dato</th>
                     {columns.map((f) => (
-                      <th key={f.factor} className="py-2 pr-4 font-medium text-indigo dark:text-white">
+                      <th key={f.factor} className="py-2 pr-4 font-medium text-ink dark:text-white">
                         {f.label}
                       </th>
                     ))}
@@ -787,17 +782,17 @@ export default function ResultatPage() {
                 </thead>
                 <tbody>
                   {[...withDeltas].reverse().map(({ entry, deltas }) => (
-                    <tr key={entry.savedAt} className="border-b border-indigo/5 dark:border-white/5">
-                      <td className="py-2 pr-4 text-indigo/70 dark:text-lavender-400/70">
+                    <tr key={entry.savedAt} className="border-b border-ink/5 dark:border-white/5">
+                      <td className="py-2 pr-4 text-ink/70 dark:text-warmgray/70">
                         {new Date(entry.savedAt).toLocaleDateString("no-NO")}
                       </td>
                       {entry.factors.map((f, i) => {
                         const delta = deltas?.[i] ?? null;
                         return (
-                          <td key={f.factor} className="py-2 pr-4 text-indigo/80 dark:text-lavender-400/80">
+                          <td key={f.factor} className="py-2 pr-4 text-ink/80 dark:text-warmgray/80">
                             {Math.round(f.score)}
                             {delta !== null && (
-                              <span className="text-indigo/50 dark:text-lavender-400/50">
+                              <span className="text-ink/50 dark:text-warmgray/50">
                                 {" "}
                                 ({delta > 0 ? `+${delta}` : delta === 0 ? "±0" : `−${Math.abs(delta)}`})
                               </span>
@@ -815,61 +810,69 @@ export default function ResultatPage() {
       })()}
 
       {tier === "free" && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">
+        <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+          <h2 className="font-semibold text-ink dark:text-white">
             Vil du se et mer presist resultat?
           </h2>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
             Ved å fortsette til alle 120 spørsmål får du en mer presis beregning, og du låser opp
             muligheten til å snakke videre med Spir om resultatet ditt. Resultatet ditt over er
             ikke ufullstendig som beskrivelse av deg fordi du velger å stoppe her -- de resterende
             spørsmålene gir bare en mer detaljert måling.
           </p>
-          <Link href="/test" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
+          <Link
+            href="/test"
+            className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white"
+          >
             Fortsett til alle 120
           </Link>
         </section>
       )}
 
       {tier === "full" && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">Vil du gå enda dypere?</h2>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+        <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+          <h2 className="font-semibold text-ink dark:text-white">Vil du gå enda dypere?</h2>
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
             Utvidet versjon stiller 10 spørsmål per underkategori i stedet for 4-5 (290 spørsmål
             totalt), og gir det mest presise resultatet Dine Fasetter kan tilby. Resultatet ditt over
             er ikke ufullstendig fordi du velger å stoppe her -- de resterende spørsmålene gir bare
             en enda sikrere måling.
           </p>
-          <Link href="/test" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
+          <Link
+            href="/test"
+            className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white"
+          >
             Fortsett til Utvidet versjon
           </Link>
         </section>
       )}
 
       {isDetailed && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">Vil du utforske resultatet videre?</h2>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+        <section className="flex flex-col gap-3 rounded-lg border border-teal/30 p-5 print:hidden">
+          <h2 className="font-semibold text-ink dark:text-white">Vil du utforske resultatet videre?</h2>
+          <p className="text-sm text-ink/70 dark:text-warmgray/70">
             Spir kan hjelpe deg å reflektere videre rundt resultatet ditt. Resultatet ditt sendes da
             til Anthropic (leverandøren av Spir) -- kun når du aktivt starter samtalen.
           </p>
-          <Link href="/spir" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
+          <Link
+            href="/spir"
+            className="self-start rounded-lg bg-teal px-5 py-2.5 font-medium text-white"
+          >
             Snakk med Spir
           </Link>
         </section>
       )}
 
-      <footer className="flex flex-col items-start gap-2 border-t border-lavender-400 pt-6 text-sm dark:border-white/10 print:hidden">
-        <p className="text-indigo/60 dark:text-lavender-400/60">
+      <footer className="flex flex-col items-start gap-2 border-t border-warmgray pt-6 text-sm dark:border-white/10 print:hidden">
+        <p className="text-ink/60 dark:text-warmgray/60">
           {loggedInEmail
             ? "Svarene dine ligger i denne nettleseren, og et beregnet resultat er lagret på kontoen din."
             : "Svarene dine er lagret bare i denne nettleseren, ikke hos Dine Fasetter."}
         </p>
-        <button type="button" onClick={() => void handleDelete()} className="text-factor-stability underline underline-offset-2">
+        <button type="button" onClick={() => void handleDelete()} className="text-coral underline underline-offset-2">
           Slett mine data
         </button>
       </footer>
-      </main>
-    </PageBackground>
+    </main>
   );
 }

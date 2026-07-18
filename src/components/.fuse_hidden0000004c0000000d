@@ -142,12 +142,12 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
           <button
             type="button"
             onClick={handleDownload}
-            className="rounded-lg bg-holo-sky px-5 py-2.5 text-center font-medium text-white"
+            className="rounded-lg bg-teal px-5 py-2.5 text-center font-medium text-white"
           >
             Last ned svarene som CSV
           </button>
         )}
-        <label className="cursor-pointer rounded-lg border border-holo-sky px-5 py-2.5 text-center font-medium text-holo-sky">
+        <label className="cursor-pointer rounded-lg border border-teal px-5 py-2.5 text-center font-medium text-teal">
           {importing ? "Laster inn …" : "Last opp et svarsett"}
           <input
             ref={fileInputRef}
@@ -159,15 +159,15 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
           />
         </label>
       </div>
-      {importedInfo && <p className="text-sm text-holo-sky">{importedInfo}</p>}
+      {importedInfo && <p className="text-sm text-teal">{importedInfo}</p>}
       {warnings.length > 0 && (
-        <ul className="flex flex-col gap-1 text-sm text-indigo/70 dark:text-lavender-400/70">
+        <ul className="flex flex-col gap-1 text-sm text-ink/70 dark:text-warmgray/70">
           {warnings.map((w, i) => (
             <li key={i}>-- {w}</li>
           ))}
         </ul>
       )}
-      {error && <p className="text-sm text-factor-stability">{error}</p>}
+      {error && <p className="text-sm text-coral">{error}</p>}
     </div>
   );
 }

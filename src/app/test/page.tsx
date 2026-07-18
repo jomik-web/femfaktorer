@@ -27,6 +27,8 @@ import {
 } from "@/lib/storage";
 import { AnswerScale } from "@/components/AnswerScale";
 import { ProgressBar } from "@/components/ProgressBar";
+import { Button } from "@/components/ui/Button";
+import { PageBackground } from "@/components/ui/PageBackground";
 
 /**
  * TRE-TRINNS TESTFLYT (v2.11, tredje trapp -- "Utvidet versjon"): de første
@@ -196,130 +198,124 @@ export default function TestPage() {
 
   if (ageDeclined) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
-        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
-          Dine Fasetter er foreløpig for voksne
-        </h1>
-        <p className="text-ink/80 dark:text-warmgray/80">
-          Denne versjonen av testen er laget for personer over 18 år. Ingenting er lagret eller
-          sendt noe sted.
-        </p>
-        <Link href="/" className="self-center text-sm text-teal underline underline-offset-2">
-          Tilbake til forsiden
-        </Link>
-      </main>
+      <PageBackground>
+        <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
+            Dine Fasetter er foreløpig for voksne
+          </h1>
+          <p className="text-indigo/80 dark:text-lavender-400/80">
+            Denne versjonen av testen er laget for personer over 18 år. Ingenting er lagret eller
+            sendt noe sted.
+          </p>
+          <Link href="/" className="self-center text-sm text-holo-sky underline underline-offset-2">
+            Tilbake til forsiden
+          </Link>
+        </main>
+      </PageBackground>
     );
   }
 
   if (!ageConfirmed) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
-        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
-          Før du starter
-        </h1>
-        <p className="text-ink/80 dark:text-warmgray/80">
-          Dine Fasetter er i denne versjonen laget for personer over 18 år.
-        </p>
-        <p className="text-sm text-ink/70 dark:text-warmgray/70">
-          Litt om hvordan du svarer: bruk det første som faller deg inn, uten å tenke for lenge på
-          hvert spørsmål -- det finnes ikke noe "riktig" svar å lete etter. Tenk på hvordan du
-          vanligvis er på tvers av ulike sammenhenger (jobb, hjemme, sammen med venner), ikke bare
-          hvordan du er akkurat i dag eller i én bestemt situasjon.
-        </p>
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <button
-            type="button"
-            onClick={() => {
-              saveAgeConfirmed();
-              setAgeConfirmed(true);
-            }}
-            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
-          >
-            Ja, jeg er 18 år eller eldre
-          </button>
-          <button
-            type="button"
-            onClick={() => setAgeDeclined(true)}
-            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
-          >
-            Nei, jeg er under 18
-          </button>
-        </div>
-      </main>
+      <PageBackground>
+        <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
+            Før du starter
+          </h1>
+          <p className="text-indigo/80 dark:text-lavender-400/80">
+            Dine Fasetter er i denne versjonen laget for personer over 18 år.
+          </p>
+          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+            Litt om hvordan du svarer: bruk det første som faller deg inn, uten å tenke for lenge på
+            hvert spørsmål -- det finnes ikke noe "riktig" svar å lete etter. Tenk på hvordan du
+            vanligvis er på tvers av ulike sammenhenger (jobb, hjemme, sammen med venner), ikke bare
+            hvordan du er akkurat i dag eller i én bestemt situasjon.
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button
+              type="button"
+              onClick={() => {
+                saveAgeConfirmed();
+                setAgeConfirmed(true);
+              }}
+            >
+              Ja, jeg er 18 år eller eldre
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setAgeDeclined(true)}>
+              Nei, jeg er under 18
+            </Button>
+          </div>
+        </main>
+      </PageBackground>
     );
   }
 
   if (awaitingRetakeChoice) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
-        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
-          Du har allerede et resultat
-        </h1>
-        <p className="text-ink/80 dark:text-warmgray/80">
-          Mente du å ta testen på nytt, eller vil du se resultatet du allerede har?
-        </p>
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <button
-            type="button"
-            onClick={() => router.push("/resultat")}
-            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
-          >
-            Se resultatet mitt
-          </button>
-          <button
-            type="button"
-            onClick={restartTest}
-            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
-          >
-            Ta testen på nytt
-          </button>
-        </div>
-      </main>
+      <PageBackground>
+        <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
+            Du har allerede et resultat
+          </h1>
+          <p className="text-indigo/80 dark:text-lavender-400/80">
+            Mente du å ta testen på nytt, eller vil du se resultatet du allerede har?
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button type="button" onClick={() => router.push("/resultat")}>
+              Se resultatet mitt
+            </Button>
+            <Button type="button" variant="ghost" onClick={restartTest}>
+              Ta testen på nytt
+            </Button>
+          </div>
+        </main>
+      </PageBackground>
     );
   }
 
   if (o6Phase === "offer") {
     return (
-      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
-        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
-          En helt valgfri tilleggsseksjon
-        </h1>
-        <p className="text-ink/80 dark:text-warmgray/80">
-          Vi tilbyr fire ekstra spørsmål om en sjette side ved åpenhet for erfaring, som handler om
-          politiske og verdimessige holdninger. Disse påvirker IKKE hovedresultatet ditt over -- de
-          vises eventuelt som et helt eget, atskilt tillegg.
-        </p>
-        <p className="text-sm text-ink/60 dark:text-warmgray/60">
-          Dette er informasjon om politisk oppfatning, en særlig kategori persondata. Du kan når som
-          helst slette akkurat denne dataen uavhengig av resten av testresultatet ditt.
-        </p>
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <button
-            type="button"
-            onClick={() => {
-              setO6Status("consented");
-              saveO6("consented", o6Answers);
-              setO6Index(0);
-              setO6Phase("questions");
-            }}
-            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
-          >
-            Ja, jeg vil svare
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setO6Status("declined");
-              saveO6("declined", {});
-              setO6Phase("none");
-              router.push("/resultat");
-            }}
-            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
-          >
-            Nei takk
-          </button>
-        </div>
-      </main>
+      <PageBackground>
+        <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
+            En helt valgfri tilleggsseksjon
+          </h1>
+          <p className="text-indigo/80 dark:text-lavender-400/80">
+            Vi tilbyr fire ekstra spørsmål om en sjette side ved åpenhet for erfaring, som handler om
+            politiske og verdimessige holdninger. Disse påvirker IKKE hovedresultatet ditt over -- de
+            vises eventuelt som et helt eget, atskilt tillegg.
+          </p>
+          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+            Dette er informasjon om politisk oppfatning, en særlig kategori persondata. Du kan når som
+            helst slette akkurat denne dataen uavhengig av resten av testresultatet ditt.
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button
+              type="button"
+              onClick={() => {
+                setO6Status("consented");
+                saveO6("consented", o6Answers);
+                setO6Index(0);
+                setO6Phase("questions");
+              }}
+            >
+              Ja, jeg vil svare
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setO6Status("declined");
+                saveO6("declined", {});
+                setO6Phase("none");
+                router.push("/resultat");
+              }}
+            >
+              Nei takk
+            </Button>
+          </div>
+        </main>
+      </PageBackground>
     );
   }
 
@@ -330,129 +326,129 @@ export default function TestPage() {
       return null;
     }
     return (
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-12">
-        <ProgressBar current={o6Index + 1} total={OPTIONAL_O6_QUESTIONS.length} />
-        <div key={o6Question.id} className="flex flex-col gap-6">
-          <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
-            {o6Question.textNo}
-          </h1>
-          <AnswerScale
-            questionId={o6Question.id}
-            value={o6Answers[o6Question.id]}
-            onAnswer={(value) => {
-              const next = { ...o6Answers, [o6Question.id]: value };
-              setO6Answers(next);
-              saveO6("consented", next);
-              if (o6Index < OPTIONAL_O6_QUESTIONS.length - 1) {
-                setO6Index(o6Index + 1);
-              } else {
-                router.push("/resultat");
-              }
-            }}
-          />
-        </div>
-      </main>
+      <PageBackground>
+        <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-12">
+          <ProgressBar current={o6Index + 1} total={OPTIONAL_O6_QUESTIONS.length} />
+          <div key={o6Question.id} className="flex flex-col gap-6">
+            <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
+              {o6Question.textNo}
+            </h1>
+            <AnswerScale
+              questionId={o6Question.id}
+              value={o6Answers[o6Question.id]}
+              onAnswer={(value) => {
+                const next = { ...o6Answers, [o6Question.id]: value };
+                setO6Answers(next);
+                saveO6("consented", next);
+                if (o6Index < OPTIONAL_O6_QUESTIONS.length - 1) {
+                  setO6Index(o6Index + 1);
+                } else {
+                  router.push("/resultat");
+                }
+              }}
+            />
+          </div>
+        </main>
+      </PageBackground>
     );
   }
 
   if (checkpoint === "afterFree") {
     return (
-      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
-        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
-          Du har svart på de første {FREE_TIER_LENGTH} spørsmålene
-        </h1>
-        <p className="text-ink/80 dark:text-warmgray/80">
-          Vil du se hva som ligger bak hovedtrekkene? Ved å fortsette til alle 120 spørsmål får du
-          et mer presist resultat, og du låser opp muligheten til å snakke videre med Spir om det.
-        </p>
-        <p className="text-sm text-ink/60 dark:text-warmgray/60">
-          Resultatet ditt er ikke ufullstendig som beskrivelse av deg fordi du velger å stoppe her
-          -- de resterende spørsmålene gir bare en mer detaljert måling.
-        </p>
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+      <PageBackground>
+        <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
+            Du har svart på de første {FREE_TIER_LENGTH} spørsmålene
+          </h1>
+          <p className="text-indigo/80 dark:text-lavender-400/80">
+            Vil du se hva som ligger bak hovedtrekkene? Ved å fortsette til alle 120 spørsmål får du
+            et mer presist resultat, og du låser opp muligheten til å snakke videre med Spir om det.
+          </p>
+          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+            Resultatet ditt er ikke ufullstendig som beskrivelse av deg fordi du velger å stoppe her
+            -- de resterende spørsmålene gir bare en mer detaljert måling.
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button
+              type="button"
+              onClick={() => {
+                setTier("full");
+                saveAnswers(answers, "full");
+                setCheckpoint("none");
+                const nextIndex = ALL_QUESTIONS.findIndex((q) => answers[q.id] === undefined);
+                setIndex(nextIndex === -1 ? 0 : nextIndex);
+              }}
+            >
+              Fortsett til alle 120
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => router.push("/resultat")}>
+              Behold det foreløpige resultatet
+            </Button>
+          </div>
           <button
             type="button"
-            onClick={() => {
-              setTier("full");
-              saveAnswers(answers, "full");
-              setCheckpoint("none");
-              const nextIndex = ALL_QUESTIONS.findIndex((q) => answers[q.id] === undefined);
-              setIndex(nextIndex === -1 ? 0 : nextIndex);
-            }}
-            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
+            onClick={restartTest}
+            className="self-center text-xs text-indigo/50 underline underline-offset-2 dark:text-lavender-400/50"
           >
-            Fortsett til alle 120
+            Trykket du hit ved en feiltakelse? Start testen helt på nytt
           </button>
-          <button
-            type="button"
-            onClick={() => router.push("/resultat")}
-            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
-          >
-            Behold det foreløpige resultatet
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={restartTest}
-          className="self-center text-xs text-ink/50 underline underline-offset-2 dark:text-warmgray/50"
-        >
-          Trykket du hit ved en feiltakelse? Start testen helt på nytt
-        </button>
-      </main>
+        </main>
+      </PageBackground>
     );
   }
 
   if (checkpoint === "afterFull") {
     return (
-      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
-        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
-          Du har svart på alle de 120 spørsmålene
-        </h1>
-        <p className="text-ink/80 dark:text-warmgray/80">
-          Vil du gå enda dypere? Utvidet versjon stiller 10 spørsmål per underkategori i stedet for
-          4-5, og gir dermed det mest presise resultatet Dine Fasetter kan tilby -- til sammen 290
-          spørsmål.
-        </p>
-        <p className="text-sm text-ink/60 dark:text-warmgray/60">
-          Resultatet ditt fra de 120 spørsmålene er ikke ufullstendig som beskrivelse av deg fordi
-          du velger å stoppe her -- de resterende spørsmålene gir bare en enda sikrere måling.
-        </p>
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+      <PageBackground>
+        <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
+            Du har svart på alle de 120 spørsmålene
+          </h1>
+          <p className="text-indigo/80 dark:text-lavender-400/80">
+            Vil du gå enda dypere? Utvidet versjon stiller 10 spørsmål per underkategori i stedet for
+            4-5, og gir dermed det mest presise resultatet Dine Fasetter kan tilby -- til sammen 290
+            spørsmål.
+          </p>
+          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+            Resultatet ditt fra de 120 spørsmålene er ikke ufullstendig som beskrivelse av deg fordi
+            du velger å stoppe her -- de resterende spørsmålene gir bare en enda sikrere måling.
+          </p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button
+              type="button"
+              onClick={() => {
+                setTier("extended");
+                saveAnswers(answers, "extended");
+                setCheckpoint("none");
+                const nextIndex = ALL_QUESTIONS_EXTENDED.findIndex((q) => answers[q.id] === undefined);
+                setIndex(nextIndex === -1 ? 0 : nextIndex);
+              }}
+            >
+              Fortsett til Utvidet versjon (290)
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                const result = computeTestResult(answers, ALL_QUESTIONS, "full");
+                if (result.complete && result.factors) {
+                  submitAnonymousNormStats(result.factors, computeFacetResults(answers, ALL_QUESTIONS), "full");
+                }
+                goToO6OrResult(o6Status, o6Answers);
+              }}
+            >
+              Behold resultatet fra de 120 spørsmålene
+            </Button>
+          </div>
           <button
             type="button"
-            onClick={() => {
-              setTier("extended");
-              saveAnswers(answers, "extended");
-              setCheckpoint("none");
-              const nextIndex = ALL_QUESTIONS_EXTENDED.findIndex((q) => answers[q.id] === undefined);
-              setIndex(nextIndex === -1 ? 0 : nextIndex);
-            }}
-            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
+            onClick={restartTest}
+            className="self-center text-xs text-indigo/50 underline underline-offset-2 dark:text-lavender-400/50"
           >
-            Fortsett til Utvidet versjon (290)
+            Trykket du hit ved en feiltakelse? Start testen helt på nytt
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              const result = computeTestResult(answers, ALL_QUESTIONS, "full");
-              if (result.complete && result.factors) {
-                submitAnonymousNormStats(result.factors, computeFacetResults(answers, ALL_QUESTIONS), "full");
-              }
-              goToO6OrResult(o6Status, o6Answers);
-            }}
-            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
-          >
-            Behold resultatet fra de 120 spørsmålene
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={restartTest}
-          className="self-center text-xs text-ink/50 underline underline-offset-2 dark:text-warmgray/50"
-        >
-          Trykket du hit ved en feiltakelse? Start testen helt på nytt
-        </button>
-      </main>
+        </main>
+      </PageBackground>
     );
   }
 
@@ -500,40 +496,37 @@ export default function TestPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-12">
-      <ProgressBar current={index + 1} total={total} />
+    <PageBackground>
+      <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-12">
+        <ProgressBar current={index + 1} total={total} />
 
-      {firstUnansweredIndex !== -1 && firstUnansweredIndex !== index && (
-        <button
-          type="button"
-          onClick={jumpToFirstUnanswered}
-          className="self-start text-sm text-teal underline underline-offset-2"
-        >
-          Hopp til første ubesvarte spørsmål
-        </button>
-      )}
+        {firstUnansweredIndex !== -1 && firstUnansweredIndex !== index && (
+          <button
+            type="button"
+            onClick={jumpToFirstUnanswered}
+            className="self-start text-sm text-holo-sky underline underline-offset-2"
+          >
+            Hopp til første ubesvarte spørsmål
+          </button>
+        )}
 
-      <div key={question.id} className="flex flex-col gap-6">
-        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
-          {question.textNo}
-        </h1>
-        <AnswerScale
-          questionId={question.id}
-          value={answers[question.id]}
-          onAnswer={handleAnswer}
-        />
-      </div>
+        <div key={question.id} className="flex flex-col gap-6 rounded-2xl bg-white/60 p-6 shadow-sm dark:bg-white/5">
+          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
+            {question.textNo}
+          </h1>
+          <AnswerScale
+            questionId={question.id}
+            value={answers[question.id]}
+            onAnswer={handleAnswer}
+          />
+        </div>
 
-      <div className="flex justify-between">
-        <button
-          type="button"
-          onClick={goBack}
-          disabled={index === 0}
-          className="rounded px-4 py-2 text-sm font-medium text-ink/70 disabled:opacity-30 dark:text-warmgray/70"
-        >
-          &larr; Tilbake
-        </button>
-      </div>
-    </main>
+        <div className="flex justify-between">
+          <Button type="button" variant="ghost" size="sm" onClick={goBack} disabled={index === 0}>
+            &larr; Tilbake
+          </Button>
+        </div>
+      </main>
+    </PageBackground>
   );
 }

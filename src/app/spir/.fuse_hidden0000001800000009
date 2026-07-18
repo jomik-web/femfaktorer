@@ -223,12 +223,12 @@ export default function FemPage() {
   if (locked || !factors) {
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="text-xl font-semibold text-indigo dark:text-white">Spir er ikke låst opp ennå</h1>
-        <p className="text-indigo/70 dark:text-lavender-400/70">
+        <h1 className="text-xl font-semibold text-ink dark:text-white">Spir er ikke låst opp ennå</h1>
+        <p className="text-ink/70 dark:text-warmgray/70">
           Spir er en del av den fulle testen. Fullfør alle 120 spørsmål for å låse opp muligheten
           til å snakke med Spir om resultatet ditt.
         </p>
-        <Link href="/test" className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-white">
+        <Link href="/test" className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white">
           Gå til testen
         </Link>
       </main>
@@ -241,8 +241,8 @@ export default function FemPage() {
   if (!consented || !mode) {
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12">
-        <h1 className="text-xl font-semibold text-indigo dark:text-white">Før du starter</h1>
-        <p className="text-indigo/80 dark:text-lavender-400/80">
+        <h1 className="text-xl font-semibold text-ink dark:text-white">Før du starter</h1>
+        <p className="text-ink/80 dark:text-warmgray/80">
           Hvis du starter en samtale med Spir, sendes det beregnede resultatet ditt -- både de fem
           hovedfaktorene og de om lag 29 underfasettene -- og det du selv skriver, til Anthropic --
           leverandøren av Spir. Dette gjør at Spir kan gi mer presise svar, blant annet om karriere,
@@ -250,7 +250,7 @@ export default function FemPage() {
           meldingene dine enn det som trengs for samtalen. Testsvarene dine forblir lokalt i
           nettleseren uansett.
         </p>
-        <p className="text-indigo/80 dark:text-lavender-400/80">Du kan velge hvordan samtalen skal foregå:</p>
+        <p className="text-ink/80 dark:text-warmgray/80">Du kan velge hvordan samtalen skal foregå:</p>
         <div className="flex flex-col gap-3">
           <button
             type="button"
@@ -258,7 +258,7 @@ export default function FemPage() {
               setConsented(true);
               setMode("guided");
             }}
-            className="rounded-lg bg-holo-sky px-5 py-3 text-left font-medium text-white"
+            className="rounded-lg bg-teal px-5 py-3 text-left font-medium text-white"
           >
             Gå gjennom resultatet steg for steg med Spir
             <span className="mt-1 block text-sm font-normal text-white/80">
@@ -272,16 +272,16 @@ export default function FemPage() {
               setConsented(true);
               setMode("free");
             }}
-            className="rounded-lg border border-holo-sky px-5 py-3 text-left font-medium text-holo-sky"
+            className="rounded-lg border border-teal px-5 py-3 text-left font-medium text-teal"
           >
             Snakk fritt med Spir
-            <span className="mt-1 block text-sm font-normal text-holo-sky/80">
+            <span className="mt-1 block text-sm font-normal text-teal/80">
               Åpen samtale om hele resultatet, uten en fast rekkefølge.
             </span>
           </button>
           <Link
             href="/resultat"
-            className="rounded-lg px-5 py-2.5 text-center font-medium text-indigo/70 dark:text-lavender-400/70"
+            className="rounded-lg px-5 py-2.5 text-center font-medium text-ink/70 dark:text-warmgray/70"
           >
             Nei, gå tilbake
           </Link>
@@ -345,18 +345,18 @@ export default function FemPage() {
   return (
     <main className="mx-auto flex h-screen max-w-2xl flex-col px-6 py-8">
       <header className="pb-6">
-        <h1 className="text-xl font-semibold text-indigo dark:text-white">Snakk med Spir</h1>
-        <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+        <h1 className="text-xl font-semibold text-ink dark:text-white">Snakk med Spir</h1>
+        <p className="text-sm text-ink/60 dark:text-warmgray/60">
           Spir tolker resultatet ditt -- den kan ikke endre skårene dine.
         </p>
         {mode === "guided" && !guidedDone && guidedPosition && (
-          <p className="mt-2 text-sm font-medium text-holo-sky">
+          <p className="mt-2 text-sm font-medium text-teal">
             Underkategori {guidedIndex + 1} av {WALKTHROUGH_ORDER.length} -- {guidedPosition.domainLabel}:{" "}
             {guidedPosition.facetLabel}
           </p>
         )}
         {mode === "guided" && guidedDone && (
-          <p className="mt-2 text-sm font-medium text-holo-sky">Gjennomgangen er ferdig.</p>
+          <p className="mt-2 text-sm font-medium text-teal">Gjennomgangen er ferdig.</p>
         )}
       </header>
 
@@ -368,24 +368,24 @@ export default function FemPage() {
               key={i}
               className={
                 m.role === "user"
-                  ? "self-end rounded-lg bg-lavender-100 px-4 py-2 dark:bg-holo-sky/20"
-                  : "self-start rounded-lg bg-lavender-400 px-4 py-2 dark:bg-white/10"
+                  ? "self-end rounded-lg bg-mint px-4 py-2 dark:bg-teal/20"
+                  : "self-start rounded-lg bg-warmgray px-4 py-2 dark:bg-white/10"
               }
             >
               {m.text}
             </div>
           ))}
-        {loading && <p className="text-sm text-indigo/50 dark:text-lavender-400/50">Spir skriver …</p>}
-        {error && <p className="text-sm text-factor-stability">{error}</p>}
+        {loading && <p className="text-sm text-ink/50 dark:text-warmgray/50">Spir skriver …</p>}
+        {error && <p className="text-sm text-coral">{error}</p>}
       </div>
 
       {mode === "guided" && !guidedDone && (
-        <div className="flex flex-wrap items-center gap-4 border-t border-lavender-400 pt-4 dark:border-white/10">
+        <div className="flex flex-wrap items-center gap-4 border-t border-warmgray pt-4 dark:border-white/10">
           <button
             type="button"
             onClick={advanceGuided}
             disabled={loading}
-            className="rounded-lg bg-holo-sky px-5 py-2 font-medium text-white disabled:opacity-50"
+            className="rounded-lg bg-teal px-5 py-2 font-medium text-white disabled:opacity-50"
           >
             Gå videre til neste underkategori →
           </button>
@@ -393,7 +393,7 @@ export default function FemPage() {
             type="button"
             onClick={() => setGuidedDone(true)}
             disabled={loading}
-            className="text-sm font-medium text-indigo/60 underline dark:text-lavender-400/60"
+            className="text-sm font-medium text-ink/60 underline dark:text-warmgray/60"
           >
             Avslutt gjennomgangen her
           </button>
@@ -401,14 +401,14 @@ export default function FemPage() {
       )}
 
       {mode === "guided" && guidedDone && (
-        <div className="flex flex-wrap items-center gap-3 border-t border-lavender-400 pt-4 pb-4 dark:border-white/10">
-          <Link href="/resultat" className="rounded-lg bg-holo-sky px-5 py-2 font-medium text-white">
+        <div className="flex flex-wrap items-center gap-3 border-t border-warmgray pt-4 pb-4 dark:border-white/10">
+          <Link href="/resultat" className="rounded-lg bg-teal px-5 py-2 font-medium text-white">
             Tilbake til resultatet
           </Link>
           <button
             type="button"
             onClick={() => setMode("free")}
-            className="rounded-lg border border-holo-sky px-5 py-2 font-medium text-holo-sky"
+            className="rounded-lg border border-teal px-5 py-2 font-medium text-teal"
           >
             Fortsett å snakke fritt med Spir
           </button>
@@ -421,7 +421,7 @@ export default function FemPage() {
             e.preventDefault();
             void sendMessage();
           }}
-          className="flex gap-3 border-t border-lavender-400 pt-4 pb-8 dark:border-white/10"
+          className="flex gap-3 border-t border-warmgray pt-4 pb-8 dark:border-white/10"
         >
           <label htmlFor="fem-input" className="sr-only">
             Skriv en melding til Spir
@@ -431,12 +431,12 @@ export default function FemPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Spør Spir om resultatet ditt …"
-            className="flex-1 rounded-lg border border-lavender-400 px-4 py-2 dark:border-white/20 dark:bg-transparent"
+            className="flex-1 rounded-lg border border-warmgray px-4 py-2 dark:border-white/20 dark:bg-transparent"
           />
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-holo-sky px-5 py-2 font-medium text-white disabled:opacity-50"
+            className="rounded-lg bg-teal px-5 py-2 font-medium text-white disabled:opacity-50"
           >
             Send
           </button>

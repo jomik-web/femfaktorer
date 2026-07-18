@@ -34,18 +34,18 @@ export default function LoggInnPage() {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <header className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-indigo dark:text-white">Logg inn</h1>
-          <p className="text-indigo/70 dark:text-lavender-400/70">
+          <h1 className="text-2xl font-semibold text-ink dark:text-white">Logg inn</h1>
+          <p className="text-ink/70 dark:text-warmgray/70">
             Innlogging og kontolagring er satt på pause under betatestingen -- vi jobber nå
             primært med språket i tilbakemeldingene og med Spir-samtalen. Vil du unngå å svare på
             alt på nytt etter en oppdatering, kan du i stedet laste ned svarene dine som en fil på
             resultatsiden, og laste den opp igjen senere.
           </p>
         </header>
-        <Link href="/resultat" className="rounded-lg bg-holo-sky px-5 py-2.5 text-center font-medium text-white">
+        <Link href="/resultat" className="rounded-lg bg-teal px-5 py-2.5 text-center font-medium text-white">
           Gå til resultatsiden
         </Link>
-        <Link href="/" className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60">
+        <Link href="/" className="text-sm text-ink/60 underline underline-offset-2 dark:text-warmgray/60">
           Tilbake til forsiden
         </Link>
       </main>
@@ -124,8 +124,8 @@ export default function LoggInnPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-indigo dark:text-white">Logg inn</h1>
-        <p className="text-indigo/70 dark:text-lavender-400/70">
+        <h1 className="text-2xl font-semibold text-ink dark:text-white">Logg inn</h1>
+        <p className="text-ink/70 dark:text-warmgray/70">
           Hent fram et tidligere lagret resultat fra den fulle testen (120 spørsmål). Vi bruker
           ingen passord -- du logger inn med en kode vi sender til e-posten din.
         </p>
@@ -133,7 +133,7 @@ export default function LoggInnPage() {
 
       {step === "email" ? (
         <form onSubmit={requestCode} className="flex flex-col gap-3">
-          <label htmlFor="login-email" className="text-sm font-medium text-indigo dark:text-white">
+          <label htmlFor="login-email" className="text-sm font-medium text-ink dark:text-white">
             E-postadresse
           </label>
           <input
@@ -143,20 +143,20 @@ export default function LoggInnPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="navn@eksempel.no"
-            className="rounded-lg border border-lavender-400 px-4 py-2 dark:border-white/20 dark:bg-transparent"
+            className="rounded-lg border border-warmgray px-4 py-2 dark:border-white/20 dark:bg-transparent"
           />
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-white disabled:opacity-50"
+            className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white disabled:opacity-50"
           >
             {loading ? "Sender kode …" : "Send meg en kode"}
           </button>
         </form>
       ) : (
         <form onSubmit={verifyCode} className="flex flex-col gap-3">
-          {info && <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{info}</p>}
-          <label htmlFor="login-code" className="text-sm font-medium text-indigo dark:text-white">
+          {info && <p className="text-sm text-ink/70 dark:text-warmgray/70">{info}</p>}
+          <label htmlFor="login-code" className="text-sm font-medium text-ink dark:text-white">
             6-sifret kode
           </label>
           <input
@@ -169,12 +169,12 @@ export default function LoggInnPage() {
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
             placeholder="123456"
-            className="rounded-lg border border-lavender-400 px-4 py-2 tracking-[0.3em] dark:border-white/20 dark:bg-transparent"
+            className="rounded-lg border border-warmgray px-4 py-2 tracking-[0.3em] dark:border-white/20 dark:bg-transparent"
           />
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-white disabled:opacity-50"
+            className="rounded-lg bg-teal px-5 py-2.5 font-medium text-white disabled:opacity-50"
           >
             {loading ? "Bekrefter …" : "Logg inn"}
           </button>
@@ -186,16 +186,16 @@ export default function LoggInnPage() {
               setError(null);
               setInfo(null);
             }}
-            className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60"
+            className="text-sm text-ink/60 underline underline-offset-2 dark:text-warmgray/60"
           >
             Bruk en annen e-postadresse
           </button>
         </form>
       )}
 
-      {error && <p className="text-sm text-factor-stability">{error}</p>}
+      {error && <p className="text-sm text-coral">{error}</p>}
 
-      <Link href="/" className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60">
+      <Link href="/" className="text-sm text-ink/60 underline underline-offset-2 dark:text-warmgray/60">
         Tilbake til forsiden
       </Link>
     </main>
