@@ -42,6 +42,7 @@ import { buildFacetDrivenOverview, buildFacetAwareNote } from "@/data/domainComp
 import { ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
 import { FactorIcon } from "@/components/FactorIcon";
+import { FactorHero } from "@/components/FactorHero";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PageBackground } from "@/components/ui/PageBackground";
@@ -49,6 +50,17 @@ import { PageBackground } from "@/components/ui/PageBackground";
 const DISPLAY_TO_DOMAIN: Record<DisplayFactor, Domain> = Object.fromEntries(
   (Object.entries(DOMAIN_TO_DISPLAY) as [Domain, DisplayFactor][]).map(([domain, display]) => [display, domain])
 ) as Record<DisplayFactor, Domain>;
+
+// Aktiv fane-pille (alternativ C, godkjent): fylt i faktorens EGEN farge i
+// stedet for den generiske holo-gradienten -- statiske klassenavn kreves for
+// at Tailwinds JIT-skanner skal finne dem (samme mønster som FactorIcon.tsx).
+const FACTOR_BG: Record<DisplayFactor, string> = {
+  openness: "bg-factor-openness",
+  conscientiousness: "bg-factor-conscientiousness",
+  extraversion: "bg-factor-extraversion",
+  agreeableness: "bg-factor-agreeableness",
+  stability: "bg-factor-stability",
+};
 
 // Klasser hentet 1:1 fra Button (variant="primary" size="md") -- Link kan
 // ikke bruke <Button> direkte (den er en <button>), men skal se identisk ut.
@@ -396,8 +408,9 @@ export default function ResultatPage() {
               return (
                 <article
                   key={f.factor}
-                  className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
+                  className="flex flex-col gap-3 overflow-hidden rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
                 >
+                  <FactorHero factor={f.factor} className="-mx-5 -mt-5 w-[calc(100%+2.5rem)] max-w-none" />
                   <div className="flex items-center gap-3">
                     <FactorIcon factor={f.factor} size={40} />
                     <h2 className="font-display font-semibold text-indigo dark:text-white">{f.label}</h2>
@@ -437,7 +450,7 @@ export default function ResultatPage() {
                 aria-current={activeFactor === f.factor ? "page" : undefined}
                 className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   activeFactor === f.factor
-                    ? "bg-holo-gradient text-white shadow-sm"
+                    ? `${FACTOR_BG[f.factor]} text-white shadow-sm`
                     : "bg-lavender-100 text-indigo hover:bg-lavender-400/40 dark:bg-white/10 dark:text-lavender-400 dark:hover:bg-white/20"
                 }`}
               >
@@ -493,6 +506,7 @@ export default function ResultatPage() {
                   aria-hidden={!isActive}
                 >
                   <div className="flex flex-col gap-3">
+                    <FactorHero factor={f.factor} className="rounded-2xl" />
                     <div className="flex items-center gap-3">
                       <FactorIcon factor={f.factor} size={56} />
                       <h2 className="font-display text-3xl font-bold text-indigo dark:text-white sm:text-4xl">
@@ -598,6 +612,7 @@ export default function ResultatPage() {
               }`}
               aria-hidden={activeFactor !== "summary"}
             >
+              <FactorHero factor="summary" className="rounded-2xl" />
               <h2 className="font-display text-xl font-semibold text-indigo dark:text-white">Hva betyr dette for deg?</h2>
               <p className="text-indigo/80 dark:text-lavender-400/80">{closing.text}</p>
             </section>
