@@ -2,6 +2,18 @@
 
 Sist oppdatert: 18.07.2026
 
+## Nytt: bekreftelse før du havner rett i resultatet igjen (v2.25, 18.07.2026)
+
+Fikset etter din tilbakemelding: hvis du allerede hadde fullført testen (høyeste nivå + den valgfrie tilleggsseksjonen) og trykket "test" eller "start testen" igjen, ble du sendt rett til resultatsiden uten noe mellomsteg. Nå får du i stedet en tydelig skjerm: "Du har allerede et resultat -- mente du å ta testen på nytt, eller vil du se resultatet du allerede har?", med to knapper. De to eksisterende sjekkpunktskjermene (etter 50 og etter 120 spørsmål) har også fått en liten ekstra lenke ("Trykket du hit ved en feiltakelse? Start testen helt på nytt"), i tilfelle noen har svart delvis og lurer på hvordan de starter helt på nytt.
+
+Velger du å starte på nytt, blir det forrige svarsettet ditt arkivert lokalt i nettleseren (siste 5 forsøk) FØR det nullstilles -- det forsvinner altså ikke stille. Det finnes ikke en egen visning av dette arkivet ennå (det henger sammen med planen om flere lagrede testresultater over tid i høyere nivåer, se punktet under) -- foreløpig er det bare en trygg sikkerhetsnett i bakgrunnen.
+
+Ingen handling kreves -- husk `git push`.
+
+## Under arbeid: tre nivåer, tre priser, og konkurrentanalyse (startet 18.07.2026)
+
+Du har skissert en fremtidig 3-nivå prismodell (gratis/20 kr/99 kr) med ulik lagring, funksjonalitet og en fremtidig partner-/kompatibilitetsfunksjon. Dette er STØRRE produktarbeid som ikke er bygget ennå -- jeg jobber med research og et forslag til tabell/dokument, og har noen oppfølgingsspørsmål før jeg fullfører det (se selve samtalen). Merk: dette representerer en endring fra en tidligere logget beslutning i denne fila ("Prisbeslutning", v2.8) om at 120- og 300-spørsmålsnivået skulle koste det samme -- den beslutningen erstattes nå av din nye 3-nivå-modell.
+
 ## Nytt: tydelig henvisning til hjelp ved vanskelige tanker (v2.24, 18.07.2026)
 
 Etter ditt ønske: FemFaktorer henviste tidligere kun vagt til "nødtjenester eller helsepersonell" ved akutt behov (på hjelp-siden), uten konkrete numre eller lavterskeltilbud -- og ingenting av dette fantes på selve resultatsiden eller i Spir. Lagt til tre steder, med numre verifisert mot Helsenorges offisielle sider:

@@ -16,8 +16,11 @@ import { computeTestResult, computeFacetResults, type AnswerMap } from "@/lib/sc
 import {
   loadAnswers,
   saveAnswers,
+  clearAnswers,
+  archiveCurrentAnswersBeforeRetake,
   loadO6,
   saveO6,
+  clearO6,
   loadAgeConfirmed,
   saveAgeConfirmed,
   type O6ConsentStatus,
@@ -85,6 +88,11 @@ export default function TestPage() {
   // ved 120 (tilbyr utvidet versjon).
   const [checkpoint, setCheckpoint] = useState<"none" | "afterFree" | "afterFull">("none");
   const [hydrated, setHydrated] = useState(false);
+  // v2.25: vises når brukeren havner på /test og allerede har et FERDIG
+  // resultat (inkl. O6 avklart) fra før -- i stedet for å hoppe rett til
+  // /resultat uten forvarsel (produkteiers rapporterte bug: "trykker test...
+  // går jeg rett til resultatet"). Se hydreringen under.
+  const [awaitingRetakeChoice, setAwaitingRetakeChoice] = useState(false);
 
   const [o6Status, setO6Status] = useState<O6ConsentStatus>("not_asked");
   const [o6Answers, setO6Answers] = useState<AnswerMap>({});
@@ -117,7 +125,20 @@ export default function TestPage() {
       } else if (stored.tier === "full") {
         setCheckpoint("afterFull");
       } else {
-        goToO6OrResult(storedO6.status, storedO6.answers);
+        // O6 kan fortsatt ha ubesvarte spørsmål igjen (samtykket, men ikke
+        // fullført) -- da skal goToO6OrResult få lov til å ta brukeren TIL
+        // dem, akkurat som før. Kun når absolutt alt (høyeste nivå + O6) er
+        // ferdig avklart, viser vi retake-skjermen i stedet for et stille
+        // hopp til /resultat.
+        const o6TrulyDone =
+          storedO6.status !== "not_asked" &&
+          (storedO6.status !== "consented" ||
+            OPTIONAL_O6_QUESTIONS.every((q) => storedO6.answers[q.id] !== undefined));
+        if (o6TrulyDone) {
+          setAwaitingRetakeChoice(true);
+        } else {
+          goToO6OrResult(storedO6.status, storedO6.answers);
+        }
       }
     } else {
       setIndex(firstUnanswered);
@@ -149,6 +170,26 @@ export default function TestPage() {
       }
     }
     router.push("/resultat");
+  }
+
+  /**
+   * v2.25: brukt fra "Du har allerede et resultat"-skjermen og som en
+   * sekundær utvei fra de to sjekkpunktskjermene ("i tilfelle man har trykket
+   * ved en feiltakelse"). Arkiverer det gamle svarsettet FØR det nullstilles
+   * -- se doc-kommentaren på `archiveCurrentAnswersBeforeRetake` i storage.ts.
+   */
+  function restartTest() {
+    archiveCurrentAnswersBeforeRetake();
+    clearAnswers();
+    clearO6();
+    setAnswers({});
+    setO6Answers({});
+    setO6Status("not_asked");
+    setO6Phase("none");
+    setTier("free");
+    setIndex(0);
+    setCheckpoint("none");
+    setAwaitingRetakeChoice(false);
   }
 
   if (!hydrated) return null;
@@ -202,6 +243,35 @@ export default function TestPage() {
             className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
           >
             Nei, jeg er under 18
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (awaitingRetakeChoice) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
+        <h1 className="text-xl font-semibold text-ink dark:text-white sm:text-2xl">
+          Du har allerede et resultat
+        </h1>
+        <p className="text-ink/80 dark:text-warmgray/80">
+          Mente du å ta testen på nytt, eller vil du se resultatet du allerede har?
+        </p>
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={() => router.push("/resultat")}
+            className="rounded-lg bg-teal px-6 py-3 font-medium text-white"
+          >
+            Se resultatet mitt
+          </button>
+          <button
+            type="button"
+            onClick={restartTest}
+            className="rounded-lg px-6 py-3 font-medium text-ink/70 dark:text-warmgray/70"
+          >
+            Ta testen på nytt
           </button>
         </div>
       </main>
@@ -321,6 +391,13 @@ export default function TestPage() {
             Behold det foreløpige resultatet
           </button>
         </div>
+        <button
+          type="button"
+          onClick={restartTest}
+          className="self-center text-xs text-ink/50 underline underline-offset-2 dark:text-warmgray/50"
+        >
+          Trykket du hit ved en feiltakelse? Start testen helt på nytt
+        </button>
       </main>
     );
   }
@@ -368,6 +445,13 @@ export default function TestPage() {
             Behold resultatet fra de 120 spørsmålene
           </button>
         </div>
+        <button
+          type="button"
+          onClick={restartTest}
+          className="self-center text-xs text-ink/50 underline underline-offset-2 dark:text-warmgray/50"
+        >
+          Trykket du hit ved en feiltakelse? Start testen helt på nytt
+        </button>
       </main>
     );
   }

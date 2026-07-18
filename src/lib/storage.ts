@@ -95,6 +95,61 @@ export function clearAnswers(): void {
   }
 }
 
+/**
+ * v2.25 (produkteiers ønske): når brukeren aktivt velger å ta testen på nytt
+ * i stedet for å se resultatet sitt (se /test sin "Du har allerede et
+ * resultat"-skjerm), skal ikke de forrige svarene bare forsvinne stille --
+ * de arkiveres lokalt (siste 5 forsøk, eldste først ut) FØR de vanlige
+ * svarene nullstilles av `clearAnswers()`. Ingen egen visning av arkivet er
+ * bygget ennå -- det hører sammen med det planlagte arbeidet med flere
+ * lagrede testresultater over tid (produkteiers nivå-/prisplan) -- men
+ * dataene er teknisk sett ikke tapt, bare ikke tilgjengelige i grensesnittet
+ * ennå.
+ */
+const ARCHIVE_STORAGE_KEY = "femfaktorer.arkiverte_svar.v1";
+const ARCHIVE_VERSION = 1;
+const ARCHIVE_MAX_ENTRIES = 5;
+
+interface ArchivedAnswers {
+  answers: AnswerMap;
+  tier: ResultTier;
+  archivedAt: string;
+}
+
+interface ArchivePayload {
+  version: number;
+  entries: ArchivedAnswers[];
+}
+
+function isValidArchivePayload(value: unknown): value is ArchivePayload {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return v.version === ARCHIVE_VERSION && Array.isArray(v.entries);
+}
+
+export function archiveCurrentAnswersBeforeRetake(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const current = loadAnswers();
+    if (Object.keys(current.answers).length === 0) return; // ingenting å arkivere ennå
+    let entries: ArchivedAnswers[] = [];
+    const raw = window.localStorage.getItem(ARCHIVE_STORAGE_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (isValidArchivePayload(parsed)) entries = parsed.entries;
+    }
+    entries.push({ answers: current.answers, tier: current.tier, archivedAt: new Date().toISOString() });
+    if (entries.length > ARCHIVE_MAX_ENTRIES) {
+      entries = entries.slice(entries.length - ARCHIVE_MAX_ENTRIES);
+    }
+    const payload: ArchivePayload = { version: ARCHIVE_VERSION, entries };
+    window.localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // Arkivering er best-effort og skal ALDRI blokkere at brukeren kan starte
+    // på nytt -- svelg feilen, akkurat som resten av lagringsfunksjonene her.
+  }
+}
+
 function isValidStoredPayload(value: unknown): value is StoredPayload {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;

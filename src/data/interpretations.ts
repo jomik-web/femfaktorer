@@ -156,7 +156,7 @@ export const INTERPRETATIONS: Copy = {
       overview:
         "Du beveger deg naturlig mellom det kjente og det nye. Byr en anledning seg, blir du gjerne med på noe nytt -- en ny restaurant, en uvant løsning på jobb -- uten at du aktivt søker det uprøvde hele tiden. Verken fast bundet til rutiner eller rastløst på jakt etter noe annet.",
       nuance:
-        "Evnen til å bevege deg mellom det kjente og det nye gjør deg tilpasningsdyktig i de fleste sammenhenger. Det kan likevel være vanskelig å kjenne etter i øyeblikket om du egentlig lengter etter noe nytt, eller bare er vant til å tenke at du burde. Privat varierer interessene dine gjerne med hvem du er sammen med; i jobbsammenheng takler du rutinepregede og kreative oppgaver omtrent like godt.",
+        "Evnen til å bevege deg mellom det kjente og det nye gjør deg tilpasningsdyktig i de fleste sammenhenger. Det kan likevel være vanskelig å kjenne etter i øyeblikket om du egentlig lengter etter noe nytt, eller bare er vant til å tenke at du burde. Privat varierer interessene dine gjerne med hvem du er sammen med. I jobbsammenheng takler du rutinepregede og kreative oppgaver omtrent like godt.",
       reflection: "I hvilke situasjoner merker du at nysgjerrigheten din faktisk slår inn -- og hva er annerledes da?",
       careerNote:
         "Du takler både strukturerte oppgaver og mer utforskende arbeidsformer rimelig greit, og passer derfor inn i mange typer roller -- fra jobber med faste rammer til oppgaver som krever litt nytenkning underveis.",
@@ -171,7 +171,7 @@ export const INTERPRETATIONS: Copy = {
       overview:
         "Nye ideer, inntrykk og perspektiver tiltrekker deg tydelig. Det viser seg gjerne som interesse for kunst, en uvant idé, eller et sted du ikke kjenner fra før -- og som en vane med å stille spørsmål ved det andre tar for gitt. Det uprøvde er sjelden noe du unngår.",
       nuance:
-        "Nysgjerrigheten din gjør deg kreativ, og en pådriver når noe faktisk trenger å tenkes nytt. Ren gjentakelse og stor forutsigbarhet er derimot situasjoner der den samme trangen til det nye lett kan oppleves som utålmodighet -- både for deg selv og andre rundt deg. På jobben er det ofte du som foreslår en annen løsning enn den vante.",
+        "Nysgjerrigheten din gjør deg kreativ, og en pådriver når noe faktisk trenger å tenkes nytt. Ren gjentakelse og stor forutsigbarhet kan derimot fort oppleves som utålmodighet, både for deg selv og andre rundt deg. På jobben er det ofte du som foreslår en annen løsning enn den vante.",
       reflection: "Hvordan bruker du nysgjerrigheten din i hverdagen -- og er det ting du kunne tenke deg å utforske mer av?",
       careerNote:
         "Roller som gir rom for nytenkning, utforsking eller kreativt arbeid passer godt for deg. Sterkt rutinepregede stillinger kan over tid oppleves lite stimulerende, siden trangen til å utforske noe nytt melder seg uansett hvor du er.",
@@ -188,7 +188,7 @@ export const INTERPRETATIONS: Copy = {
       overview:
         "Planer og faste rutiner styrer ikke hverdagen din i særlig grad -- du tar ting som de kommer. Å utsette noe til det faktisk haster, improvisere fremfor å følge en fast plan, og et skrivebord som gjerne ser litt rotete ut, er kjente mønstre for deg.",
       nuance:
-        "Friheten fra faste rammer gjør deg god til å improvisere og tilpasse deg når planer endrer seg brått. Krever noe derimot tett oppfølging over lang tid -- et prosjekt med mange detaljer, en avtale langt frem i tid -- kan litt mer bevisst struktur være til god hjelp. Hjemme kan andre oppleve deg som avslappet der de selv ville planlagt; på jobb trives du best med korte, fleksible oppgaver fremfor lange løp med faste milepæler.",
+        "Friheten fra faste rammer gjør deg god til å improvisere og tilpasse deg når planer endrer seg brått. Krever noe derimot tett oppfølging over lang tid -- et prosjekt med mange detaljer, en avtale langt frem i tid -- kan litt mer bevisst struktur være til god hjelp. Hjemme kan andre oppleve deg som avslappet der de selv ville planlagt. På jobb trives du best med korte, fleksible oppgaver fremfor lange løp med faste milepæler.",
       reflection: "Er det noen bestemte områder der litt mer forhåndsplanlegging ville gjort hverdagen lettere for deg?",
       careerNote:
         "Roller med stor grad av frihet og variasjon passer ofte bedre for deg enn stillinger som krever tett, langsiktig oppfølging av detaljer. Ekstern struktur -- sjekklister, eller faste rutiner satt av andre -- kan være god støtte i oppgaver der presisjon er avgjørende.",
@@ -218,7 +218,7 @@ export const INTERPRETATIONS: Copy = {
       overview:
         "Grundighet og sans for detaljer peker seg ut som tydelige trekk ved deg. Du fører lister, dobbeltsjekker arbeid før du leverer det, og lover sjelden noe du ikke faktisk følger opp -- pålitelighet kommer naturlig.",
       nuance:
-        "Grundigheten din er en klar styrke når noe krever nøyaktighet, oppfølging, eller at andre skal kunne stole på deg over tid. Rask og uforutsigbar endring kan derimot kreve at du bevisst gir deg selv -- og andre -- litt mer rom for at ting ikke går helt som planlagt. Andre stoler gjerne på deg med ansvar på jobben; privat setter du innimellom strengere krav til deg selv enn situasjonen egentlig ber om.",
+        "Grundigheten din er en klar styrke når noe krever nøyaktighet, oppfølging, eller at andre skal kunne stole på deg over tid. Rask og uforutsigbar endring kan derimot kreve at du bevisst gir deg selv -- og andre -- litt mer rom for at ting ikke går helt som planlagt. Andre stoler gjerne på deg med ansvar på jobben. Privat setter du innimellom strengere krav til deg selv enn situasjonen egentlig ber om.",
       reflection: "Er det situasjoner der behovet ditt for orden og kontroll gjør noe vanskeligere enn det egentlig trenger å være?",
       careerNote:
         "Roller som krever nøyaktighet, pålitelighet og evne til å fullføre over tid passer godt for deg. Vær samtidig oppmerksom på at høye krav til deg selv kan gjøre det vanskeligere å delegere, eller akseptere at noe er «godt nok».",
@@ -235,7 +235,7 @@ export const INTERPRETATIONS: Copy = {
       overview:
         "Ro og egen tid gir deg mer energi enn store forsamlinger av mennesker. Én-til-én-samtaler foretrekker du fremfor store selskaper, og du trenger tid alene for å lade opp etter en sosial dag.",
       nuance:
-        "Preferansen for ro gir deg godt fokus og evne til dypere konsentrasjon, uten at du blir avledet av det som skjer rundt deg. Mye sosial energi over tid -- nettverksbygging, store arrangementer -- kan derimot kjennes tyngre å holde ut i enn for andre. Sosialt foretrekker du ofte et lite, fast vennenettverk fremfor mange bekjentskaper; på jobb presterer du best med færre avbrytelser og mer skjermet tid.",
+        "Preferansen for ro gir deg godt fokus og evne til dypere konsentrasjon, uten at du blir avledet av det som skjer rundt deg. Mye sosial energi over tid -- nettverksbygging, store arrangementer -- kan derimot kjennes tyngre å holde ut i enn for andre. Sosialt foretrekker du ofte et lite, fast vennenettverk fremfor mange bekjentskaper. På jobb presterer du best med færre avbrytelser og mer skjermet tid.",
       reflection: "Hvordan balanserer du behovet ditt for ro opp mot situasjoner der du faktisk må være sosial?",
       careerNote:
         "Roller med mer selvstendig arbeid, dybdefokus og færre avbrytelser passer godt for deg. Åpne kontorlandskap, eller jobber med mye uforutsigbar sosial kontakt, kan tappe mer energi enn de gir tilbake.",
@@ -265,14 +265,14 @@ export const INTERPRETATIONS: Copy = {
       overview:
         "Du får energi av mennesker, og merker det tydelig når det skjer noe rundt deg. Det faller naturlig for deg å ta kontakt først, presentere deg for noen du ikke kjenner, eller foreslå at gruppen gjør noe sammen i stedet for å vente og se. Der andre nøler litt, er du ofte den som setter i gang samtalen eller aktiviteten.",
       nuance:
-        "Den sosiale energien din smitter lett over på andre, og du blir ofte den som drar i gang driv og stemning i en gruppe. Baksiden er at det kan bli fristende å fylle kalenderen litt for mye. En helg uten planer, eller en uke med mest arbeid alene, kan kjennes tommere for deg enn for mange andre. Privat henter du overskudd gjennom folk rundt deg; på jobben bidrar du ofte til liv, fremdrift og engasjement i møter og prosjekter.",
+        "Den sosiale energien din smitter lett over på andre, og du blir ofte den som drar i gang driv og stemning i en gruppe. Baksiden er at det kan bli fristende å fylle kalenderen litt for mye. En helg uten planer, eller en uke med mest arbeid alene, kan kjennes tommere for deg enn for mange andre. Privat henter du overskudd gjennom folk rundt deg. På jobben bidrar du ofte til liv, fremdrift og engasjement i møter og prosjekter.",
       reflection: "Når merker du best forskjellen mellom sosial energi som gir deg overskudd, og sosial aktivitet som bare fyller tiden?",
       careerNote:
         "Arbeid der du får møte mennesker, samarbeide, påvirke eller formidle -- som salg, prosjektledelse eller kundekontakt -- gir deg ofte energi i stedet for å tappe deg. Dager med variasjon og jevnlig kontakt med andre passer deg bedre enn lange strekk med stillesittende arbeid alene.",
       relationshipNote:
         "Du trives som regel best når det skjer noe sammen med andre -- en middag med venner, en tur, en spontan plan. En partner som setter pris på, eller i det minste forstår, behovet ditt for et aktivt sosialt liv, passer deg godt. Venner og familie er ofte en viktig kilde til energi og gode opplevelser for deg.",
       synthesis:
-        "Du får tydelig energi av mennesker, og merker det raskt når det skjer noe rundt deg. Det faller naturlig for deg å ta kontakt først, presentere deg for noen du ikke kjenner, eller foreslå at gruppen gjør noe sammen i stedet for å vente og se. Den sosiale energien din smitter lett over på andre -- du blir ofte den som drar i gang driv og stemning i en gruppe. Baksiden er at det kan bli fristende å fylle kalenderen litt for mye; en helg uten planer kan kjennes tommere for deg enn for mange andre. På jobben bidrar du ofte til liv, fremdrift og engasjement i møter og prosjekter. Arbeid der du får møte mennesker, samarbeide eller formidle -- som salg, prosjektledelse eller kundekontakt -- gir deg gjerne energi i stedet for å tappe deg. Du trives som regel best når det skjer noe sammen med andre, og en partner som setter pris på -- eller i det minste forstår -- behovet ditt for et aktivt sosialt liv, passer deg godt.",
+        "Du får tydelig energi av mennesker, og merker det raskt når det skjer noe rundt deg. Det faller naturlig for deg å ta kontakt først, presentere deg for noen du ikke kjenner, eller foreslå at gruppen gjør noe sammen i stedet for å vente og se. Den sosiale energien din smitter lett over på andre -- du blir ofte den som drar i gang driv og stemning i en gruppe. Baksiden er at det kan bli fristende å fylle kalenderen litt for mye. En helg uten planer kan kjennes tommere for deg enn for mange andre. På jobben bidrar du ofte til liv, fremdrift og engasjement i møter og prosjekter. Arbeid der du får møte mennesker, samarbeide eller formidle -- som salg, prosjektledelse eller kundekontakt -- gir deg gjerne energi i stedet for å tappe deg. Du trives som regel best når det skjer noe sammen med andre, og en partner som setter pris på -- eller i det minste forstår -- behovet ditt for et aktivt sosialt liv, passer deg godt.",
       closingHook:
         "Andre merker fort når du er i rommet, og det gir deg en reell innflytelse på stemningen rundt deg. Bruk den bevisst -- den samme energien kan løfte en gruppe, eller ta unødvendig mye plass.",
     },
@@ -312,7 +312,7 @@ export const INTERPRETATIONS: Copy = {
       overview:
         "Andres behov opptar en stor plass hos deg, og du finner ofte glede i å hjelpe. Du sier gjerne ja når noen ber om hjelp, selv når det koster deg noe, og velger heller å unngå konflikt enn å skape uenighet.",
       nuance:
-        "Andre lener seg gjerne på deg som en varm, tillitsvekkende samarbeidspartner nettopp derfor. Å sette grenser kan derimot bli vanskeligere med det samme trekket, selv når det går ut over deg selv. Privat bruker du mye energi på å unngå at noen blir skuffet; på jobb tar du ofte på deg mer enn du burde for å hjelpe andre.",
+        "Andre lener seg gjerne på deg som en varm, tillitsvekkende samarbeidspartner nettopp derfor. Å sette grenser kan derimot bli vanskeligere med det samme trekket, selv når det går ut over deg selv. Privat bruker du mye energi på å unngå at noen blir skuffet. På jobb tar du ofte på deg mer enn du burde for å hjelpe andre.",
       reflection: "Er det situasjoner der omtanken din for andre går tydelig på bekostning av dine egne behov?",
       careerNote:
         "Du er en verdsatt samarbeidspartner i team, men risikerer å ta på deg mer enn du burde for å hjelpe andre. Bevisst grensesetting på jobb kan derfor være ekstra viktig for deg.",
@@ -329,7 +329,7 @@ export const INTERPRETATIONS: Copy = {
       overview:
         "Bekymring, uro og humørsvingninger rammer deg noe hardere enn mange andre i perioder. Smått kan vokse seg stort i tankene dine, og humøret ditt kan svinge en del i løpet av én og samme dag.",
       nuance:
-        "Følsomheten din betyr også at du er følelsesmessig oppmerksom, og legger merke til nyanser i stemninger som andre overser. I stressende perioder er det ekstra viktig for deg å ha noen faste holdepunkter -- rutiner, mennesker eller steder -- som hjelper deg å roe deg selv ned. Forutsigbarhet i relasjoner hjelper deg å kjenne deg trygg; på jobb kjennes press og tidsfrister ofte tyngre enn de ser ut til for andre.",
+        "Følsomheten din betyr også at du er følelsesmessig oppmerksom, og legger merke til nyanser i stemninger som andre overser. I stressende perioder er det ekstra viktig for deg å ha noen faste holdepunkter -- rutiner, mennesker eller steder -- som hjelper deg å roe deg selv ned. Forutsigbarhet i relasjoner hjelper deg å kjenne deg trygg. På jobb kjennes press og tidsfrister ofte tyngre enn de ser ut til for andre.",
       reflection: "Hva pleier å hjelpe deg mest når bekymringer eller uro tar overhånd?",
       careerNote:
         "Høyt tempo, stramme tidsfrister og mye uforutsigbarhet i jobben kan kjennes tyngre for deg enn for mange andre. Roller med noe mer forutsigbarhet, og støtte fra kolleger eller leder, kan gjøre stor forskjell.",
@@ -359,14 +359,14 @@ export const INTERPRETATIONS: Copy = {
       overview:
         "Stress og motgang preller lettere av deg enn hos mange andre, selv når mye skjer samtidig. Andre kommer gjerne til deg når noe er vanskelig, fordi du sjelden virker overveldet, og kritikk tar sjelden tak i deg over lang tid.",
       nuance:
-        "Roen din gjør deg til en stødig støtte for andre i krevende situasjoner, og gir deg selv ro til å tenke klart under press. Reell risiko og tidlige varselsignaler er derimot noe det samme trekket kan gjøre deg mindre oppmerksom på. Folk rundt deg må privat noen ganger si tydelig ifra før du fanger opp at noe er galt; på jobb er du gjerne den som holder hodet kaldt når andre stresser.",
+        "Roen din gjør deg til en stødig støtte for andre i krevende situasjoner, og gir deg selv ro til å tenke klart under press. Baksiden er at du lettere overser reell risiko og tidlige varselsignaler. Folk rundt deg må privat noen ganger si tydelig ifra før du fanger opp at noe er galt. På jobb er du gjerne den som holder hodet kaldt når andre stresser.",
       reflection: "Er det signaler fra deg selv eller andre du noen ganger overser fordi du naturlig tar ting med ro?",
       careerNote:
         "Du takler press og uforutsigbarhet bedre enn mange andre, noe som kan gjøre deg til en verdifull ressurs i krevende eller krisepregede roller. Vær samtidig oppmerksom på at det samme trekket kan gjøre deg mindre lydhør for tidlige varselsignaler.",
       relationshipNote:
         "Du er gjerne den stødige når en partner eller venner går gjennom noe vanskelig. Pass på at de som reagerer sterkere enn deg, ikke opplever at bekymringene deres blir avfeid.",
       synthesis:
-        "Stress og motgang preller lettere av deg enn hos mange andre, selv når mye skjer samtidig. Andre kommer gjerne til deg når noe er vanskelig, fordi du sjelden virker overveldet. Kritikk tar sjelden tak i deg over lang tid. Roen din gjør deg til en stødig støtte for andre i krevende situasjoner, og gir deg selv ro til å tenke klart under press. Reell risiko og tidlige varselsignaler er derimot noe det samme trekket kan gjøre deg mindre oppmerksom på. På jobben er du gjerne den som holder hodet kaldt når andre stresser -- en egenskap som kan gjøre deg til en verdifull ressurs i krevende eller krisepregede roller. Vær bevisst på at folk rundt deg noen ganger må si tydelig ifra før du fanger opp at noe er galt. Du er gjerne den stødige når en partner eller venner går gjennom noe vanskelig -- pass på at de som reagerer sterkere enn deg ikke opplever at bekymringene deres blir avfeid.",
+        "Stress og motgang preller lettere av deg enn hos mange andre, selv når mye skjer samtidig. Andre kommer gjerne til deg når noe er vanskelig, fordi du sjelden virker overveldet. Kritikk tar sjelden tak i deg over lang tid. Roen din gjør deg til en stødig støtte for andre i krevende situasjoner, og gir deg selv ro til å tenke klart under press. Baksiden er at du lettere overser reell risiko og tidlige varselsignaler. På jobben er du gjerne den som holder hodet kaldt når andre stresser -- en egenskap som kan gjøre deg til en verdifull ressurs i krevende eller krisepregede roller. Vær bevisst på at folk rundt deg noen ganger må si tydelig ifra før du fanger opp at noe er galt. Du er gjerne den stødige når en partner eller venner går gjennom noe vanskelig -- pass på at de som reagerer sterkere enn deg ikke opplever at bekymringene deres blir avfeid.",
       closingHook:
         "Roen din er en ressurs andre merker og lener seg på, kanskje mer enn du selv legger merke til. Spør innimellom hvordan de faktisk har det -- den samme roen kan gjøre deg vanskelig å lese for dem.",
     },
