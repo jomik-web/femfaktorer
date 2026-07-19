@@ -29,11 +29,9 @@ import {
   ALL_QUESTIONS,
   ALL_QUESTIONS_EXTENDED,
   FREE_QUESTIONS,
-  OPTIONAL_O6_QUESTIONS,
   type Domain,
 } from "@/data/questions";
 import { isValidAnswerValue, type AnswerMap, type AnswerValue, type ResultTier } from "@/lib/scoring";
-import type { O6ConsentStatus } from "@/lib/storage";
 
 const FORMAT_MARKER = "femfaktorer-svardata";
 const FORMAT_VERSION = 1;
@@ -41,9 +39,9 @@ const DELIMITER = ";";
 
 interface CsvRow {
   id: string;
-  section: "hovedtest" | "o6";
+  section: "hovedtest";
   order: number;
-  domain: Domain | "O6";
+  domain: Domain;
   facet: string;
   facetName: string;
   textNo: string;
@@ -59,22 +57,11 @@ const HOVEDTEST_ROWS: CsvRow[] = ALL_QUESTIONS_EXTENDED.map((q) => ({
   textNo: q.textNo,
 }));
 
-const O6_ROWS: CsvRow[] = OPTIONAL_O6_QUESTIONS.map((q, i) => ({
-  id: q.id,
-  section: "o6",
-  order: i + 1,
-  domain: "O6",
-  facet: q.facet,
-  facetName: q.facetName,
-  textNo: q.textNo,
-}));
-
-const ALL_ROWS: CsvRow[] = [...HOVEDTEST_ROWS, ...O6_ROWS];
+const ALL_ROWS: CsvRow[] = HOVEDTEST_ROWS;
 
 const HEADER = ["id", "section", "order", "domain", "facet", "facetName", "textNo", "svar"] as const;
 
 const HOVEDTEST_IDS = new Set(HOVEDTEST_ROWS.map((r) => r.id));
-const O6_IDS = new Set(O6_ROWS.map((r) => r.id));
 const FULL_IDS = new Set(ALL_QUESTIONS.map((q) => q.id));
 const FREE_IDS = new Set(FREE_QUESTIONS.map((q) => q.id));
 const EXTENDED_IDS = new Set(ALL_QUESTIONS_EXTENDED.map((q) => q.id));
@@ -89,8 +76,6 @@ function csvEscape(value: string): string {
 export interface BuildAnswerSetCsvInput {
   tier: ResultTier;
   answers: AnswerMap;
-  o6Status: O6ConsentStatus;
-  o6Answers: AnswerMap;
 }
 
 /** Bygger selve CSV-teksten (uten BOM -- BOM legges til av nedlastingskoden, se page.tsx). */
@@ -98,10 +83,9 @@ export function buildAnswerSetCsv(input: BuildAnswerSetCsvInput): string {
   const lines: string[] = [];
   lines.push(`# ${FORMAT_MARKER} v${FORMAT_VERSION}`);
   lines.push(`# tier=${input.tier}`);
-  lines.push(`# o6_status=${input.o6Status}`);
   lines.push(HEADER.join(DELIMITER));
   for (const row of ALL_ROWS) {
-    const svar = row.section === "hovedtest" ? input.answers[row.id] : input.o6Answers[row.id];
+    const svar = input.answers[row.id];
     const cells = [
       row.id,
       row.section,
@@ -173,8 +157,6 @@ function splitCsv(text: string, delimiter: string): string[][] {
 export interface ParsedAnswerSet {
   tier: ResultTier;
   answers: AnswerMap;
-  o6Status: O6ConsentStatus;
-  o6Answers: AnswerMap;
   warnings: string[];
 }
 
@@ -211,7 +193,6 @@ export function parseAnswerSetCsv(raw: string): ParseAnswerSetResult {
 
   const header = headerRow.map((h) => h.trim().toLowerCase());
   const idCol = header.indexOf("id");
-  const sectionCol = header.indexOf("section");
   const svarCol = header.indexOf("svar");
   if (idCol === -1 || svarCol === -1) {
     return {
@@ -221,7 +202,6 @@ export function parseAnswerSetCsv(raw: string): ParseAnswerSetResult {
   }
 
   const answers: AnswerMap = {};
-  const o6Answers: AnswerMap = {};
   const unknownIds: string[] = [];
   const invalidValues: string[] = [];
 
@@ -229,14 +209,8 @@ export function parseAnswerSetCsv(raw: string): ParseAnswerSetResult {
     const id = (r[idCol] ?? "").trim();
     if (!id) continue;
     const svarRaw = (r[svarCol] ?? "").trim();
-    const sectionValue = sectionCol > -1 ? r[sectionCol]?.trim() : undefined;
-    const isO6 = sectionValue ? sectionValue === "o6" : O6_IDS.has(id);
 
-    if (isO6 && !O6_IDS.has(id)) {
-      unknownIds.push(id);
-      continue;
-    }
-    if (!isO6 && !HOVEDTEST_IDS.has(id)) {
+    if (!HOVEDTEST_IDS.has(id)) {
       unknownIds.push(id);
       continue;
     }
@@ -247,8 +221,7 @@ export function parseAnswerSetCsv(raw: string): ParseAnswerSetResult {
       invalidValues.push(`${id}=${svarRaw}`);
       continue;
     }
-    if (isO6) o6Answers[id] = num as AnswerValue;
-    else answers[id] = num as AnswerValue;
+    answers[id] = num as AnswerValue;
   }
 
   const warnings: string[] = [];
@@ -287,17 +260,8 @@ export function parseAnswerSetCsv(raw: string): ParseAnswerSetResult {
     );
   }
 
-  const o6Complete = O6_ROWS.every((r) => o6Answers[r.id] !== undefined);
-  const o6HasAny = Object.keys(o6Answers).length > 0;
-  if (o6HasAny && !o6Complete) {
-    warnings.push(
-      "O6-tilleggsspørsmålene var delvis utfylt og ble derfor hoppet over (alle fire må være besvart for at tilleggsseksjonen skal vises)."
-    );
-  }
-  const o6Status: O6ConsentStatus = o6Complete ? "consented" : "not_asked";
-
   return {
     ok: true,
-    result: { tier, answers, o6Status, o6Answers: o6Complete ? o6Answers : {}, warnings },
+    result: { tier, answers, warnings },
   };
 }

@@ -10,7 +10,7 @@ import type { DisplayFactor } from "@/lib/scoring";
 const PRIMARY_LG_LINK_CLASSES =
   "font-display font-semibold transition-all duration-150 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-holo-sky focus-visible:ring-offset-2 " +
-  "bg-holo-gradient text-white shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98] " +
+  "bg-holo-sky text-indigo shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98] " +
   "px-8 py-4 text-lg rounded-2xl";
 
 const FACTORS: DisplayFactor[] = [
@@ -39,7 +39,7 @@ export default function ForsidePage() {
         <h1 className="font-display text-3xl font-bold text-indigo dark:text-white sm:text-4xl">
           Dine Fasetter
         </h1>
-        <p className="text-lg font-medium text-holo-sky">Flere sider av deg</p>
+        <p className="text-lg font-medium text-holo-skyText">Flere sider av deg</p>
         <p className="max-w-md text-indigo/80 dark:text-lavender-400/80">
           Bli litt klokere på hvem du egentlig er. En norsk personlighetstest basert på
           offentlig tilgjengelig forskning på femfaktormodellen (Big Five).

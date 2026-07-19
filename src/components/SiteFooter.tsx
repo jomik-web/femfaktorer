@@ -30,7 +30,7 @@ export function SiteFooter() {
     <footer className="border-t border-lavender-400 py-8 dark:border-white/10">
       <nav className="mx-auto flex max-w-2xl flex-wrap justify-center gap-x-6 gap-y-2 px-6 text-sm text-indigo/60 dark:text-lavender-400/60">
         {LINKS.map((link) => (
-          <Link key={link.href} href={link.href} className="hover:text-holo-sky">
+          <Link key={link.href} href={link.href} className="hover:text-holo-skyText">
             {link.label}
           </Link>
         ))}

@@ -8,7 +8,6 @@ import {
   ALL_QUESTIONS_EXTENDED,
   FREE_QUESTIONS,
   FREE_TIER_LENGTH,
-  OPTIONAL_O6_QUESTIONS,
   type Question,
 } from "@/data/questions";
 import type { AnswerValue, FactorResult, FacetResult, ResultTier } from "@/lib/scoring";
@@ -18,17 +17,14 @@ import {
   saveAnswers,
   clearAnswers,
   archiveCurrentAnswersBeforeRetake,
-  loadO6,
-  saveO6,
-  clearO6,
-  loadAgeConfirmed,
-  saveAgeConfirmed,
-  type O6ConsentStatus,
+  loadIntroSeen,
+  saveIntroSeen,
 } from "@/lib/storage";
 import { AnswerScale } from "@/components/AnswerScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/Button";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { SpirQuizScene } from "@/components/SpirQuizScene";
 
 /**
  * TRE-TRINNS TESTFLYT (v2.11, tredje trapp -- "Utvidet versjon"): de første
@@ -38,15 +34,6 @@ import { PageBackground } from "@/components/ui/PageBackground";
  * 120 for et mer presist resultat og tilgang til Spir. Ved spørsmål 120
  * tilbys, på samme måte, et tredje og siste steg: alle 290 spørsmål (10 per
  * fasett i stedet for 4-5), kalt "Utvidet versjon" i grensesnittet.
- *
- * Sjekkpunktet etter 120 er bevisst plassert FØR O6-tilbudet, slik at O6
- * (se under) alltid kommer til slutt, uansett hvilket av de tre nivåene
- * brukeren til slutt lander på.
- *
- * Etter fullført test (uansett tier "full" eller "extended") tilbys en HELT
- * VALGFRI bonusseksjon (O6, se questions.ts) med eget, uttrykkelig samtykke
- * (GDPR art. 9(2)(a)). Produkteier har besluttet (14.07.2026) at funksjonen
- * beholdes permanent.
  */
 
 function questionsForTier(tier: ResultTier): readonly Question[] {
@@ -91,33 +78,25 @@ export default function TestPage() {
   const [checkpoint, setCheckpoint] = useState<"none" | "afterFree" | "afterFull">("none");
   const [hydrated, setHydrated] = useState(false);
   // v2.25: vises når brukeren havner på /test og allerede har et FERDIG
-  // resultat (inkl. O6 avklart) fra før -- i stedet for å hoppe rett til
-  // /resultat uten forvarsel (produkteiers rapporterte bug: "trykker test...
-  // går jeg rett til resultatet"). Se hydreringen under.
+  // resultat fra før -- i stedet for å hoppe rett til /resultat uten
+  // forvarsel (produkteiers rapporterte bug: "trykker test... går jeg rett
+  // til resultatet"). Se hydreringen under.
   const [awaitingRetakeChoice, setAwaitingRetakeChoice] = useState(false);
 
-  const [o6Status, setO6Status] = useState<O6ConsentStatus>("not_asked");
-  const [o6Answers, setO6Answers] = useState<AnswerMap>({});
-  const [o6Phase, setO6Phase] = useState<"none" | "offer" | "questions">("none");
-  const [o6Index, setO6Index] = useState(0);
-
-  // Aldersbekreftelse (v2.6, Dokument 07 §8) -- vises før noe annet dersom
-  // ikke tidligere bekreftet på denne enheten. "declined" viser en enkel
-  // avvisningsskjerm i stedet for å sende brukeren videre inn i testen.
-  const [ageConfirmed, setAgeConfirmed] = useState(false);
-  const [ageDeclined, setAgeDeclined] = useState(false);
+  // "Før du starter"-veiledningen (v2.31, 19.07.2026) -- vises før noe annet
+  // dersom brukeren ikke har sett den før på denne enheten. Inneholder kun
+  // veiledning om hvordan man svarer, ingen bekreftelse kreves lenger (den
+  // tidligere aldersbekreftelsen er fjernet på produkteiers ønske).
+  const [introSeen, setIntroSeen] = useState(false);
 
   const activeQuestions = questionsForTier(tier);
 
   // Last lagrede svar ved oppstart (autolagring, Dokument 09 §10.3).
   useEffect(() => {
-    setAgeConfirmed(loadAgeConfirmed());
+    setIntroSeen(loadIntroSeen());
     const stored = loadAnswers();
     setAnswers(stored.answers);
     setTier(stored.tier);
-    const storedO6 = loadO6();
-    setO6Status(storedO6.status);
-    setO6Answers(storedO6.answers);
 
     const list = questionsForTier(stored.tier);
     const firstUnanswered = list.findIndex((q) => stored.answers[q.id] === undefined);
@@ -127,20 +106,9 @@ export default function TestPage() {
       } else if (stored.tier === "full") {
         setCheckpoint("afterFull");
       } else {
-        // O6 kan fortsatt ha ubesvarte spørsmål igjen (samtykket, men ikke
-        // fullført) -- da skal goToO6OrResult få lov til å ta brukeren TIL
-        // dem, akkurat som før. Kun når absolutt alt (høyeste nivå + O6) er
-        // ferdig avklart, viser vi retake-skjermen i stedet for et stille
-        // hopp til /resultat.
-        const o6TrulyDone =
-          storedO6.status !== "not_asked" &&
-          (storedO6.status !== "consented" ||
-            OPTIONAL_O6_QUESTIONS.every((q) => storedO6.answers[q.id] !== undefined));
-        if (o6TrulyDone) {
-          setAwaitingRetakeChoice(true);
-        } else {
-          goToO6OrResult(storedO6.status, storedO6.answers);
-        }
+        // tier === "extended" og alt besvart -- ferdig avklart, vis
+        // retake-skjermen i stedet for et stille hopp til /resultat.
+        setAwaitingRetakeChoice(true);
       }
     } else {
       setIndex(firstUnanswered);
@@ -157,23 +125,6 @@ export default function TestPage() {
     [answers, activeQuestions]
   );
 
-  /** Etter fullført test (full ELLER extended): avgjør om O6-tilbudet skal vises, fortsettes, eller hoppes over. */
-  function goToO6OrResult(status: O6ConsentStatus, o6answers: AnswerMap) {
-    if (status === "not_asked") {
-      setO6Phase("offer");
-      return;
-    }
-    if (status === "consented") {
-      const unanswered = OPTIONAL_O6_QUESTIONS.some((q) => o6answers[q.id] === undefined);
-      if (unanswered) {
-        setO6Index(OPTIONAL_O6_QUESTIONS.findIndex((q) => o6answers[q.id] === undefined));
-        setO6Phase("questions");
-        return;
-      }
-    }
-    router.push("/resultat");
-  }
-
   /**
    * v2.25: brukt fra "Du har allerede et resultat"-skjermen og som en
    * sekundær utvei fra de to sjekkpunktskjermene ("i tilfelle man har trykket
@@ -183,11 +134,7 @@ export default function TestPage() {
   function restartTest() {
     archiveCurrentAnswersBeforeRetake();
     clearAnswers();
-    clearO6();
     setAnswers({});
-    setO6Answers({});
-    setO6Status("not_asked");
-    setO6Phase("none");
     setTier("free");
     setIndex(0);
     setCheckpoint("none");
@@ -196,35 +143,13 @@ export default function TestPage() {
 
   if (!hydrated) return null;
 
-  if (ageDeclined) {
-    return (
-      <PageBackground>
-        <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
-          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
-            Dine Fasetter er foreløpig for voksne
-          </h1>
-          <p className="text-indigo/80 dark:text-lavender-400/80">
-            Denne versjonen av testen er laget for personer over 18 år. Ingenting er lagret eller
-            sendt noe sted.
-          </p>
-          <Link href="/" className="self-center text-sm text-holo-sky underline underline-offset-2">
-            Tilbake til forsiden
-          </Link>
-        </main>
-      </PageBackground>
-    );
-  }
-
-  if (!ageConfirmed) {
+  if (!introSeen) {
     return (
       <PageBackground>
         <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
           <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
             Før du starter
           </h1>
-          <p className="text-indigo/80 dark:text-lavender-400/80">
-            Dine Fasetter er i denne versjonen laget for personer over 18 år.
-          </p>
           <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
             Litt om hvordan du svarer: bruk det første som faller deg inn, uten å tenke for lenge på
             hvert spørsmål -- det finnes ikke noe "riktig" svar å lete etter. Tenk på hvordan du
@@ -235,14 +160,11 @@ export default function TestPage() {
             <Button
               type="button"
               onClick={() => {
-                saveAgeConfirmed();
-                setAgeConfirmed(true);
+                saveIntroSeen();
+                setIntroSeen(true);
               }}
             >
-              Ja, jeg er 18 år eller eldre
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => setAgeDeclined(true)}>
-              Nei, jeg er under 18
+              Jeg er klar -- start testen
             </Button>
           </div>
         </main>
@@ -267,86 +189,6 @@ export default function TestPage() {
             <Button type="button" variant="ghost" onClick={restartTest}>
               Ta testen på nytt
             </Button>
-          </div>
-        </main>
-      </PageBackground>
-    );
-  }
-
-  if (o6Phase === "offer") {
-    return (
-      <PageBackground>
-        <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
-          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
-            En helt valgfri tilleggsseksjon
-          </h1>
-          <p className="text-indigo/80 dark:text-lavender-400/80">
-            Vi tilbyr fire ekstra spørsmål om en sjette side ved åpenhet for erfaring, som handler om
-            politiske og verdimessige holdninger. Disse påvirker IKKE hovedresultatet ditt over -- de
-            vises eventuelt som et helt eget, atskilt tillegg.
-          </p>
-          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-            Dette er informasjon om politisk oppfatning, en særlig kategori persondata. Du kan når som
-            helst slette akkurat denne dataen uavhengig av resten av testresultatet ditt.
-          </p>
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Button
-              type="button"
-              onClick={() => {
-                setO6Status("consented");
-                saveO6("consented", o6Answers);
-                setO6Index(0);
-                setO6Phase("questions");
-              }}
-            >
-              Ja, jeg vil svare
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setO6Status("declined");
-                saveO6("declined", {});
-                setO6Phase("none");
-                router.push("/resultat");
-              }}
-            >
-              Nei takk
-            </Button>
-          </div>
-        </main>
-      </PageBackground>
-    );
-  }
-
-  if (o6Phase === "questions") {
-    const o6Question = OPTIONAL_O6_QUESTIONS[o6Index];
-    if (!o6Question) {
-      router.push("/resultat");
-      return null;
-    }
-    return (
-      <PageBackground>
-        <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-12">
-          <ProgressBar current={o6Index + 1} total={OPTIONAL_O6_QUESTIONS.length} />
-          <div key={o6Question.id} className="flex flex-col gap-6">
-            <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
-              {o6Question.textNo}
-            </h1>
-            <AnswerScale
-              questionId={o6Question.id}
-              value={o6Answers[o6Question.id]}
-              onAnswer={(value) => {
-                const next = { ...o6Answers, [o6Question.id]: value };
-                setO6Answers(next);
-                saveO6("consented", next);
-                if (o6Index < OPTIONAL_O6_QUESTIONS.length - 1) {
-                  setO6Index(o6Index + 1);
-                } else {
-                  router.push("/resultat");
-                }
-              }}
-            />
           </div>
         </main>
       </PageBackground>
@@ -434,7 +276,7 @@ export default function TestPage() {
                 if (result.complete && result.factors) {
                   submitAnonymousNormStats(result.factors, computeFacetResults(answers, ALL_QUESTIONS), "full");
                 }
-                goToO6OrResult(o6Status, o6Answers);
+                router.push("/resultat");
               }}
             >
               Behold resultatet fra de 120 spørsmålene
@@ -472,7 +314,7 @@ export default function TestPage() {
           computeFacetResults(next, ALL_QUESTIONS_EXTENDED),
           "extended"
         );
-        goToO6OrResult(o6Status, o6Answers);
+        router.push("/resultat");
       }
       return;
     }
@@ -498,13 +340,18 @@ export default function TestPage() {
   return (
     <PageBackground>
       <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-8 px-6 py-12">
+        {/* v2.32: vises kun over ALLER FØRSTE spørsmål (ikke ved hvert
+            spørsmål) -- setter stemningen idet spørsmålene starter, uten å ta
+            opp fast vertikal plass gjennom alle 290 spørsmålene (samme
+            avveining som SpirHero på /spir, se den filens filhode). */}
+        {index === 0 && <SpirQuizScene className="mb-1" />}
         <ProgressBar current={index + 1} total={total} />
 
         {firstUnansweredIndex !== -1 && firstUnansweredIndex !== index && (
           <button
             type="button"
             onClick={jumpToFirstUnanswered}
-            className="self-start text-sm text-holo-sky underline underline-offset-2"
+            className="self-start text-sm text-holo-skyText underline underline-offset-2"
           >
             Hopp til første ubesvarte spørsmål
           </button>

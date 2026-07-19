@@ -4,8 +4,10 @@ import { ButtonHTMLAttributes, forwardRef } from "react";
  * Button -- Designsystem v2.0.
  *
  * Tre varianter:
- * - primary: holografisk gradient-bakgrunn, hvit tekst. Brukes til ÉN
- *   hovedhandling per skjerm (start test, neste spørsmål, se resultat).
+ * - primary: hel himmelblå bakgrunn (holo.sky), indigo tekst -- var
+ *   holografisk gradient frem til v2.27, endret til flat farge på
+ *   produkteiers ønske. Brukes til ÉN hovedhandling per skjerm (start test,
+ *   neste spørsmål, se resultat).
  * - secondary: lavendel-bakgrunn, indigo tekst. Sekundære handlinger.
  * - ghost: gjennomsiktig, indigo tekst, kun understrek/farge ved hover.
  *   Lavest visuell vekt -- avbryt, tilbake, lenke-aktige handlinger.
@@ -24,7 +26,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
-    "bg-holo-gradient text-white shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98]",
+    "bg-holo-sky text-indigo shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98]",
   secondary:
     "bg-lavender-100 text-indigo hover:bg-lavender-400/40 active:scale-[0.98]",
   ghost:

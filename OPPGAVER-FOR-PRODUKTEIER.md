@@ -1,6 +1,87 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 18.07.2026
+Sist oppdatert: 19.07.2026
+
+## Nytt: fikset hover-meny-bug + betaversjon i toppmenyen + rød beta-varsel (v2.34, 19.07.2026)
+
+- **Rettet feilen du meldte fra om:** rapportvalg-menyen under "Resultat" lukket seg selv i det du beveget musepekeren nedover fra "Resultat" og inn i selve valgene. Årsak: et reelt "dødt" område mellom menyknappen og valgene (en margin-avstand som ikke telte som en del av menyen for museavstanden). Rettet ved å gjøre selve avstanden til en del av det hoverbare området i stedet, pluss en kort forsinkelse før menyen faktisk lukkes -- den tåler nå at pekeren beveger seg litt fram og tilbake uten å forsvinne.
+- **"Beta v2.34" vises nå ved siden av "Dine Fasetter"** i toppmenyen (i en liten avrundet boks). Tallet følger nummereringen i denne loggen -- jeg oppdaterer det i `src/lib/version.ts` for hver ny oppføring her, så du alltid kan se hvilken versjon som faktisk er i drift.
+- **Lagt til en tydelig, rød advarsel** rett under overskriften "Lagre resultatet ditt" på resultatsiden: at kontolagring ikke er i bruk mens vi betatester, og at CSV-verktøyet lenger opp på siden er den fungerende måten å ta vare på svar på i mellomtiden. (Antar du mente denne seksjonen -- si ifra hvis det var et annet sted du tenkte på, f.eks. innloggingssiden.)
+
+Testet: `npx tsc --noEmit` kjører uten feil. Husk `git push`.
+
+## Nytt: rapportvalg (50/120/290) + differensiert rapportdybde per nivå (v2.33, 19.07.2026)
+
+Etter ditt ønske om at man skal kunne velge rapport og at de tre nivåene skal oppleves tydelig forskjellige:
+
+- **Rapportvalg-meny i toppmenyen.** Hold musen over (eller trykk pil-knappen ved siden av) "Resultat" -- en undermeny viser 50/120/290 spørsmål som egne valg. Nivåer du faktisk har fullført er klikkbare og lenker til `/resultat?tier=...`; nivåer du ikke har fullført vises gråtonet og er ikke klikkbare. Siden svarene dine er kumulative (120-settet inneholder de samme svarene som 50-settet, osv.), kan alle fullførte nivåer vises uavhengig av hvor langt du faktisk kom i testen.
+- **Gratis (50 spm):** uendret innhold per hovedkategori, men nå med kort kategoribeskrivelse øverst (som de to andre nivåene alltid har hatt) og en ny, kort **"Samlet sett"**-oppsummering nederst på siden -- din forespurte "overordnede analyse... og en samlet".
+- **Standard (120 spm):** viser **ikke lenger underkategorier eller samspill-kort** (var en inkurie at de vistes før -- 120-spørsmålsdataene ga egentlig for tynt grunnlag per underkategori uansett). Viser i stedet en penere, mer sammenhengende analysetekst enn gratisnivået, PLUSS jobb- og kjærlighets-notatene og en oppsummeringsfane på tvers av alle fem kategoriene -- det er "de ekstra momentene" som skiller Standard fra gratis.
+- **Utvidet (290 spm):** uendret struktur -- underkategorier med egen graf, fasett-samspill, kryss-kategori-samspill ("Spennende samspill") og den mest utfyllende oppsummeringen. Dette er fortsatt det tydelige premium-nivået.
+- **Oppsummeringstekstene (både per hovedkategori og til slutt) kan nå vises i flere avsnitt** -- delt automatisk ved naturlige setningsgrenser der teksten er lang nok til at det gir bedre lesbarhet, uten at noen av de eksisterende tekstene måtte skrives om for hånd.
+- Har du allerede fullført et høyere nivå, bytter "fortsett testen"-boksen nederst ut til en lenke til det andre resultatet i stedet for en oppfordring som ikke lenger gir mening.
+
+Testet: `npx tsc --noEmit` kjører uten feil. Husk `git push`.
+
+## Nytt: humor i resultatet + quiz-illustrasjon på spørsmålene (v2.32, 19.07.2026)
+
+Etter ditt ønske om å lette opp stemningen litt og gjøre testen mer folkelig:
+
+- **Fun fact-boks under hver av de fem hovedkategoriene på resultatsiden.** En lekent avmerket boks (😄-ikon, stiplet kant, tydelig atskilt fra selve tolkningsteksten) med et kort, gjenkjennelig "kjenner du deg igjen?"-eksempel knyttet til akkurat den kategorien og skåren din -- 15 tekster totalt (5 kategorier x lav/middels/høy). Bevisst IKKE en del av selve den faglige tolkningen, kun ment som en kort spøk å flire litt av. Holdt unna sårbare temaer -- f.eks. bruker lav emosjonell stabilitet en helt triviell, gjenkjennelig ting (å overtenke en SMS), ikke angst eller uro generelt.
+- **Ny illustrasjon over aller første spørsmål i testen** (`src/components/SpirQuizScene.tsx`): Spir som en quizvert med spørsmålskort i hevet hånd, foran tre "slektninger" av Spir bak hver sin pult med buzzer -- én av dem rekker opp hånda. Samme bølgekant-stil som de andre heltegrafikkene, og de tre figurene er bygget fra Spir sine egne, gjenbrukte kroppsdeler (kun i andre fargekombinasjoner) for å beholde den visuelle familien. Vises KUN over det aller første spørsmålet, ikke ved hvert av de 290 -- for å sette stemningen uten å ta fast plass gjennom hele testen (samme avveining som ble gjort med Spir-grafikken på /spir i går). Si ifra om du heller vil ha den synlig oftere.
+
+Testet: `npx tsc --noEmit` kjører uten feil. Husk `git push`.
+
+## Nytt: 18-årsgrensen fjernet (v2.31, 19.07.2026)
+
+Etter din beskjed: aldersverifikasjonen ("Ja, jeg er 18 år eller eldre" / "Nei, jeg er under 18") er fjernet, mot min anbefaling fra i går (v2.30) om å beholde den -- ditt valg, notert.
+
+- **`/test`**: "Før du starter"-skjermen vises fortsatt (én gang per enhet), men uten aldersspørsmål eller de to knappene. Teksten om hvordan du bør svare ("bruk det første som faller deg inn...") står uendret. Én knapp ("Jeg er klar -- start testen") fører rett videre inn i testen. Avvisningsskjermen ("Dine Fasetter er foreløpig for voksne") er fjernet, siden det ikke lenger finnes noe "nei"-valg.
+- **Personvernsiden** ("Aldersgrense"-avsnittet): setningen om at du selv må bekrefte alder er fjernet siden mekanismen ikke lenger finnes. Står igjen: testen er ment for voksne og ikke tilpasset mindreårige (språklig, innholdsmessig og samtykkemessig) -- altså fortsatt en forklaring på hvem testen passer for, slik du ønsket som alternativ.
+- Teknisk: lagringsfunksjonene i `src/lib/storage.ts` er omdøpt fra alderbekreftelse til "intro sett" (`loadIntroSeen`/`saveIntroSeen`) -- samme lagringsmekanikk, nytt formål.
+
+Testet: `npx tsc --noEmit` kjører uten feil. Husk `git push`.
+
+## Nytt: Spir-illustrasjon + maskot på resultatsiden (v2.30, 19.07.2026)
+
+Etter ditt ønske:
+
+- **Ny grafikk øverst på /spir** (`src/components/SpirHero.tsx`): et landskaps-motiv i samme visuelle språk som FactorHero på resultatsiden (håndtegnet bølgekant, samme bølgekontur som "Oppsummering"-motivet). Viser en talebobbel (brukerens side av samtalen) og Spir -- speilvendt, i "tenkende" uttrykk med tankeprikkene trekkende mot bobla -- på den andre siden, bokstavelig "på andre siden av dialogen" slik du ba om. Vises øverst på både "ikke låst opp ennå"-skjermen og "Før du starter"-skjermen (ikke i selve chatten, for å spare plass til meldingene).
+- **Spir er satt inn i "Vil du utforske resultatet videre?"-kortet** på resultatsiden, ved siden av teksten (oppmuntrende uttrykk).
+- Teknisk: Spir sine bygge-blokker (kropp, armer, briller, ansiktsuttrykk) i `SpirMascot.tsx` er gjort gjenbrukbare slik at den nye illustrasjonen alltid er 100 % visuelt identisk med maskoten ellers -- ingen dupliserte, potensielt avvikende tegninger.
+- Grafikken er bygget og visuelt kontrollert (rendret til bilde og sett gjennom) før den ble satt inn, men en rask titt i faktisk nettleser (spesielt på mobil) anbefales likevel.
+
+**Om aldersgrensen (18+-bekreftelsen)**: du spurte om denne er viktig -- se svaret i chatten. Kort oppsummert: jeg anbefaler å beholde den, blant annet fordi testen viser krisehjelp-informasjon, deler data med en tredjepart (Spir/Anthropic) og etter hvert skal ta betalt -- alt sammen ting som gjør en enkel, selvdeklarert voksenbekreftelse mer forsvarlig enn på en helt vanlig, gratis personlighetstest. Ingen kodeendring gjort på dette punktet. Personvernsidens "Aldersgrense"-avsnitt dekker allerede "hvem testen passer for"-forklaringen du nevnte som alternativ, så det trengs uansett ikke noe nytt der.
+
+Testet: `npx tsc --noEmit` kjører uten feil. Husk `git push`.
+
+## Nytt: kortere lagre-tekst, kontolagring satt på pause igjen, personvernrettelser (v2.29, 19.07.2026)
+
+Etter din tilbakemelding på "Lagre resultatet ditt"-kortet på resultatsiden:
+
+- **Teksten er kraftig forkortet** -- to lange avsnitt er nå tre setninger, med lenke til den fullstendige forklaringen i personvernerklæringen (`/personvern#konto`) i stedet for å gjenta alt i kortet.
+- **Selve lagre-knappen er deaktivert igjen under betatesting**, atskilt fra selve innloggingen: nytt flagg `RESULT_ACCOUNT_SAVE_ENABLED = false` i `src/lib/featureFlags.ts`. CSV-verktøyet lenger opp på siden er dermed igjen den ene, fungerende måten å ta vare på svar på under betatesting -- akkurat som ønsket. Innlogging i seg selv (`ACCOUNT_SAVE_ENABLED`) er IKKE slått av, siden den fortsatt trengs til admin-tilgang (se v2.28 under).
+- **Personvernsiden er rettet på to punkter**: en gjenglemt lenke i innholdsfortegnelsen pekte til en seksjon ("Den valgfrie tilleggsseksjonen") som ikke lenger finnes på siden -- fjernet. Setningen om admin-innlogging var fortsatt skrevet som om admin hadde en egen cookie (fra før v2.28) -- rettet til å beskrive at admin nå bruker samme innlogging som alle andre. Lagt til en eksplisitt linje om at kontolagring skjer på grunnlag av samtykke, og at samtykket når som helst kan trekkes tilbake ved sletting.
+
+Testet: `npx tsc --noEmit` kjører uten feil. Husk `git push`.
+
+## Nytt: rettet tre kritiske funn fra kvalitetsrevisjonen + innlogging i menyen (v2.28, 19.07.2026)
+
+Etter en full kvalitetsrevisjon (se `Kvalitetsrevisjon_DineFasetter_2026-07-19.docx`) ba du om at de kritiske funnene skulle rettes først, og at det som krever oppfølging med firma/formelle avtaler (DPA, DPIA, jurist, org.nr.) kunne vente. Følgende er gjort:
+
+- **Admin-passkeyen er avviklet -- lukker et kritisk sikkerhetshull.** Den gamle WebAuthn-registreringen var "først til mølla": hvem som helst kunne i teorien registrere seg som admin før du gjorde det selv. Admin-tilgang styres nå i stedet av HVILKEN E-POST som logger inn via den vanlige e-post/kode-innloggingen -- `jomik.guldager@gmail.com` er alltid admin (hardkodet i koden, kan aldri "mistes"), og du kan som admin gi flere kontoer admin-rolle (`src/lib/admin/roles.ts` + et enkelt API, `/api/admin/roles` -- ikke koblet til noe grensesnitt ennå, se eget punkt om admin-UI under). De gamle passkey-endepunktene svarer nå bare med en forklarende feilmelding.
+- **Innlogging er lagt i toppmenyen**, ikke bare i bunnteksten -- samme innlogging brukes både til å hente fram et lagret resultat OG som eneste vei inn i adminpanelet. `/logg-inn` viser nå kontostatus når du er innlogget (hent lagret resultat, snarvei til adminpanelet hvis du er admin, logg ut). **Kontolagring er derfor reaktivert** (`ACCOUNT_SAVE_ENABLED = true` i `src/lib/featureFlags.ts`) -- den var satt på pause i går (v2.27) av hensyn til betatestfokus, men trengs nå for at innlogging/admin skal fungere i det hele tatt.
+- **Kontrastfeilen på holo-sky som tekstfarge er rettet.** Den lyse himmelblåe fargen ga bare 2,04:1 kontrast som tekst (WCAG-krav 4,5:1) -- brukt bl.a. på forsidens undertittel, aktiv meny-lenke og flere knapper/lenker. Lagt til en ny, mørkere tekst-variant (`holo.skyText`, 5,03:1 kontrast) og byttet ca. 20 forekomster til denne -- selve bakgrunnsfargen (knapper, glød-effekter) er uendret.
+- **Det globale AI-spørsmålstaket håndheves nå faktisk.** Innstillingen fantes i adminpanelet, men ble aldri sjekket i selve `/api/spir`-ruten -- et reelt, uovervåket kostnadshull. Det finnes nå en enkel, serverlagret teller (`src/lib/admin/aiUsage.ts`) som stopper Spir når det globale taket er nådd.
+- **Admin-innstillinger flyttet fra en lokal fil til Netlify Blobs.** Filbasert lagring (`.data/admin-store.json`) fungerer ikke pålitelig i Netlifys produksjonsmiljø (delt ikke filsystem mellom kalde starter) -- innstillingene dine (av/på-brytere, AI-tak) kunne i praksis forsvinne. Nødvendig for at rettelsen over faktisk skal virke i drift, ikke bare lokalt.
+
+**Ikke gjort i denne runden (bevisst, etter din beskjed):** DPA-signering, DPIA, juristgjennomgang av personvernteksten, organisasjonsnummer -- disse krever din oppfølging med formelle avtaler/firma og venter til du tar dem opp igjen. Heller ikke betalingsflyten (stort, eget arbeid) eller de øvrige, ikke-kritiske funnene fra revisjonsrapporten (SEO-metadata, ARIA-forbedringer i testflyten, m.m.) -- si ifra om du vil at jeg skal ta fatt på noen av dem.
+
+**Trenger fortsatt oppfølging fra deg:**
+- [ ] Adminpanelets brukergrensesnitt for å administrere HVEM som har admin-rolle (legge til/fjerne) er ikke bygget -- kommer i egen runde når du har sett an hvordan du vil at det skal se ut, som avtalt.
+- [ ] Domeneverifisering i Resend er fortsatt ikke på plass -- innloggingskoder når derfor i praksis kun din egen registrerte adresse ennå (se tidligere punkt i denne loggen).
+
+Testet: `npx tsc --noEmit` kjører uten feil. `npm run lint`/`npx vitest` kunne ikke kjøres i denne økten (sandkassen mangler riktige native binærfiler for SWC/Rollup og har ikke nettverkstilgang til å laste dem ned) -- kjør disse selv (eller la Netlify sitt bygg gjøre det) før du stoler fullt på endringen. Husk `git push`.
 
 ## Nytt: "Utvikling over tid" for Premium-nivå (v2.27, 18.07.2026)
 

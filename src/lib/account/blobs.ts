@@ -32,7 +32,7 @@ export function otpStore() {
 
 /**
  * Lagrede fullversjon-resultater, nøklet på normalisert e-post. Lagrer KUN
- * ferdig beregnede skårer (FactorResult[]/FacetResult[]/O6-skår) -- ALDRI
+ * ferdig beregnede skårer (FactorResult[]/FacetResult[]) -- ALDRI
  * de 120 rå svarene. Dette er et bevisst personvernvalg (dataminimering,
  * GDPR art. 5(1)(c)): de rå svarene sier mer om enkeltpåstander brukeren har
  * tatt stilling til, mens de beregnede skårene er det som faktisk trengs for

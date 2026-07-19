@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { readStore, writeStore, type AdminSettings } from "@/lib/admin/store";
-import { ADMIN_SESSION_COOKIE_NAME, isValidSessionCookieValue } from "@/lib/admin/session";
+import { requireAdminEmail } from "@/lib/admin/auth";
 
 export const runtime = "nodejs";
 
-async function requireSession(): Promise<boolean> {
-  const cookieStore = await cookies();
-  const value = cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value;
-  return isValidSessionCookieValue(value);
-}
-
 export async function GET() {
-  if (!(await requireSession())) {
-    return NextResponse.json({ error: "Ikke innlogget." }, { status: 401 });
+  if (!(await requireAdminEmail())) {
+    return NextResponse.json({ error: "Ikke innlogget som admin." }, { status: 401 });
   }
   const store = await readStore();
   return NextResponse.json(store.settings);
@@ -29,8 +22,8 @@ export async function GET() {
  * typesikkert og lettere å lese.
  */
 export async function POST(request: Request) {
-  if (!(await requireSession())) {
-    return NextResponse.json({ error: "Ikke innlogget." }, { status: 401 });
+  if (!(await requireAdminEmail())) {
+    return NextResponse.json({ error: "Ikke innlogget som admin." }, { status: 401 });
   }
   const body = (await request.json()) as Record<string, unknown>;
   const store = await readStore();

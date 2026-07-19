@@ -25,7 +25,7 @@ export default function HjelpPage() {
         </p>
         <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
           Full oversikt, inkludert cookies og hvilke tjenester som er involvert:{" "}
-          <Link href="/personvern" className="text-holo-sky underline underline-offset-2">
+          <Link href="/personvern" className="text-holo-skyText underline underline-offset-2">
             se personvernsiden
           </Link>
           .
@@ -53,7 +53,7 @@ export default function HjelpPage() {
           <li>
             <span className="font-medium">Hjelpetelefonen (Mental Helse): 116 123</span> -- gratis,
             døgnåpen og anonym, for alle som trenger noen å snakke med. Foretrekker du å skrive:{" "}
-            <a href="https://sidetmedord.no" className="text-holo-sky underline underline-offset-2">
+            <a href="https://sidetmedord.no" className="text-holo-skyText underline underline-offset-2">
               sidetmedord.no
             </a>
             .

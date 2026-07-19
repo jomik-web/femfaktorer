@@ -8,7 +8,7 @@
  *  - Systemet skal aldri krasje ved ugyldige lagrede data.
  */
 
-import { ALL_QUESTIONS_EXTENDED, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
+import { ALL_QUESTIONS_EXTENDED } from "@/data/questions";
 import {
   isValidAnswerValue,
   type AnswerMap,
@@ -161,68 +161,6 @@ function isValidStoredPayload(value: unknown): value is StoredPayload {
 }
 
 /**
- * O6-tilleggsseksjonen (se questions.ts) lagres i EGET localStorage-felt,
- * atskilt fra hovedtesten -- slik at samtykke og data for denne (særlige
- * kategori-data etter GDPR art. 9) kan trekkes tilbake/slettes helt
- * uavhengig av resten av testresultatet (art. 9(2)(a) krever nettopp dette).
- */
-const O6_STORAGE_KEY = "femfaktorer.o6tillegg.v1";
-const O6_STORAGE_VERSION = 1;
-
-export type O6ConsentStatus = "not_asked" | "declined" | "consented";
-
-interface StoredO6Payload {
-  version: number;
-  status: O6ConsentStatus;
-  answers: AnswerMap;
-}
-
-const o6QuestionIds = new Set(OPTIONAL_O6_QUESTIONS.map((q) => q.id));
-
-export function loadO6(): { status: O6ConsentStatus; answers: AnswerMap } {
-  if (typeof window === "undefined") return { status: "not_asked", answers: {} };
-  try {
-    const raw = window.localStorage.getItem(O6_STORAGE_KEY);
-    if (!raw) return { status: "not_asked", answers: {} };
-    const parsed: unknown = JSON.parse(raw);
-    if (typeof parsed !== "object" || parsed === null) return { status: "not_asked", answers: {} };
-    const v = parsed as Record<string, unknown>;
-    if (v.version !== O6_STORAGE_VERSION) return { status: "not_asked", answers: {} };
-    const status: O6ConsentStatus =
-      v.status === "consented" || v.status === "declined" ? v.status : "not_asked";
-    const answers: AnswerMap = {};
-    if (typeof v.answers === "object" && v.answers !== null) {
-      for (const [id, value] of Object.entries(v.answers as Record<string, unknown>)) {
-        if (o6QuestionIds.has(id) && isValidAnswerValue(value)) answers[id] = value;
-      }
-    }
-    return { status, answers };
-  } catch {
-    return { status: "not_asked", answers: {} };
-  }
-}
-
-export function saveO6(status: O6ConsentStatus, answers: AnswerMap): void {
-  if (typeof window === "undefined") return;
-  const payload: StoredO6Payload = { version: O6_STORAGE_VERSION, status, answers };
-  try {
-    window.localStorage.setItem(O6_STORAGE_KEY, JSON.stringify(payload));
-  } catch {
-    // se over
-  }
-}
-
-/** Sletter O6-samtykke og -svar UAVHENGIG av resten av testresultatet. */
-export function clearO6(): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.removeItem(O6_STORAGE_KEY);
-  } catch {
-    // se over
-  }
-}
-
-/**
  * Resultat HENTET FRA KONTOEN (v2.4, se lib/account/*.ts og /logg-inn) --
  * brukt når noen logger inn på en ny enhet/nettleser og henter fram et
  * tidligere lagret fullversjon-resultat. Dette er BEVISST atskilt fra
@@ -237,7 +175,6 @@ const RESTORED_STORAGE_VERSION = 1;
 export interface RestoredAccountResult {
   factors: FactorResult[];
   facets: FacetResult[];
-  o6Score: number | null;
   savedAt: string;
   /**
    * Hvilken testversjon resultatet er basert på (v2.11). Eldre lagrede
@@ -269,9 +206,8 @@ export function loadRestoredAccountResult(): RestoredAccountResult | null {
     if (!Array.isArray(v.factors) || !v.factors.every(isValidFactorResult)) return null;
     if (!Array.isArray(v.facets) || !v.facets.every(isValidFacetResult)) return null;
     if (typeof v.savedAt !== "string") return null;
-    const o6Score = typeof v.o6Score === "number" ? v.o6Score : null;
     const tier = v.tier === "extended" ? "extended" : "full";
-    return { factors: v.factors, facets: v.facets, o6Score, savedAt: v.savedAt, tier };
+    return { factors: v.factors, facets: v.facets, savedAt: v.savedAt, tier };
   } catch {
     return null;
   }
@@ -287,26 +223,27 @@ export function clearRestoredAccountResult(): void {
 }
 
 /**
- * Aldersbekreftelse (v2.6, Dokument 07 §8: "enkel, synlig aldersbekreftelse
- * fremfor teknisk alderskontroll"). Selvdeklarert, ikke en reell alderssjekk
- * -- lagres lokalt slik at brukeren bare trenger å bekrefte én gang, ikke
- * ved hvert testforsøk.
+ * "Før du starter"-veiledningen (hvordan man bør svare) -- v2.31,
+ * 19.07.2026: erstatter den tidligere aldersbekreftelsen (v2.6, Dokument 07
+ * §8), som er fjernet på produkteiers ønske. Selve veiledningsskjermen
+ * beholdes, men uten noe bekreftelsessteg -- lagres lokalt slik at brukeren
+ * bare ser den én gang, ikke ved hvert testforsøk.
  */
-const AGE_CONFIRMED_STORAGE_KEY = "femfaktorer.aldersbekreftelse.v1";
+const INTRO_SEEN_STORAGE_KEY = "femfaktorer.intro-sett.v1";
 
-export function loadAgeConfirmed(): boolean {
+export function loadIntroSeen(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    return window.localStorage.getItem(AGE_CONFIRMED_STORAGE_KEY) === "true";
+    return window.localStorage.getItem(INTRO_SEEN_STORAGE_KEY) === "true";
   } catch {
     return false;
   }
 }
 
-export function saveAgeConfirmed(): void {
+export function saveIntroSeen(): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(AGE_CONFIRMED_STORAGE_KEY, "true");
+    window.localStorage.setItem(INTRO_SEEN_STORAGE_KEY, "true");
   } catch {
     // se over
   }

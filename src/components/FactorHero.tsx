@@ -4,11 +4,13 @@ import { useId } from "react";
 import type { DisplayFactor } from "@/lib/scoring";
 
 /**
- * FactorHero -- Designsystem v2.0, "store motiv"-serien (godkjent forslag v6).
+ * FactorHero -- Designsystem v2.0, "store motiv"-serien (godkjent forslag v6,
+ * senere justert 19.07.2026: ca. 50% høyere format + dempet bølgeamplitude
+ * på Emosjonell stabilitet og Oppsummering).
  *
- * Store landskapsmotiv (900x260) for hver hovedkategori + oppsummering.
- * Hvert motiv har sin egen "hovedfarge" (faktorfargen) blandet med flere
- * farger fra paletten via graderte himmel-/vann-flater, for å skape bevegelse.
+ * Store landskapsmotiv for hver hovedkategori + oppsummering. Hvert motiv
+ * har sin egen "hovedfarge" (faktorfargen) blandet med flere farger fra
+ * paletten via graderte himmel-/vann-flater, for å skape bevegelse.
  *
  * Kanten er en uregelmessig, håndtegnet bølge (Catmull-Rom -> Bezier) som
  * følger silhuetten til hovedelementet i hver scene (fjelltopper, fyrtårn,
@@ -17,9 +19,22 @@ import type { DisplayFactor } from "@/lib/scoring";
  * (feGaussianBlur), slik at motivet glir over i sidens bakgrunnsfarge uten
  * synlig kant. Se 09_Forslag_faktorillustrasjon_v6_bolget.docx for forslaget
  * som ble godkjent.
+ *
+ * FORMAT: opprinnelig viewBox var 900x260. Motivene er nå tegnet i en
+ * 900x390-kanvas (50% høyere) ved å skalere hele scene-innholdet 1,5x
+ * vertikalt (<g transform="scale(1,1.5)">) i stedet for å tegne hver scene
+ * på nytt -- selve scene-komponentene under er UENDRET 1:1 fra v6-forslaget
+ * (900x260-koordinater), kun skalert opp ved rendring. WAVE_PATHS er
+ * regnet ut i det ferdig skalerte 900x390-rommet, slik at masken alltid
+ * matcher silhuetten uansett skalering.
  */
 
 export type HeroKey = DisplayFactor | "summary";
+
+/** Skala brukt til å gjøre hele motivet ca. 50% høyere (900x260 -> 900x390). */
+const HEIGHT_SCALE = 1.5;
+const VIEWBOX_WIDTH = 900;
+const VIEWBOX_HEIGHT = 260 * HEIGHT_SCALE;
 
 const COLORS = {
   openness: "#8B7CE8",
@@ -39,21 +54,27 @@ const COLORS = {
 } as const;
 
 // Håndtegnede bølgekonturer (Catmull-Rom -> kubisk Bezier), forhåndsberegnet
-// fra kontrollpunktene i det godkjente forslaget (v6). Se prosjektarkivet
-// for punktlistene disse er generert fra.
+// i det skalerte 900x390-koordinatrommet (se HEIGHT_SCALE over). Emosjonell
+// stabilitet og Oppsummering har i tillegg fått bunnradens svingninger
+// dempet til ca. halv amplitude (rundt 48 enheter i stedet for 96, i det
+// opprinnelige 900x260-rommet) etter tilbakemelding om at bølgen var for
+// markant der. Emosjonell stabilitet fikk siden en ekstra runde demping
+// spesifikt på midtre fjelltopp (som stakk tydelig mer opp enn de andre
+// etter første demping) for å jevne den ut med resten av silhuetten. Se
+// prosjektarkivet for punktlistene disse er generert fra.
 const WAVE_PATHS: Record<HeroKey, string> = {
   stability:
-    "M20,26 C55.0,10.0 151.7,13.3 220,14 C288.3,14.7 353.3,30.3 430,30 C506.7,29.7 605.0,12.7 680,12 C755.0,11.3 845.7,8.0 880,26 C914.3,44.0 883.7,92.7 886,120 C888.3,147.3 898.3,172.7 894,190 C889.7,207.3 877.3,214.7 860,224 C842.7,233.3 816.7,245.8 790,246 C763.3,246.2 733.3,225.3 700,225 C666.7,224.7 626.7,246.8 590,244 C553.3,241.2 508.3,223.7 480,208 C451.7,192.3 441.7,147.7 420,150 C398.3,152.3 376.7,206.0 350,222 C323.3,238.0 290.0,247.3 260,246 C230.0,244.7 200.0,214.3 170,214 C140.0,213.7 106.0,248.0 80,244 C54.0,240.0 25.7,212.3 14,190 C2.3,167.7 9.0,137.3 10,110 C11.0,82.7 -15.0,42.0 20,26 Z",
+    "M20,39 C55.0,15.0 151.7,14.5 220,21 C288.3,27.5 353.3,78.5 430,78 C506.7,77.5 605.0,24.5 680,18 C755.0,11.5 845.7,12.0 880,39 C914.3,66.0 883.7,139.0 886,180 C888.3,221.0 898.3,262.3 894,285 C889.7,307.8 877.3,308.5 860,316.5 C842.7,324.5 816.7,332.9 790,333 C763.3,333.1 733.3,317.5 700,317.25 C666.7,317.0 626.7,333.6 590,331.5 C553.3,329.4 508.3,312.9 480,304.5 C451.7,296.1 441.7,279.4 420,281.1 C398.3,282.9 376.7,306.4 350,315 C323.3,323.6 290.0,334.0 260,333 C230.0,332.0 200.0,309.3 170,309 C140.0,308.8 106.0,335.5 80,331.5 C54.0,327.5 25.7,312.8 14,285 C2.3,257.3 9.0,206.0 10,165 C11.0,124.0 -15.0,63.0 20,39 Z",
   openness:
-    "M20,24 C68.3,9.3 201.7,8.7 300,12 C398.3,15.3 533.3,43.3 610,44 C686.7,44.7 715.0,19.0 760,16 C805.0,13.0 858.7,10.3 880,26 C901.3,41.7 886.0,82.7 888,110 C890.0,137.3 898.3,171.3 892,190 C885.7,208.7 872.0,213.3 850,222 C828.0,230.7 791.7,244.7 760,242 C728.3,239.3 693.3,206.7 660,206 C626.7,205.3 596.7,237.3 560,238 C523.3,238.7 476.7,209.0 440,210 C403.3,211.0 376.7,242.3 340,244 C303.3,245.7 256.7,220.3 220,220 C183.3,219.7 146.7,243.0 120,242 C93.3,241.0 77.7,224.3 60,214 C42.3,203.7 22.3,199.0 14,180 C5.7,161.0 9.0,126.0 10,100 C11.0,74.0 -28.3,38.7 20,24 Z",
+    "M20,36 C68.3,14.0 201.7,13.0 300,18 C398.3,23.0 533.3,65.0 610,66 C686.7,67.0 715.0,28.5 760,24 C805.0,19.5 858.7,15.5 880,39 C901.3,62.5 886.0,124.0 888,165 C890.0,206.0 898.3,257.0 892,285 C885.7,313.0 872.0,320.0 850,333 C828.0,346.0 791.7,367.0 760,363 C728.3,359.0 693.3,310.0 660,309 C626.7,308.0 596.7,356.0 560,357 C523.3,358.0 476.7,313.5 440,315 C403.3,316.5 376.7,363.5 340,366 C303.3,368.5 256.7,330.5 220,330 C183.3,329.5 146.7,364.5 120,363 C93.3,361.5 77.7,336.5 60,321 C42.3,305.5 22.3,298.5 14,270 C5.7,241.5 9.0,189.0 10,150 C11.0,111.0 -28.3,58.0 20,36 Z",
   conscientiousness:
-    "M20,24 C61.7,11.3 178.3,16.3 260,14 C341.7,11.7 448.3,11.0 510,10 C571.7,9.0 588.3,6.3 630,8 C671.7,9.7 718.3,17.0 760,20 C801.7,23.0 858.7,12.7 880,26 C901.3,39.3 886.0,79.3 888,100 C890.0,120.7 896.7,127.3 892,150 C887.3,172.7 892.0,219.7 860,236 C828.0,252.3 750.0,248.7 700,248 C650.0,247.3 610.0,232.3 560,232 C510.0,231.7 456.7,246.0 400,246 C343.3,246.0 273.3,232.0 220,232 C166.7,232.0 114.3,259.7 80,246 C45.7,232.3 25.7,176.0 14,150 C2.3,124.0 9.0,111.0 10,90 C11.0,69.0 -21.7,36.7 20,24 Z",
+    "M20,36 C61.7,17.0 178.3,24.5 260,21 C341.7,17.5 448.3,16.5 510,15 C571.7,13.5 588.3,9.5 630,12 C671.7,14.5 718.3,25.5 760,30 C801.7,34.5 858.7,19.0 880,39 C901.3,59.0 886.0,119.0 888,150 C890.0,181.0 896.7,191.0 892,225 C887.3,259.0 892.0,329.5 860,354 C828.0,378.5 750.0,373.0 700,372 C650.0,371.0 610.0,348.5 560,348 C510.0,347.5 456.7,369.0 400,369 C343.3,369.0 273.3,348.0 220,348 C166.7,348.0 114.3,389.5 80,369 C45.7,348.5 25.7,264.0 14,225 C2.3,186.0 9.0,166.5 10,135 C11.0,103.5 -21.7,55.0 20,36 Z",
   extraversion:
-    "M20,30 C55.0,14.0 148.3,18.3 220,14 C291.7,9.7 373.3,4.0 450,4 C526.7,4.0 608.3,9.7 680,14 C751.7,18.3 845.3,12.3 880,30 C914.7,47.7 886.0,93.3 888,120 C890.0,146.7 898.3,173.0 892,190 C885.7,207.0 875.3,212.7 850,222 C824.7,231.3 778.3,248.7 740,246 C701.7,243.3 666.7,207.3 620,206 C573.3,204.7 506.7,238.3 460,238 C413.3,237.7 380.0,203.7 340,204 C300.0,204.3 256.7,238.3 220,240 C183.3,241.7 145.0,213.3 120,214 C95.0,214.7 87.7,248.0 70,244 C52.3,240.0 24.0,212.3 14,190 C4.0,167.7 9.0,136.7 10,110 C11.0,83.3 -15.0,46.0 20,30 Z",
+    "M20,45 C55.0,21.0 148.3,27.5 220,21 C291.7,14.5 373.3,6.0 450,6 C526.7,6.0 608.3,14.5 680,21 C751.7,27.5 845.3,18.5 880,45 C914.7,71.5 886.0,140.0 888,180 C890.0,220.0 898.3,259.5 892,285 C885.7,310.5 875.3,319.0 850,333 C824.7,347.0 778.3,373.0 740,369 C701.7,365.0 666.7,311.0 620,309 C573.3,307.0 506.7,357.5 460,357 C413.3,356.5 380.0,305.5 340,306 C300.0,306.5 256.7,357.5 220,360 C183.3,362.5 145.0,320.0 120,321 C95.0,322.0 87.7,372.0 70,366 C52.3,360.0 24.0,318.5 14,285 C4.0,251.5 9.0,205.0 10,165 C11.0,125.0 -15.0,69.0 20,45 Z",
   agreeableness:
-    "M20,26 C58.3,10.3 176.7,19.3 240,16 C303.3,12.7 346.7,7.0 400,6 C453.3,5.0 506.7,7.7 560,10 C613.3,12.3 666.7,17.0 720,20 C773.3,23.0 852.0,11.3 880,28 C908.0,44.7 886.0,92.0 888,120 C890.0,148.0 898.3,177.3 892,196 C885.7,214.7 882.0,223.7 850,232 C818.0,240.3 748.3,246.3 700,246 C651.7,245.7 606.7,230.0 560,230 C513.3,230.0 466.7,246.0 420,246 C373.3,246.0 326.7,230.0 280,230 C233.3,230.0 173.3,245.7 140,246 C106.7,246.3 101.0,240.3 80,232 C59.0,223.7 25.7,216.3 14,196 C2.3,175.7 9.0,138.3 10,110 C11.0,81.7 -18.3,41.7 20,26 Z",
+    "M20,39 C58.3,15.5 176.7,29.0 240,24 C303.3,19.0 346.7,10.5 400,9 C453.3,7.5 506.7,11.5 560,15 C613.3,18.5 666.7,25.5 720,30 C773.3,34.5 852.0,17.0 880,42 C908.0,67.0 886.0,138.0 888,180 C890.0,222.0 898.3,266.0 892,294 C885.7,322.0 882.0,335.5 850,348 C818.0,360.5 748.3,369.5 700,369 C651.7,368.5 606.7,345.0 560,345 C513.3,345.0 466.7,369.0 420,369 C373.3,369.0 326.7,345.0 280,345 C233.3,345.0 173.3,368.5 140,369 C106.7,369.5 101.0,360.5 80,348 C59.0,335.5 25.7,324.5 14,294 C2.3,263.5 9.0,207.5 10,165 C11.0,122.5 -18.3,62.5 20,39 Z",
   summary:
-    "M20,26 C58.3,11.7 166.7,17.3 240,14 C313.3,10.7 390.0,5.7 460,6 C530.0,6.3 590.0,12.0 660,16 C730.0,20.0 842.0,14.3 880,30 C918.0,45.7 886.0,85.0 888,110 C890.0,135.0 898.3,162.7 892,180 C885.7,197.3 872.0,203.0 850,214 C828.0,225.0 791.7,251.7 760,246 C728.3,240.3 693.3,181.7 660,180 C626.7,178.3 598.3,241.0 560,236 C521.7,231.0 473.3,150.7 430,150 C386.7,149.3 341.7,224.3 300,232 C258.3,239.7 216.7,195.3 180,196 C143.3,196.7 107.7,238.7 80,236 C52.3,233.3 25.7,202.7 14,180 C2.3,157.3 9.0,125.7 10,100 C11.0,74.3 -18.3,40.3 20,26 Z",
+    "M20,39 C58.3,17.5 166.7,26.0 240,21 C313.3,16.0 390.0,8.5 460,9 C530.0,9.5 590.0,18.0 660,24 C730.0,30.0 842.0,21.5 880,45 C918.0,68.5 886.0,127.5 888,165 C890.0,202.5 898.3,246.0 892,270 C885.7,294.0 872.0,298.5 850,309 C828.0,319.5 791.7,337.3 760,333 C728.3,328.8 693.3,284.8 660,283.5 C626.7,282.3 598.3,329.3 560,325.5 C521.7,321.8 473.3,261.5 430,261 C386.7,260.5 341.7,316.8 300,322.5 C258.3,328.3 216.7,295.0 180,295.5 C143.3,296.0 107.7,329.8 80,325.5 C52.3,321.3 25.7,299.3 14,270 C2.3,240.8 9.0,188.5 10,150 C11.0,111.5 -18.3,60.5 20,39 Z",
 };
 
 // ---------- Scener ----------
@@ -328,7 +349,7 @@ export function FactorHero({ factor, className = "" }: FactorHeroProps) {
 
   return (
     <svg
-      viewBox="0 0 900 260"
+      viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
       className={["block h-auto w-full", className].join(" ")}
       role="img"
       aria-hidden="true"
@@ -337,12 +358,16 @@ export function FactorHero({ factor, className = "" }: FactorHeroProps) {
         <filter id={blurId} x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="7" />
         </filter>
-        <mask id={maskId} maskUnits="userSpaceOnUse" x={0} y={0} width={900} height={260}>
+        <mask id={maskId} maskUnits="userSpaceOnUse" x={0} y={0} width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT}>
           <path d={WAVE_PATHS[factor]} fill="white" filter={`url(#${blurId})`} />
         </mask>
       </defs>
       <g mask={`url(#${maskId})`}>
-        <Scene uid={uid} />
+        {/* Scene-komponentene er tegnet i det opprinnelige 900x260-rommet --
+            skaleres opp 1,5x vertikalt her i stedet for å tegnes på nytt. */}
+        <g transform={`scale(1,${HEIGHT_SCALE})`}>
+          <Scene uid={uid} />
+        </g>
       </g>
     </svg>
   );

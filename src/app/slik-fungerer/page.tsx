@@ -63,7 +63,7 @@ export default function OmFemfaktorerPage() {
         <ul className="flex flex-col gap-1.5 text-sm">
           {SECTIONS.map((s) => (
             <li key={s.id}>
-              <a href={`#${s.id}`} className="text-holo-sky underline underline-offset-2">
+              <a href={`#${s.id}`} className="text-holo-skyText underline underline-offset-2">
                 {s.label}
               </a>
             </li>

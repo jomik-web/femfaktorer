@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED, FREE_QUESTIONS, OPTIONAL_O6_QUESTIONS } from "@/data/questions";
-import { loadAnswers, loadO6 } from "@/lib/storage";
+import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED, FREE_QUESTIONS } from "@/data/questions";
+import { loadAnswers } from "@/lib/storage";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
 
 /**
@@ -30,18 +30,14 @@ export default function SvardataVerktoyPage() {
   // server- og klient-render siden dette leser fra localStorage.
   useEffect(() => {
     const stored = loadAnswers();
-    const storedO6 = loadO6();
     const answeredCount = Object.keys(stored.answers).length;
-    const answeredO6 = Object.keys(storedO6.answers).length;
     const totalByTier =
       stored.tier === "extended"
         ? ALL_QUESTIONS_EXTENDED.length
         : stored.tier === "full"
           ? ALL_QUESTIONS.length
           : FREE_QUESTIONS.length;
-    setCurrentSummary(
-      `tier "${stored.tier}", ${answeredCount} av ${totalByTier} hovedspørsmål besvart, ${answeredO6} av ${OPTIONAL_O6_QUESTIONS.length} O6-tilleggsspørsmål besvart`
-    );
+    setCurrentSummary(`tier "${stored.tier}", ${answeredCount} av ${totalByTier} hovedspørsmål besvart`);
   }, []);
 
   return (

@@ -28,7 +28,7 @@ export type SpirExpression =
   | "oppmuntrende"
   | "feirende";
 
-const COLORS = {
+export const COLORS = {
   holoMint: "#5FF0C0",
   holoSky: "#5FC0F0",
   holoViolet: "#C05FF0",
@@ -53,12 +53,12 @@ const CX = 96;
 const CY = 94;
 
 /** Bakke-skygge -- identisk i alle uttrykk. */
-function SpirGround() {
+export function SpirGround() {
   return <ellipse cx={100} cy={184} rx={42} ry={7} fill={COLORS.lavender100} opacity={0.7} />;
 }
 
 /** Hvilende arm ("unbothered") -- albue ut, hånd ved hoften. Identisk i alle uttrykk. */
-function SpirArm() {
+export function SpirArm() {
   return (
     <>
       <path
@@ -74,7 +74,7 @@ function SpirArm() {
 }
 
 /** Slouchy, vektforskjøvet kropp med holo-gradient + shine. Identisk i alle uttrykk. */
-function SpirBody({ gradientId }: { gradientId: string }) {
+export function SpirBody({ gradientId }: { gradientId: string }) {
   return (
     <>
       <path
@@ -87,7 +87,7 @@ function SpirBody({ gradientId }: { gradientId: string }) {
 }
 
 /** Gullkjede + anheng -- identisk i alle uttrykk. */
-function SpirChain({ gradientId }: { gradientId: string }) {
+export function SpirChain({ gradientId }: { gradientId: string }) {
   return (
     <>
       <path
@@ -105,7 +105,7 @@ function SpirChain({ gradientId }: { gradientId: string }) {
 }
 
 /** Solbriller dyttet ned -- figurens signatur-trekk. Identisk i alle uttrykk. */
-function SpirGlasses({ gradientId }: { gradientId: string }) {
+export function SpirGlasses({ gradientId }: { gradientId: string }) {
   return (
     <>
       <ellipse cx={CX - 19} cy={CY + 6} rx={16} ry={11} fill={`url(#${gradientId})`} />
@@ -154,7 +154,7 @@ function SmileWithTooth({ d }: { d: string }) {
 }
 
 /** Ansikt over/under solbrillene -- eneste elementet som varierer mellom uttrykk. */
-function SpirFace({ expression }: { expression: SpirExpression }) {
+export function SpirFace({ expression }: { expression: SpirExpression }) {
   switch (expression) {
     case "tenkende":
       return (

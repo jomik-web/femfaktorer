@@ -3,15 +3,17 @@ import Link from "next/link";
 /**
  * Fullstendig personvernoversikt. Innhold basert på Dokument 07
  * (Personvern, jus og etikk v1.0) og faktisk gjeldende funksjonalitet i
- * koden (localStorage, O6-tillegg, konto/Netlify Blobs v2.4, Spir/Anthropic,
- * Resend). Dokument 07 er selv merket "utkast -- ikke juridisk
- * kvalitetssikret"; denne siden arver samme forbehold, se avsnittet
- * "Status på denne siden" nederst.
+ * koden (localStorage, konto/Netlify Blobs v2.4, Spir/Anthropic, Resend).
+ * Dokument 07 er selv merket "utkast -- ikke juridisk kvalitetssikret";
+ * denne siden arver samme forbehold, se avsnittet "Status på denne siden"
+ * nederst.
  *
  * MERK: denne siden går lenger enn Dokument 07 v1.0 i omfang, fordi
- * kontofunksjonen (v2.4) og O6-tillegget ble bygget etter at dokumentet ble
- * skrevet. Innholdet her beskriver systemet slik det faktisk fungerer i
- * dag, ikke bare det opprinnelige MVP-omfanget.
+ * kontofunksjonen (v2.4) ble bygget etter at dokumentet ble skrevet.
+ * Innholdet her beskriver systemet slik det faktisk fungerer i dag, ikke
+ * bare det opprinnelige MVP-omfanget. (Et tidligere valgfritt tillegg om
+ * politiske/verdimessige holdninger, "O6", ble fjernet igjen 19.07.2026 --
+ * finnes ikke lenger i koden.)
  */
 
 const SECTIONS = [
@@ -19,7 +21,6 @@ const SECTIONS = [
   { id: "behandlingsansvarlig", label: "Hvem er behandlingsansvarlig" },
   { id: "testsvar", label: "Testsvarene dine" },
   { id: "normtall", label: "Anonym normtall-statistikk" },
-  { id: "tilleggsseksjon", label: "Den valgfrie tilleggsseksjonen" },
   { id: "konto", label: "Hvis du lagrer resultatet ditt" },
   { id: "cookies", label: "Informasjonskapsler (cookies)" },
   { id: "spir", label: "Hvis du snakker med Spir" },
@@ -51,7 +52,7 @@ export default function PersonvernPage() {
         <ul className="flex flex-col gap-1.5 text-sm">
           {SECTIONS.map((s) => (
             <li key={s.id}>
-              <a href={`#${s.id}`} className="text-holo-sky underline underline-offset-2">
+              <a href={`#${s.id}`} className="text-holo-skyText underline underline-offset-2">
                 {s.label}
               </a>
             </li>
@@ -148,30 +149,6 @@ export default function PersonvernPage() {
         </ul>
       </section>
 
-      <section id="tilleggsseksjon" className="flex flex-col gap-3 rounded-lg border border-factor-stability/40 p-5">
-        <h2 className="text-lg font-semibold text-indigo dark:text-white">
-          Den valgfrie tilleggsseksjonen (politiske og verdimessige holdninger)
-        </h2>
-        <p className="text-indigo/80 dark:text-lavender-400/80">
-          Etter fullført fullversjon (120 spørsmål) eller Utvidet versjon (290 spørsmål) kan du
-          velge en helt separat, valgfri tilleggsseksjon om politiske og verdimessige holdninger.
-          Dette regnes som en særlig kategori
-          personopplysninger etter GDPR artikkel 9, og krever derfor et eget, uttrykkelig samtykke
-          -- atskilt fra samtykket for resten av testen. Denne seksjonen teller ikke med i noen av
-          de fem hovedfaktorene.
-        </p>
-        <p className="text-indigo/80 dark:text-lavender-400/80">
-          Du kan trekke tilbake samtykket og slette bare denne dataen når som helst, uavhengig av
-          resten av testresultatet ditt -- se "Slett bare denne dataen" på resultatsiden.
-        </p>
-        <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-          Merk: hvis du både har svart på denne tilleggsseksjonen og velger å lagre resultatet ditt
-          på en konto (se under), tas skåren fra denne seksjonen med i det som lagres server-side,
-          på samme måte som de fem hovedfaktorene. Dette gjelder ikke hvis du ikke bruker
-          kontofunksjonen.
-        </p>
-      </section>
-
       <section id="konto" className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-indigo dark:text-white">
           Hvis du lagrer resultatet ditt (konto)
@@ -186,7 +163,7 @@ export default function PersonvernPage() {
         <ul className="flex flex-col gap-2 text-indigo/80 dark:text-lavender-400/80">
           <li>
             -- Vi lagrer bare de <strong>ferdig beregnede skårene</strong> dine (de fem
-            hovedfaktorene, fasettene, og ev. tilleggsseksjonen) -- aldri de rå svarene du ga.
+            hovedfaktorene og fasettene) -- aldri de rå svarene du ga.
           </li>
           <li>
             -- Innlogging skjer med en engangskode sendt til e-posten din, ikke passord. Koden
@@ -211,6 +188,11 @@ export default function PersonvernPage() {
             -- Innloggingsøkten din holdes ved like med en informasjonskapsel (cookie) -- se eget
             avsnitt om cookies under.
           </li>
+          <li>
+            -- Grunnlag: samtykke. Vi lagrer resultatet ditt utelukkende fordi du selv aktivt ber om
+            det -- ingenting lagres på konto automatisk eller uten at du ber om det, og du kan når
+            som helst trekke samtykket tilbake ved å slette det lagrede resultatet.
+          </li>
         </ul>
       </section>
 
@@ -230,8 +212,10 @@ export default function PersonvernPage() {
             økten utløper (30 dager).
           </li>
           <li>
-            -- Nettstedets adminpanel (kun for oss som drifter siden) bruker en tilsvarende
-            innloggingskapsel. Den berører ikke deg som vanlig besøkende.
+            -- Adgang til nettstedets adminpanel (kun for oss som drifter siden) bruker den samme
+            innloggingskapselen som over -- det finnes ingen egen admin-kapsel. Hvilke kontoer som
+            faktisk får administrasjonstilgang etter innlogging, styres separat og bare av oss.
+            Dette berører ikke deg som vanlig besøkende.
           </li>
           <li>
             -- Ingen analyseverktøy er aktivert per i dag. Hvis vi på sikt tar i bruk
@@ -298,7 +282,7 @@ export default function PersonvernPage() {
                 href="https://www.netlify.com/privacy/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-holo-sky underline underline-offset-2"
+                className="text-holo-skyText underline underline-offset-2"
               >
                 Netlifys personvernerklæring
               </a>{" "}
@@ -307,7 +291,7 @@ export default function PersonvernPage() {
                 href="https://www.netlify.com/legal/subprocessors/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-holo-sky underline underline-offset-2"
+                className="text-holo-skyText underline underline-offset-2"
               >
                 deres liste over underleverandører
               </a>
@@ -327,7 +311,7 @@ export default function PersonvernPage() {
                 href="https://resend.com/security/gdpr"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-holo-sky underline underline-offset-2"
+                className="text-holo-skyText underline underline-offset-2"
               >
                 Resends GDPR-side
               </a>
@@ -406,10 +390,9 @@ export default function PersonvernPage() {
       <section id="aldersgrense" className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-indigo dark:text-white">Aldersgrense</h2>
         <p className="text-indigo/80 dark:text-lavender-400/80">
-          Dine Fasetter er i denne versjonen ment for personer over 18 år. Før testen starter, må du
-          selv bekrefte at du er over 18 -- en enkel, selvdeklarert bekreftelse, ikke en teknisk
-          alderskontroll. Testen er ikke tilpasset mindreårige, verken språklig eller når det
-          gjelder samtykke.
+          Dine Fasetter er i denne versjonen ment for personer over 18 år. Det er ingen teknisk
+          alderskontroll på siden -- testen er rett og slett ikke tilpasset mindreårige, verken
+          språklig, innholdsmessig eller når det gjelder samtykke.
         </p>
       </section>
 
@@ -437,7 +420,7 @@ export default function PersonvernPage() {
             href="https://www.datatilsynet.no"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-holo-sky underline underline-offset-2"
+            className="text-holo-skyText underline underline-offset-2"
           >
             datatilsynet.no
           </a>
@@ -463,14 +446,14 @@ export default function PersonvernPage() {
         <p className="text-indigo/80 dark:text-lavender-400/80">
           Spørsmål om personvern, eller ønsker om innsyn/sletting utover det du kan gjøre selv? Ta
           kontakt på{" "}
-          <a href="mailto:jomik.guldager@gmail.com" className="text-holo-sky underline underline-offset-2">
+          <a href="mailto:jomik.guldager@gmail.com" className="text-holo-skyText underline underline-offset-2">
             jomik.guldager@gmail.com
           </a>
           .
         </p>
       </section>
 
-      <Link href="/slik-fungerer" className="self-start text-sm text-holo-sky underline underline-offset-2">
+      <Link href="/slik-fungerer" className="self-start text-sm text-holo-skyText underline underline-offset-2">
         &larr; Tilbake til Om Dine Fasetter
       </Link>
     </main>

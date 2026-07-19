@@ -1,14 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
+import Link from "next/link";
 import type { AdminSettings } from "@/lib/admin/store";
 
-type Screen = "loading" | "register" | "login" | "panel";
+/**
+ * v2.28 (kvalitetsrevisjon 19.07.2026): admin-tilgang skjer nå via den
+ * vanlige e-post/kode-innloggingen (samme som "hent lagret resultat", se
+ * /logg-inn og SiteNav) i stedet for en egen WebAuthn-passkey. Se
+ * lib/admin/roles.ts for begrunnelsen -- det gamle systemet hadde et
+ * kritisk sikkerhetshull der hvem som helst kunne registrere seg som admin
+ * før produkteier rakk det selv.
+ *
+ * Selve dette panelets utforming (utover selve tilgangssjekken) er
+ * uendret -- en egen gjennomgang av admin-UI-et er varslet til senere.
+ */
+
+type Screen = "loading" | "logged-out" | "not-admin" | "panel";
 
 export default function AdminPage() {
   const [screen, setScreen] = useState<Screen>("loading");
-  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
   const [settings, setSettings] = useState<AdminSettings | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -17,53 +29,21 @@ export default function AdminPage() {
   }, []);
 
   async function checkStatus() {
-    const res = await fetch("/api/admin/settings");
-    if (res.ok) {
-      setSettings(await res.json());
-      setScreen("panel");
+    const meRes = await fetch("/api/account/me");
+    const me = await meRes.json();
+    if (!me.loggedIn) {
+      setScreen("logged-out");
       return;
     }
-    // Ikke innlogget -- finn ut om det finnes en registrert passkey ennå.
-    const optionsRes = await fetch("/api/admin/login/options");
-    setScreen(optionsRes.ok ? "login" : "register");
-  }
+    setEmail(me.email ?? null);
 
-  async function handleRegister() {
-    setError(null);
-    try {
-      const optionsRes = await fetch("/api/admin/register/options");
-      if (!optionsRes.ok) throw new Error((await optionsRes.json()).error);
-      const options = await optionsRes.json();
-      const attestation = await startRegistration({ optionsJSON: options });
-      const verifyRes = await fetch("/api/admin/register/verify", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(attestation),
-      });
-      if (!verifyRes.ok) throw new Error((await verifyRes.json()).error);
-      await handleLogin();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Registrering feilet.");
+    const settingsRes = await fetch("/api/admin/settings");
+    if (!settingsRes.ok) {
+      setScreen("not-admin");
+      return;
     }
-  }
-
-  async function handleLogin() {
-    setError(null);
-    try {
-      const optionsRes = await fetch("/api/admin/login/options");
-      if (!optionsRes.ok) throw new Error((await optionsRes.json()).error);
-      const options = await optionsRes.json();
-      const assertion = await startAuthentication({ optionsJSON: options });
-      const verifyRes = await fetch("/api/admin/login/verify", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(assertion),
-      });
-      if (!verifyRes.ok) throw new Error((await verifyRes.json()).error);
-      await checkStatus();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Innlogging feilet.");
-    }
+    setSettings(await settingsRes.json());
+    setScreen("panel");
   }
 
   async function saveSettings(partial: Partial<AdminSettings>) {
@@ -83,36 +63,46 @@ export default function AdminPage() {
   }
 
   async function handleLogout() {
-    await fetch("/api/admin/logout", { method: "POST" });
+    await fetch("/api/account/logout", { method: "POST" });
     setSettings(null);
-    setScreen("login");
+    setEmail(null);
+    setScreen("logged-out");
   }
 
   if (screen === "loading") return null;
 
-  if (screen === "register" || screen === "login") {
+  if (screen === "logged-out") {
     return (
       <main className="mx-auto flex min-h-screen max-w-sm flex-col items-center justify-center gap-4 px-6 text-center">
         <h1 className="text-xl font-semibold text-indigo dark:text-white">Dine Fasetter admin</h1>
-        {screen === "register" ? (
-          <>
-            <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-              Ingen admin-passkey er registrert ennå. Opprett én med Face ID, Touch ID eller
-              tilsvarende på denne enheten.
-            </p>
-            <button onClick={handleRegister} className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-white">
-              Registrer passkey
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-indigo/70 dark:text-lavender-400/70">Logg inn med din passkey.</p>
-            <button onClick={handleLogin} className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-white">
-              Logg inn
-            </button>
-          </>
-        )}
-        {error && <p className="text-sm text-factor-stability">{error}</p>}
+        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+          Logg inn med e-postadressen din for å få admin-tilgang, dersom kontoen din har
+          admin-rolle.
+        </p>
+        <Link
+          href="/logg-inn"
+          className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-indigo"
+        >
+          Logg inn
+        </Link>
+      </main>
+    );
+  }
+
+  if (screen === "not-admin") {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-sm flex-col items-center justify-center gap-4 px-6 text-center">
+        <h1 className="text-xl font-semibold text-indigo dark:text-white">Dine Fasetter admin</h1>
+        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+          Du er logget inn som <span className="font-medium">{email}</span>, men denne kontoen har
+          ikke admin-tilgang.
+        </p>
+        <button
+          onClick={handleLogout}
+          className="text-sm text-holo-skyText underline underline-offset-2"
+        >
+          Logg ut
+        </button>
       </main>
     );
   }
@@ -122,7 +112,10 @@ export default function AdminPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 px-6 py-12">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-indigo dark:text-white">Admin-panel</h1>
+        <div>
+          <h1 className="text-xl font-semibold text-indigo dark:text-white">Admin-panel</h1>
+          <p className="text-xs text-indigo/50 dark:text-lavender-400/50">Innlogget som {email}</p>
+        </div>
         <button onClick={handleLogout} className="text-sm text-indigo/60 underline dark:text-lavender-400/60">
           Logg ut
         </button>
@@ -185,9 +178,9 @@ export default function AdminPage() {
       </section>
 
       <p className="text-xs text-indigo/50 dark:text-lavender-400/50">
-        Dashboard med besøkstall, gjennomførte tester og AI-kostnad er ikke bygget i dette
-        utkastet -- se Dokument 09 §21.1 for full spesifikasjon, dette dekker foreløpig bare
-        de tekniske bryterne.
+        Dashboard med besøkstall, gjennomførte tester, AI-kostnad og administrasjon av hvem som har
+        admin-rolle er ikke bygget i dette utkastet -- kommer i en egen runde med eget forslag til
+        utforming.
       </p>
     </main>
   );

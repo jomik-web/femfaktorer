@@ -1,40 +1,24 @@
 import { NextResponse } from "next/server";
-import { generateRegistrationOptions } from "@simplewebauthn/server";
-import { readStore, writeStore } from "@/lib/admin/store";
 
 export const runtime = "nodejs";
 
-function getRpId(): string {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  return new URL(siteUrl).hostname;
-}
-
 /**
- * Trinn 1 av passkey-registrering (kun mulig når det IKKE finnes en
- * registrert admin-credential ennå -- se §10.2: én admin-bruker, ikke et
- * fullt rollesystem. Etter første registrering skal dette endepunktet
- * avvises for å hindre at noen andre registrerer en ny nøkkel.)
+ * AVVIKLET (v2.28, kvalitetsrevisjon 19.07.2026 -- kritisk sikkerhetsfunn).
+ *
+ * Dette endepunktet var tidligere åpent for registrering av en admin-passkey
+ * for HVEM SOM HELST fram til noen registrerte den første ("først til
+ * mølla") -- se OPPGAVER-FOR-PRODUKTEIER.md. Admin-tilgang styres nå av
+ * hvilken e-post som logger inn via den vanlige e-post/kode-innloggingen
+ * (se /logg-inn og lib/admin/roles.ts), som ikke har noen tilsvarende åpen
+ * registreringsflyt å kapre. Endepunktet er beholdt (i stedet for slettet)
+ * kun for å gi et tydelig svar til eventuelle gamle klienter/bokmerker.
  */
 export async function GET() {
-  const store = await readStore();
-  if (store.credential) {
-    return NextResponse.json(
-      { error: "Admin-passkey er allerede registrert. Kontakt utvikler for å nullstille." },
-      { status: 403 }
-    );
-  }
-
-  const options = await generateRegistrationOptions({
-    rpName: process.env.ADMIN_PASSKEY_RP_NAME || "Dine Fasetter Admin",
-    rpID: getRpId(),
-    userName: "produkteier",
-    attestationType: "none",
-    authenticatorSelection: {
-      residentKey: "preferred",
-      userVerification: "preferred",
+  return NextResponse.json(
+    {
+      error:
+        "Admin-passkey-registrering er avviklet. Admin-tilgang skjer nå via vanlig e-post-innlogging (se /logg-inn).",
     },
-  });
-
-  await writeStore({ ...store, currentChallenge: options.challenge });
-  return NextResponse.json(options);
+    { status: 410 }
+  );
 }

@@ -4,6 +4,7 @@ import { DOMAIN_TO_DISPLAY, DISPLAY_FACTOR_LABELS_NO } from "@/lib/scoring";
 import { buildSpirSystemPrompt, buildGuidedFacetSystemPrompt } from "@/lib/spir/systemPrompt";
 import { validateSpirResponse, SPIR_FALLBACK_MESSAGE } from "@/lib/spir/responseValidator";
 import { readStore } from "@/lib/admin/store";
+import { getGlobalAiUsage, incrementGlobalAiUsage } from "@/lib/admin/aiUsage";
 import { FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
 
 export const runtime = "nodejs";
@@ -187,6 +188,22 @@ export async function POST(request: Request) {
     );
   }
 
+  // v2.28 (kvalitetsrevisjon 19.07.2026, kritisk funn): aiGlobalQuestionCap
+  // ble tidligere lest fra innstillingene men ALDRI faktisk håndhevet her --
+  // se lib/admin/aiUsage.ts sitt filhode. Dette er den faktiske, serverlagrede
+  // sperren adminpanelets "Globalt AI-spørsmålstak"-felt nå styrer.
+  const globalCap = settings?.aiGlobalQuestionCap ?? Number(process.env.AI_GLOBAL_QUESTION_CAP ?? 10000);
+  const globalUsage = await getGlobalAiUsage();
+  if (globalUsage >= globalCap) {
+    return NextResponse.json(
+      {
+        error:
+          "Spir har nådd sitt totale bruksvolum for nå. Kontakt produkteier, eller prøv igjen senere.",
+      },
+      { status: 429 }
+    );
+  }
+
   let systemPrompt: string;
   if (body.guidedFacet) {
     // Slår opp fasettmetadata (navn/domene/definisjon) SELV, fra den
@@ -268,6 +285,12 @@ export async function POST(request: Request) {
       { status }
     );
   }
+
+  // Tell dette som ett brukt AI-kall mot det globale taket -- selve kallet er
+  // gjort (og betalt for) uansett hva Anthropic faktisk svarte, så telleren
+  // økes her, ikke bare ved vellykkede/godkjente svar. Fire-and-forget: skal
+  // aldri forsinke eller blokkere selve Spir-svaret til brukeren.
+  void incrementGlobalAiUsage();
 
   const data = await anthropicRes.json();
   const text: string = data?.content?.[0]?.text ?? "";

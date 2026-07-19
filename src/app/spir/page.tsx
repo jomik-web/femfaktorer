@@ -14,6 +14,7 @@ import {
 import { loadAnswers } from "@/lib/storage";
 import { FACET_ORDER_BY_DOMAIN, FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
 import { DOMAIN_DISPLAY_ORDER } from "@/data/combinationInsights";
+import { SpirHero } from "@/components/SpirHero";
 
 interface ChatMessage {
   role: "user" | "fem";
@@ -223,6 +224,7 @@ export default function FemPage() {
   if (locked || !factors) {
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
+        <SpirHero className="mb-2" />
         <h1 className="text-xl font-semibold text-indigo dark:text-white">Spir er ikke låst opp ennå</h1>
         <p className="text-indigo/70 dark:text-lavender-400/70">
           Spir er en del av den fulle testen. Fullfør alle 120 spørsmål for å låse opp muligheten
@@ -241,6 +243,7 @@ export default function FemPage() {
   if (!consented || !mode) {
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12">
+        <SpirHero />
         <h1 className="text-xl font-semibold text-indigo dark:text-white">Før du starter</h1>
         <p className="text-indigo/80 dark:text-lavender-400/80">
           Hvis du starter en samtale med Spir, sendes det beregnede resultatet ditt -- både de fem
@@ -272,10 +275,10 @@ export default function FemPage() {
               setConsented(true);
               setMode("free");
             }}
-            className="rounded-lg border border-holo-sky px-5 py-3 text-left font-medium text-holo-sky"
+            className="rounded-lg border border-holo-skyText px-5 py-3 text-left font-medium text-holo-skyText"
           >
             Snakk fritt med Spir
-            <span className="mt-1 block text-sm font-normal text-holo-sky/80">
+            <span className="mt-1 block text-sm font-normal text-holo-skyText/80">
               Åpen samtale om hele resultatet, uten en fast rekkefølge.
             </span>
           </button>
@@ -350,13 +353,13 @@ export default function FemPage() {
           Spir tolker resultatet ditt -- den kan ikke endre skårene dine.
         </p>
         {mode === "guided" && !guidedDone && guidedPosition && (
-          <p className="mt-2 text-sm font-medium text-holo-sky">
+          <p className="mt-2 text-sm font-medium text-holo-skyText">
             Underkategori {guidedIndex + 1} av {WALKTHROUGH_ORDER.length} -- {guidedPosition.domainLabel}:{" "}
             {guidedPosition.facetLabel}
           </p>
         )}
         {mode === "guided" && guidedDone && (
-          <p className="mt-2 text-sm font-medium text-holo-sky">Gjennomgangen er ferdig.</p>
+          <p className="mt-2 text-sm font-medium text-holo-skyText">Gjennomgangen er ferdig.</p>
         )}
       </header>
 
@@ -408,7 +411,7 @@ export default function FemPage() {
           <button
             type="button"
             onClick={() => setMode("free")}
-            className="rounded-lg border border-holo-sky px-5 py-2 font-medium text-holo-sky"
+            className="rounded-lg border border-holo-skyText px-5 py-2 font-medium text-holo-skyText"
           >
             Fortsett å snakke fritt med Spir
           </button>

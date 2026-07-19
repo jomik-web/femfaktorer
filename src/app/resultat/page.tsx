@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED, FREE_QUESTIONS, OPTIONAL_O6_QUESTIONS, type Domain } from "@/data/questions";
+import { useSearchParams } from "next/navigation";
+import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED, FREE_QUESTIONS, type Domain, type Question } from "@/data/questions";
 import {
   computeTestResult,
-  computeOptionalO6Score,
   computeFacetResults,
   DOMAIN_TO_DISPLAY,
   type FactorResult,
@@ -16,8 +16,6 @@ import {
 import {
   loadAnswers,
   clearAnswers,
-  loadO6,
-  clearO6,
   loadRestoredAccountResult,
   clearRestoredAccountResult,
 } from "@/lib/storage";
@@ -29,6 +27,7 @@ import {
   CRISIS_NOTICE,
   bandFor,
   buildClosingSynthesis,
+  splitIntoParagraphs,
 } from "@/data/interpretations";
 import { FACET_INTERPRETATIONS, FACET_ORDER_BY_DOMAIN, facetInterpretationFor } from "@/data/facetInterpretations";
 import {
@@ -39,13 +38,15 @@ import {
 } from "@/data/combinationInsights";
 import { computeAccountResultExpiry, type StoredAccountResult } from "@/lib/account/types";
 import { buildFacetDrivenOverview, buildFacetAwareNote } from "@/data/domainComposition";
-import { ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
+import { ACCOUNT_SAVE_ENABLED, RESULT_ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
 import { FactorIcon } from "@/components/FactorIcon";
 import { FactorHero } from "@/components/FactorHero";
+import SpirMascot from "@/components/SpirMascot";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { Disclosure } from "@/components/ui/Disclosure";
 
 const DISPLAY_TO_DOMAIN: Record<DisplayFactor, Domain> = Object.fromEntries(
   (Object.entries(DOMAIN_TO_DISPLAY) as [Domain, DisplayFactor][]).map(([domain, display]) => [display, domain])
@@ -67,16 +68,35 @@ const FACTOR_BG: Record<DisplayFactor, string> = {
 const PRIMARY_MD_LINK_CLASSES =
   "font-display font-semibold transition-all duration-150 inline-block " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-holo-sky focus-visible:ring-offset-2 " +
-  "bg-holo-gradient text-white shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98] " +
+  "bg-holo-sky text-indigo shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98] " +
   "px-6 py-3 text-base rounded-xl";
 
+function questionSetForTier(tier: ResultTier): readonly Question[] {
+  return tier === "extended" ? ALL_QUESTIONS_EXTENDED : tier === "full" ? ALL_QUESTIONS : FREE_QUESTIONS;
+}
+
+/**
+ * v2.33 (produkteiers ønske 19.07.2026): "Resultat" i menyen har fått en
+ * rapportvalg-undermeny (se SiteNav.tsx) som lenker til /resultat?tier=X --
+ * denne siden må derfor kunne lese ?tier= reaktivt (useSearchParams), som i
+ * Next sin App Router krever en Suspense-grense rundt komponenten som
+ * faktisk bruker hooken.
+ */
 export default function ResultatPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResultatContent />
+    </Suspense>
+  );
+}
+
+function ResultatContent() {
+  const searchParams = useSearchParams();
   const [factors, setFactors] = useState<FactorResult[] | null>(null);
   const [facets, setFacets] = useState<FacetResult[]>([]);
   const [tier, setTier] = useState<ResultTier | null>(null);
   const [incomplete, setIncomplete] = useState(false);
   const [hydrated, setHydrated] = useState(false);
-  const [o6Score, setO6Score] = useState<number | null>(null);
   // Hvilken hovedkategori-"side" som vises for den fulle testen (v2.3,
   // produkteiers ønske om å dele opp rapporten i én side per hovedkategori
   // i stedet for alt på én lang side). v2.22: kan også være "summary" -- den
@@ -103,31 +123,66 @@ export default function ResultatPage() {
   // nivå, 290 spm), se lib/account/types.ts sin doc-kommentar for hvorfor
   // "full" (Standard) aldri bygger opp en flerpunkts-historikk.
   const [history, setHistory] = useState<StoredAccountResult[]>([]);
+  // v2.33: hvilke av de tre rapportnivåene er faktisk fullført lokalt --
+  // brukes til å skjule "fortsett til neste nivå"-oppfordringer når
+  // brukeren allerede har fullført det neste nivået (bare ser på et
+  // tidligere/kortere resultat via rapportvalg-menyen), og til å tilby en
+  // lenke til det andre resultatet i stedet.
+  const [unlockedTiers, setUnlockedTiers] = useState<Record<ResultTier, boolean>>({
+    free: false,
+    full: false,
+    extended: false,
+  });
 
   useEffect(() => {
     const stored = loadAnswers();
-    // Prøv det spørsmålssettet brukeren faktisk er inne i (jf. testflyten):
-    // "extended" -> alle 290, "full" -> alle 120, ellers de første 50 (det
-    // foreløpige, gratis resultatet).
-    const questionSet =
-      stored.tier === "extended" ? ALL_QUESTIONS_EXTENDED : stored.tier === "full" ? ALL_QUESTIONS : FREE_QUESTIONS;
-    const resultTier: ResultTier = stored.tier;
-    const result = computeTestResult(stored.answers, questionSet, resultTier);
 
-    if (result.complete && result.factors) {
-      setFactors(result.factors);
-      setTier(result.tier ?? resultTier);
-      // Fasettskår (underkategorier) er kun meningsfulle -- og kun vist -- for
-      // full/extended-testen (v2.1/v2.11, se scoring.ts computeFacetResults).
-      if (resultTier === "full" || resultTier === "extended") {
-        setFacets(computeFacetResults(stored.answers, questionSet));
+    setUnlockedTiers({
+      free: computeTestResult(stored.answers, FREE_QUESTIONS, "free").complete,
+      full: computeTestResult(stored.answers, ALL_QUESTIONS, "full").complete,
+      extended: computeTestResult(stored.answers, ALL_QUESTIONS_EXTENDED, "extended").complete,
+    });
+
+    // v2.33: rapportvalg-menyen (SiteNav) lenker til /resultat?tier=X for et
+    // FULLFØRT nivå -- siden svarene er kumulative (120-settet inneholder de
+    // samme svarene som 50-settet, osv.), kan hvert nivås rapport beregnes
+    // uavhengig fra det samme lagrede svarsettet. Ugyldig/ufullført
+    // forespurt tier faller tilbake til det brukeren sist var inne i
+    // testflyten (uendret oppførsel fra før v2.33).
+    const requestedParam = searchParams.get("tier");
+    const requestedTier: ResultTier | null =
+      requestedParam === "free" || requestedParam === "full" || requestedParam === "extended"
+        ? requestedParam
+        : null;
+
+    let chosenTier: ResultTier | null = null;
+    let chosenFactors: FactorResult[] | null = null;
+
+    if (requestedTier) {
+      const r = computeTestResult(stored.answers, questionSetForTier(requestedTier), requestedTier);
+      if (r.complete && r.factors) {
+        chosenTier = requestedTier;
+        chosenFactors = r.factors;
+      }
+    }
+    if (!chosenTier) {
+      const r = computeTestResult(stored.answers, questionSetForTier(stored.tier), stored.tier);
+      if (r.complete && r.factors) {
+        chosenTier = stored.tier;
+        chosenFactors = r.factors;
+      }
+    }
+
+    if (chosenTier && chosenFactors) {
+      setFactors(chosenFactors);
+      setTier(chosenTier);
+      // Fasettskår (underkategorier) vises nå KUN for Utvidet versjon (290,
+      // v2.33, produkteiers ønske) -- Standard (120) skal ikke lenger vise
+      // underkategorier, selv om de teknisk sett er beregnbare fra 120-settet.
+      if (chosenTier === "extended") {
+        setFacets(computeFacetResults(stored.answers, ALL_QUESTIONS_EXTENDED));
       }
 
-      // O6-tilleggsseksjonen (helt valgfri, se questions.ts) -- vises KUN
-      // dersom brukeren aktivt har samtykket og fullført den, og ALDRI
-      // blandet inn i de fem hovedfaktorene over.
-      const storedO6 = loadO6();
-      setO6Score(computeOptionalO6Score(storedO6.answers, OPTIONAL_O6_QUESTIONS));
       setHydrated(true);
       return;
     }
@@ -140,7 +195,6 @@ export default function ResultatPage() {
       setFactors(restored.factors);
       setFacets(restored.facets);
       setTier(restored.tier);
-      setO6Score(restored.o6Score);
       setIsRestored(true);
       setHydrated(true);
       return;
@@ -148,7 +202,7 @@ export default function ResultatPage() {
 
     setIncomplete(true);
     setHydrated(true);
-  }, []);
+  }, [searchParams]);
 
   // Sett første fane som aktiv så snart resultatet er klart.
   useEffect(() => {
@@ -178,7 +232,7 @@ export default function ResultatPage() {
   // Hent lagret historikk for "Utvikling over tid" -- kun meningsfullt for
   // extended-tier (Premium), og kun når vi vet brukeren faktisk er logget inn.
   useEffect(() => {
-    if (!ACCOUNT_SAVE_ENABLED || tier !== "extended" || !loggedInEmail) return;
+    if (!RESULT_ACCOUNT_SAVE_ENABLED || tier !== "extended" || !loggedInEmail) return;
     let cancelled = false;
     fetch("/api/account/result")
       .then((res) => (res.ok ? res.json() : null))
@@ -235,14 +289,8 @@ export default function ResultatPage() {
       }
     }
     clearAnswers();
-    clearO6();
     clearRestoredAccountResult();
     window.location.href = "/";
-  }
-
-  function handleDeleteO6() {
-    clearO6();
-    setO6Score(null);
   }
 
   // "full" og "extended" deler nesten hele den detaljerte visningen --
@@ -283,7 +331,7 @@ export default function ResultatPage() {
       const res = await fetch("/api/account/save-result", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ factors, facets, o6Score, tier }),
+        body: JSON.stringify({ factors, facets, tier }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -352,13 +400,27 @@ export default function ResultatPage() {
   // hoveddomene de skal vises under -- se plasseringsregelen i
   // data/combinationInsights.ts (samme domene -> der; ulike domener -> under
   // det som kommer sist i visningsrekkefølgen).
-  const domainCombosByDomain: Map<Domain, CombinationInsight[]> = isDetailed
+  //
+  // v2.33 (produkteiers rapportnivå-krav): "Spennende samspill"-kortene og
+  // fasett-samspill vises nå KUN for Utvidet versjon (290) -- Standard (120)
+  // skal verken vise underkategorier eller kombinasjonsfunn, kun en penere,
+  // mer utfyllende hovedkategori-tekst (se `useTabsUI`/`tier === "full"`
+  // under i selve visningen).
+  const showCombosCards = tier === "extended";
+  const domainCombosByDomain: Map<Domain, CombinationInsight[]> = showCombosCards
     ? matchCombinationInsightsByDomain(factors, bandFor, DISPLAY_TO_DOMAIN)
     : new Map<Domain, CombinationInsight[]>();
-  const facetCombosByDomain: Map<Domain, FacetCombinationInsight[]> = isDetailed
+  const facetCombosByDomain: Map<Domain, FacetCombinationInsight[]> = showCombosCards
     ? matchFacetCombinationInsights(facets, bandFor)
     : new Map<Domain, FacetCombinationInsight[]>();
+  // Den avsluttende "Oppsummering"-fanen vises for BÅDE full og extended
+  // (facets er tom for "full", så funksjonen faller naturlig tilbake til kun
+  // domenenivå-samspill der -- se buildClosingSynthesis sin doc-kommentar).
   const closing = isDetailed ? buildClosingSynthesis(factors, facets) : null;
+  // Gratis-tierens egen, korte "samlede" analyse (v2.33) -- egen, enklere
+  // variant nederst på siden (ikke en fane, siden gratis-tieren ikke har
+  // fane-navigasjon i utgangspunktet).
+  const closingFree = tier === "free" && factors ? buildClosingSynthesis(factors, [], { skipCombos: true }) : null;
 
   return (
     <PageBackground>
@@ -374,24 +436,26 @@ export default function ResultatPage() {
             </Button>
           )}
         </div>
-        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{NON_DIAGNOSTIC_NOTICE}</p>
-        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{CRISIS_NOTICE}</p>
-        {tier === "free" && (
-          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-            Dette er et foreløpig resultat, basert på de første 50 av 120 spørsmål.
-          </p>
-        )}
-        {tier === "full" && (
-          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-            Basert på fullversjonen (alle 120 spørsmål).
-          </p>
-        )}
-        {tier === "extended" && (
-          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-            Basert på Utvidet versjon (alle 290 spørsmål) -- det mest presise resultatet Dine Fasetter
-            kan gi, med 10 spørsmål per underkategori i stedet for 4-5.
-          </p>
-        )}
+        <Disclosure title="Viktig å vite om resultatet">
+          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{NON_DIAGNOSTIC_NOTICE}</p>
+          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{CRISIS_NOTICE}</p>
+          {tier === "free" && (
+            <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+              Dette er et foreløpig resultat, basert på de første 50 av 120 spørsmål.
+            </p>
+          )}
+          {tier === "full" && (
+            <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+              Basert på fullversjonen (alle 120 spørsmål).
+            </p>
+          )}
+          {tier === "extended" && (
+            <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+              Basert på Utvidet versjon (alle 290 spørsmål) -- det mest presise resultatet Dine Fasetter
+              kan gi, med 10 spørsmål per underkategori i stedet for 4-5.
+            </p>
+          )}
+        </Disclosure>
       </header>
 
       {tier === "free" && (
@@ -415,6 +479,7 @@ export default function ResultatPage() {
                     <FactorIcon factor={f.factor} size={40} />
                     <h2 className="font-display font-semibold text-indigo dark:text-white">{f.label}</h2>
                   </div>
+                  <p className="text-sm text-indigo/60 dark:text-lavender-400/60">{DOMAIN_DEFINITIONS[f.factor]}</p>
                   <p className="text-indigo/80 dark:text-lavender-400/80">{copy.overview}</p>
                   <p className="text-indigo/80 dark:text-lavender-400/80">{copy.nuance}</p>
                   <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
@@ -429,10 +494,35 @@ export default function ResultatPage() {
                       <p className="mt-1 text-indigo/80 dark:text-lavender-400/80">{copy.partnerNote}</p>
                     </div>
                   </div>
+                  {copy.funFact && (
+                    <aside
+                      className="mt-1 flex items-start gap-3 rounded-xl border border-dashed border-holo-sky/40 bg-white/50 p-3 print:hidden dark:bg-white/5"
+                      aria-label="Humoristisk kommentar, ikke en del av selve tolkningen"
+                    >
+                      <span className="text-xl leading-none" aria-hidden="true">
+                        😄
+                      </span>
+                      <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+                        <span className="font-medium text-indigo dark:text-white">Kjenner du deg igjen?</span>{" "}
+                        {copy.funFact}
+                      </p>
+                    </aside>
+                  )}
                 </article>
               );
             })}
           </section>
+
+          {closingFree && (
+            <section className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
+              <h2 className="font-display font-semibold text-indigo dark:text-white">Samlet sett</h2>
+              {splitIntoParagraphs(closingFree.text).map((p, i) => (
+                <p key={i} className="text-indigo/80 dark:text-lavender-400/80">
+                  {p}
+                </p>
+              ))}
+            </section>
+          )}
         </>
       )}
 
@@ -465,7 +555,7 @@ export default function ResultatPage() {
                 aria-current={activeFactor === "summary" ? "page" : undefined}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   activeFactor === "summary"
-                    ? "bg-holo-gradient text-white shadow-sm"
+                    ? "bg-indigo text-white shadow-sm dark:bg-white dark:text-indigo"
                     : "bg-lavender-100 text-indigo hover:bg-lavender-400/40 dark:bg-white/10 dark:text-lavender-400 dark:hover:bg-white/20"
                 }`}
               >
@@ -557,11 +647,32 @@ export default function ResultatPage() {
 
                   {useNewLayout ? (
                     <article className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{copy.synthesis}</p>
+                      {splitIntoParagraphs(copy.synthesis!).map((p, i) => (
+                        <p key={i} className="text-indigo/80 dark:text-lavender-400/80">
+                          {p}
+                        </p>
+                      ))}
                       {facetAwareNote && (
                         <p className="text-indigo/80 dark:text-lavender-400/80">{facetAwareNote}</p>
                       )}
                       <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
+                      {/* v2.33: Standard-nivået (120) har ingen underkategorier å
+                          vise til, så jobb/kjærlighet-notatene (som gratis-tieren
+                          allerede har) tas med her også -- det er nettopp "de
+                          flere momentene" som skiller Standard fra gratisnivået. */}
+                      {tier === "full" && (
+                        <div className="mt-3 flex flex-col gap-3 border-t border-indigo/10 pt-3 dark:border-white/10">
+                          <div>
+                            <h3 className="text-sm font-medium text-indigo dark:text-white">Jobb</h3>
+                            <p className="text-indigo/80 dark:text-lavender-400/80">{copy.careerNote}</p>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-indigo dark:text-white">Kjærlighet</h3>
+                            <p className="text-indigo/80 dark:text-lavender-400/80">{copy.relationshipNote}</p>
+                            <p className="mt-1 text-indigo/80 dark:text-lavender-400/80">{copy.partnerNote}</p>
+                          </div>
+                        </div>
+                      )}
                     </article>
                   ) : (
                     <article className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
@@ -579,6 +690,21 @@ export default function ResultatPage() {
                         </div>
                       </div>
                     </article>
+                  )}
+
+                  {copy.funFact && (
+                    <aside
+                      className="flex items-start gap-3 rounded-2xl border border-dashed border-holo-sky/40 bg-white/50 p-4 print:hidden dark:bg-white/5"
+                      aria-label="Humoristisk kommentar, ikke en del av selve tolkningen"
+                    >
+                      <span className="text-xl leading-none" aria-hidden="true">
+                        😄
+                      </span>
+                      <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+                        <span className="font-medium text-indigo dark:text-white">Kjenner du deg igjen?</span>{" "}
+                        {copy.funFact}
+                      </p>
+                    </aside>
                   )}
 
                   {domainCombos.length > 0 && (
@@ -614,70 +740,83 @@ export default function ResultatPage() {
             >
               <FactorHero factor="summary" className="rounded-2xl" />
               <h2 className="font-display text-xl font-semibold text-indigo dark:text-white">Hva betyr dette for deg?</h2>
-              <p className="text-indigo/80 dark:text-lavender-400/80">{closing.text}</p>
+              {splitIntoParagraphs(closing.text).map((p, i) => (
+                <p key={i} className="text-indigo/80 dark:text-lavender-400/80">
+                  {p}
+                </p>
+              ))}
             </section>
           )}
         </>
       )}
 
-      {o6Score !== null && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-factor-stability/40 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">
-            Tilleggsseksjon: politiske og verdimessige holdninger
-          </h2>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Dette er et helt eget, valgfritt tillegg du samtykket til separat -- det er IKKE en del
-            av de fem hovedfaktorene over, og teller ikke med i noen av dem. Skåren din her er{" "}
-            {o6Score} av 100.
-          </p>
-          <button
-            type="button"
-            onClick={handleDeleteO6}
-            className="self-start text-sm text-factor-stability underline underline-offset-2"
-          >
-            Slett bare denne dataen
-          </button>
+      {isDetailed && (
+        <section className="flex flex-col items-center gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden sm:flex-row sm:items-start sm:gap-5">
+          <SpirMascot expression="oppmuntrende" size={72} className="shrink-0" />
+          <div className="flex flex-col items-center gap-3 text-center sm:items-start sm:text-left">
+            <h2 className="font-display font-semibold text-indigo dark:text-white">Vil du utforske resultatet videre?</h2>
+            <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+              Spir kan hjelpe deg å reflektere videre rundt resultatet ditt. Resultatet ditt sendes da
+              til Anthropic (leverandøren av Spir) -- kun når du aktivt starter samtalen.
+            </p>
+            <Link href="/spir" className={`self-center ${PRIMARY_MD_LINK_CLASSES} sm:self-start`}>
+              Snakk med Spir
+            </Link>
+          </div>
         </section>
       )}
 
       {BETA_ANSWER_SET_TOOLS_ENABLED && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">Betatest: ta vare på svarene dine</h2>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Testen kan bli oppdatert innimellom mens vi jobber videre med Dine Fasetter. Last ned
-            svarene dine som en fil nå, så slipper du å svare på alt på nytt etter en oppdatering
-            -- last filen opp igjen her for å se resultatet med én gang. Denne muligheten fjernes
-            igjen når betatestingen er ferdig.
-          </p>
-          <AnswerSetCsvPanel afterImport="reload" />
+        <section className="rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
+          <Disclosure
+            title={
+              <span className="font-display font-semibold text-indigo dark:text-white">
+                Betatest: ta vare på svarene dine
+              </span>
+            }
+          >
+            <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+              Testen kan bli oppdatert innimellom mens vi jobber videre med Dine Fasetter. Last ned
+              svarene dine som en fil nå, så slipper du å svare på alt på nytt etter en oppdatering
+              -- last filen opp igjen her for å se resultatet med én gang. Denne muligheten fjernes
+              igjen når betatestingen er ferdig.
+            </p>
+            <AnswerSetCsvPanel afterImport="reload" />
+          </Disclosure>
         </section>
       )}
 
       {ACCOUNT_SAVE_ENABLED && isDetailed && accountChecked && (
         <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
           <h2 className="font-display font-semibold text-indigo dark:text-white">Lagre resultatet ditt</h2>
+          {!RESULT_ACCOUNT_SAVE_ENABLED && (
+            <p className="text-sm font-semibold text-factor-stability">
+              Denne funksjonen er ikke i bruk mens vi betatester -- vi har en annen måte å lagre
+              resultatene på under betatestingen, se CSV-verktøyet lenger opp på siden.
+            </p>
+          )}
           {isRestored && (
             <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
               Dette resultatet er hentet fra kontoen din.
             </p>
           )}
           <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Vil du slippe å ta testen på nytt for å se resultatet igjen -- på denne eller en annen
-            enhet -- kan du lagre det knyttet til e-postadressen din. Vi lagrer da bare de ferdig
-            beregnede skårene dine (fem hovedfaktorer og fasetter, og skåren fra den valgfrie
-            tilleggsseksjonen om du har svart på den), ALDRI de 120 svarene du ga. Innlogging skjer
-            med en engangskode sendt på e-post, ikke passord, og du kan slette det lagrede
-            resultatet når som helst -- her, eller ved å logge inn på nytt.
-          </p>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Resultatet lagres i 12 måneder fra siste lagring. I løpet av den perioden kan du logge
-            inn så mange ganger du vil, se resultatet, ta testen på nytt for å oppdatere det, og
-            snakke med Spir. Vi sender deg en e-postpåminnelse cirka en måned før 12-månedersfristen.
-            Vil du bevare resultatet lenger enn det, må du enten laste det ned som PDF før fristen,
-            eller lagre på nytt for å starte en ny 12-månedersperiode.
+            Lagre resultatet knyttet til e-postadressen din, så slipper du å ta testen på nytt for
+            å se det igjen -- også fra en annen enhet. Vi lagrer kun de ferdig beregnede skårene
+            dine, aldri svarene, i inntil 12 måneder, og du kan slette det når som helst. Les mer om
+            hvordan dette fungerer i{" "}
+            <Link href="/personvern#konto" className="text-holo-skyText underline underline-offset-2">
+              personvernerklæringen
+            </Link>
+            .
           </p>
 
-          {loggedInEmail ? (
+          {!RESULT_ACCOUNT_SAVE_ENABLED ? (
+            <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+              Kontolagring er satt på pause under betatestingen. Bruk CSV-verktøyet lenger opp på
+              siden for å ta vare på svarene dine mellom oppdateringer i stedet.
+            </p>
+          ) : loggedInEmail ? (
             <div className="flex flex-col gap-2">
               <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
                 Innlogget som {loggedInEmail}
@@ -757,11 +896,13 @@ export default function ResultatPage() {
             </form>
           )}
 
-          {saveError && <p className="text-sm text-factor-stability">{saveError}</p>}
+          {RESULT_ACCOUNT_SAVE_ENABLED && saveError && (
+            <p className="text-sm text-factor-stability">{saveError}</p>
+          )}
         </section>
       )}
 
-      {ACCOUNT_SAVE_ENABLED && tier === "extended" && loggedInEmail && history.length > 1 && (() => {
+      {RESULT_ACCOUNT_SAVE_ENABLED && tier === "extended" && loggedInEmail && history.length > 1 && (() => {
         // Regn ut endring fra forrige lagring for hver hovedfaktor (nøytralt
         // -- ALDRI farget eller omtalt som "bedre"/"verre", se den avgjorte
         // holdningen til utviklingsråd, v2.23/17.07.2026: dette er et bilde
@@ -829,7 +970,12 @@ export default function ResultatPage() {
         );
       })()}
 
-      {tier === "free" && (
+      {/* v2.33: disse to oppfordringene skjules når brukeren allerede har
+          fullført neste nivå (bare ser på et kortere resultat via
+          rapportvalg-menyen) -- da tilbys en lenke til det andre, allerede
+          ferdige resultatet i stedet for en "fortsett testen"-oppfordring
+          som ikke gir mening lenger. */}
+      {tier === "free" && !unlockedTiers.full && (
         <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
           <h2 className="font-display font-semibold text-indigo dark:text-white">
             Vil du se et mer presist resultat?
@@ -845,31 +991,39 @@ export default function ResultatPage() {
           </Link>
         </section>
       )}
+      {tier === "free" && unlockedTiers.full && (
+        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
+          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+            Du har allerede fullført {unlockedTiers.extended ? "både 120 og 290" : "120"} spørsmål.
+          </p>
+          <Link href="/resultat?tier=full" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
+            Se resultatet fra {unlockedTiers.extended ? "120 spørsmål" : "den versjonen"}
+          </Link>
+        </section>
+      )}
 
-      {tier === "full" && (
+      {tier === "full" && !unlockedTiers.extended && (
         <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
           <h2 className="font-display font-semibold text-indigo dark:text-white">Vil du gå enda dypere?</h2>
           <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
             Utvidet versjon stiller 10 spørsmål per underkategori i stedet for 4-5 (290 spørsmål
-            totalt), og gir det mest presise resultatet Dine Fasetter kan tilby. Resultatet ditt over
-            er ikke ufullstendig fordi du velger å stoppe her -- de resterende spørsmålene gir bare
-            en enda sikrere måling.
+            totalt), viser underkategoriene hver for seg med egen graf, og gir det mest presise
+            resultatet Dine Fasetter kan tilby. Resultatet ditt over er ikke ufullstendig fordi du
+            velger å stoppe her -- de resterende spørsmålene gir bare en enda sikrere måling.
           </p>
           <Link href="/test" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
             Fortsett til Utvidet versjon
           </Link>
         </section>
       )}
-
-      {isDetailed && (
+      {tier === "full" && unlockedTiers.extended && (
         <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">Vil du utforske resultatet videre?</h2>
           <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Spir kan hjelpe deg å reflektere videre rundt resultatet ditt. Resultatet ditt sendes da
-            til Anthropic (leverandøren av Spir) -- kun når du aktivt starter samtalen.
+            Du har allerede fullført Utvidet versjon (290 spørsmål), med underkategorier og
+            samspill-analyser.
           </p>
-          <Link href="/spir" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
-            Snakk med Spir
+          <Link href="/resultat?tier=extended" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
+            Se den utvidede rapporten
           </Link>
         </section>
       )}

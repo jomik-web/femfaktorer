@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loadAnswers, saveAnswers, loadO6, saveO6 } from "@/lib/storage";
+import { loadAnswers, saveAnswers } from "@/lib/storage";
 import { buildAnswerSetCsv, parseAnswerSetCsv } from "@/lib/devTools/answerSetCsv";
 
 export interface AnswerSetCsvPanelProps {
@@ -51,12 +51,9 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
 
   async function handleDownload() {
     const stored = loadAnswers();
-    const storedO6 = loadO6();
     const csv = buildAnswerSetCsv({
       tier: stored.tier,
       answers: stored.answers,
-      o6Status: storedO6.status,
-      o6Answers: storedO6.answers,
     });
     const date = new Date().toISOString().slice(0, 10);
     const filename = `femfaktorer-svardata-${stored.tier}-${date}.csv`;
@@ -117,9 +114,6 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
         return;
       }
       saveAnswers(parsed.result.answers, parsed.result.tier);
-      if (Object.keys(parsed.result.o6Answers).length > 0) {
-        saveO6(parsed.result.o6Status, parsed.result.o6Answers);
-      }
       setWarnings(parsed.result.warnings);
       setImportedInfo(`Lastet inn som "${parsed.result.tier}"-versjonen. Viser resultatet …`);
       const delay = parsed.result.warnings.length > 0 ? 1800 : 400;
@@ -147,7 +141,7 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
             Last ned svarene som CSV
           </button>
         )}
-        <label className="cursor-pointer rounded-lg border border-holo-sky px-5 py-2.5 text-center font-medium text-holo-sky">
+        <label className="cursor-pointer rounded-lg border border-holo-skyText px-5 py-2.5 text-center font-medium text-holo-skyText">
           {importing ? "Laster inn …" : "Last opp et svarsett"}
           <input
             ref={fileInputRef}
@@ -159,7 +153,7 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
           />
         </label>
       </div>
-      {importedInfo && <p className="text-sm text-holo-sky">{importedInfo}</p>}
+      {importedInfo && <p className="text-sm text-holo-skyText">{importedInfo}</p>}
       {warnings.length > 0 && (
         <ul className="flex flex-col gap-1 text-sm text-indigo/70 dark:text-lavender-400/70">
           {warnings.map((w, i) => (

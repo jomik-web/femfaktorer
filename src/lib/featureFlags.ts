@@ -14,14 +14,25 @@
 
 /**
  * Kontolagring (innlogging, "lagre resultatet mitt", /logg-inn) --
- * GJENAKTIVERT 18.07.2026 (v2.26): produkteier har besluttet å gjenbruke og
- * videreutvikle denne fremfor å bygge en ny løsning, som en del av
- * 3-nivå-prismodellen (skylagring på Standard/Premium-nivå, se
- * FemFaktorer_Forretnings-og-prismodell_v1.2.docx del 6.1). Ingen
- * betalingssperre er lagt inn ennå -- funksjonen er tilgjengelig for alle,
- * uavhengig av nivå, inntil en eventuell betalingsløsning bygges i fase 2.
+ * REAKTIVERT 19.07.2026 (v2.28, kvalitetsrevisjon): innlogging med
+ * e-post + engangskode trengs nå ikke bare for å hente lagrede resultater,
+ * men også som inngang til admin-panelet (se lib/admin/roles.ts) --
+ * innloggingen er derfor lagt i toppmenyen (SiteNav), ikke bare i
+ * bunnteksten. Planen om å gjenbruke denne til 3-nivå-prismodellen (se
+ * FemFaktorer_Forretnings-og-prismodell_v1.2.docx del 6.1) står fortsatt.
  */
 export const ACCOUNT_SAVE_ENABLED = true;
+
+/**
+ * Selve "lagre resultatet mitt PÅ KONTO"-knappen/skjemaet på resultatsiden --
+ * SATT PÅ PAUSE 19.07.2026 (v2.29, på produkteiers ønske), atskilt fra
+ * ACCOUNT_SAVE_ENABLED over. Under betatestingen skal CSV-verktøyet
+ * (BETA_ANSWER_SET_TOOLS_ENABLED) være den ene, fungerende måten å ta vare
+ * på svarene sine på -- ikke kontolagring, som ellers ville gitt to
+ * parallelle "lagre"-veier samtidig. Innlogging i seg selv (nødvendig for
+ * admin-tilgang, se ACCOUNT_SAVE_ENABLED) er IKKE påvirket av dette flagget.
+ */
+export const RESULT_ACCOUNT_SAVE_ENABLED = false;
 
 /** Synlige last ned/last opp-knapper for svarsett på resultatsiden -- KUN for betatestperioden. */
 export const BETA_ANSWER_SET_TOOLS_ENABLED = true;

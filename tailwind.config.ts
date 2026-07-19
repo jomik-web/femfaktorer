@@ -15,8 +15,14 @@ const config: Config = {
         // ---- v2: holografisk primærgradient ----
         holo: {
           mint: "#5FF0C0", // Frisk grønn -- start på gradient
-          sky: "#5FC0F0", // Himmelblå -- midtpunkt
+          sky: "#5FC0F0", // Himmelblå -- midtpunkt. KUN til bakgrunn/dekorasjon -- for lys til tekst (2,04:1 mot hvit, se skyText).
           violet: "#C05FF0", // Fiolett -- slutt på gradient
+          // Kvalitetsrevisjon 19.07.2026, kritisk WCAG 2.2 AA-funn (1.4.3):
+          // holo-sky brukt som TEKSTFARGE ga kun 2,04:1 kontrast mot hvit
+          // bakgrunn (krav 4,5:1). skyText er samme fargefamilie, mørket til
+          // L=36% (fra 66%), som gir 5,03:1 -- bruk denne for all tekst/
+          // lenker/kant-på-tekst der holo-sky tidligere ble brukt direkte.
+          skyText: "#1076A8",
         },
         // ---- v2: gull-aksent (status, merker, sjeldne highlights) ----
         gold: {

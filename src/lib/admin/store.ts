@@ -1,28 +1,35 @@
 /**
- * Enkel fillagring for admin-panelet (Dokument 09 §21.1, besluttet v1.5).
+ * Lagring for admin-panelets innstillinger (Dokument 09 §21.1, besluttet v1.5).
  *
- * ÆRLIG BEGRENSNING: dette er en JSON-fil på disk, ikke en ekte database.
- * Det fungerer greit for én admin-bruker på én Netlify-instans i utviklings-
- * /testfasen, men Netlifys produksjonsmiljø har IKKE et vedvarende, delt
- * filsystem mellom forespørsler (serverless-funksjoner starter ofte "kaldt").
- * Før reell drift i produksjon MÅ dette flyttes til en ekte datalagring
- * (f.eks. Netlify Blobs, som er tilgjengelig i samme plattform og krever
- * minimal endring i dette laget sitt grensesnitt). Denne filen er bevisst
- * isolert til én modul nettopp for at den byttingen skal bli enkel.
+ * v2.28 (kvalitetsrevisjon 19.07.2026, kritisk teknisk funn): flyttet fra en
+ * lokal JSON-fil (.data/admin-store.json) til Netlify Blobs. Filbasert lagring
+ * fungerer greit i én enkelt, langvarig lokal dev-prosess, men Netlifys
+ * produksjonsmiljø har IKKE et vedvarende, delt filsystem mellom
+ * serverless-forespørsler -- innstillinger satt i panelet (f.eks. "Spir er
+ * slått av", eller det globale AI-taket) kunne dermed i praksis forsvinne
+ * ved neste kalde start i produksjon. Samme mønster som account/blobs.ts og
+ * stats/blobs.ts.
+ *
+ * Passkey-/WebAuthn-feltene (credential, currentChallenge) er fjernet i
+ * samme runde -- admin-tilgang styres nå av vanlig e-post/kode-innlogging
+ * (lib/account) + rollesjekk (lib/admin/roles.ts), se
+ * OPPGAVER-FOR-PRODUKTEIER.md for begrunnelsen (lukker et kritisk
+ * "først til mølla"-sikkerhetshull i den gamle passkey-registreringen).
  */
 
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import { getStore } from "@netlify/blobs";
 
-const DATA_DIR = path.join(process.cwd(), ".data");
-const STORE_FILE = path.join(DATA_DIR, "admin-store.json");
-
-export interface PasskeyCredential {
-  credentialId: string;
-  publicKey: string; // base64url
-  counter: number;
-  transports?: string[];
+function manualConfig(): { siteID: string; token: string } | Record<string, never> {
+  const siteID = process.env.NETLIFY_BLOBS_SITE_ID;
+  const token = process.env.NETLIFY_BLOBS_TOKEN;
+  return siteID && token ? { siteID, token } : {};
 }
+
+function adminStore() {
+  return getStore({ name: "femfaktorer-admin", consistency: "strong", ...manualConfig() });
+}
+
+const SETTINGS_KEY = "settings";
 
 export interface AdminSettings {
   aiEnabled: boolean;
@@ -34,8 +41,6 @@ export interface AdminSettings {
 }
 
 export interface AdminStoreData {
-  credential: PasskeyCredential | null;
-  currentChallenge: string | null;
   settings: AdminSettings;
 }
 
@@ -48,32 +53,17 @@ const DEFAULT_SETTINGS: AdminSettings = {
   aiGlobalQuestionCap: Number(process.env.AI_GLOBAL_QUESTION_CAP ?? 10000),
 };
 
-async function ensureFile(): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  try {
-    await fs.access(STORE_FILE);
-  } catch {
-    const initial: AdminStoreData = {
-      credential: null,
-      currentChallenge: null,
-      settings: DEFAULT_SETTINGS,
-    };
-    await fs.writeFile(STORE_FILE, JSON.stringify(initial, null, 2));
-  }
-}
-
 export async function readStore(): Promise<AdminStoreData> {
-  await ensureFile();
-  const raw = await fs.readFile(STORE_FILE, "utf-8");
+  let stored: Partial<AdminSettings> | null = null;
   try {
-    const parsed = JSON.parse(raw) as AdminStoreData;
-    return { ...parsed, settings: { ...DEFAULT_SETTINGS, ...parsed.settings } };
+    stored = (await adminStore().get(SETTINGS_KEY, { type: "json" })) as Partial<AdminSettings> | null;
   } catch {
-    return { credential: null, currentChallenge: null, settings: DEFAULT_SETTINGS };
+    // Blobs utilgjengelig (f.eks. lokal `next dev` uten Netlify-kontekst/manuell config) -- fall tilbake til default.
+    stored = null;
   }
+  return { settings: { ...DEFAULT_SETTINGS, ...(stored ?? {}) } };
 }
 
 export async function writeStore(data: AdminStoreData): Promise<void> {
-  await ensureFile();
-  await fs.writeFile(STORE_FILE, JSON.stringify(data, null, 2));
+  await adminStore().setJSON(SETTINGS_KEY, data.settings);
 }

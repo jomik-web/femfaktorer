@@ -1,31 +1,58 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveRestoredAccountResult } from "@/lib/storage";
 import { ACCOUNT_SAVE_ENABLED } from "@/lib/featureFlags";
 
-type Step = "email" | "code";
+type Step = "checking" | "loggedIn" | "email" | "code";
 
 /**
  * Innlogging med e-post + engangskode (v2.4) -- for å hente fram et
- * tidligere lagret FULLVERSJON-resultat på en ny enhet/nettleser. Gjelder
- * kun fullversjonen (produkteiers eksplisitte krav): korttesten (50
- * spørsmål) tilbyr ingen lagring, se resultat/page.tsx.
+ * tidligere lagret FULLVERSJON-resultat på en ny enhet/nettleser, OG
+ * (v2.28, kvalitetsrevisjon 19.07.2026) som eneste inngang til
+ * admin-panelet. Gjelder resultatlagring kun fullversjonen (produkteiers
+ * eksplisitte krav): korttesten (50 spørsmål) tilbyr ingen lagring, se
+ * resultat/page.tsx.
  *
  * Ingen passord -- eierskap til e-postadressen ER innloggingen. Samme
  * endepunkt (/api/account/request-code) brukes uansett om det er første
- * gang eller ikke.
+ * gang eller ikke, og uansett om man logger inn for å hente et resultat
+ * eller for å få admin-tilgang -- hvilken av delene som er relevante for
+ * DEG avgjøres av hva kontoen din faktisk har (lagret resultat og/eller
+ * admin-rolle), ikke av en egen "logg inn som admin"-vei.
  */
 export default function LoggInnPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("email");
+  const [step, setStep] = useState<Step>(ACCOUNT_SAVE_ENABLED ? "checking" : "email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!ACCOUNT_SAVE_ENABLED) return;
+    fetch("/api/account/me")
+      .then((res) => res.json())
+      .then(async (data) => {
+        if (!data.loggedIn) {
+          setStep("email");
+          return;
+        }
+        setLoggedInEmail(data.email ?? null);
+        // Kun for å vise en "Gå til adminpanel"-snarvei her -- selve
+        // tilgangen håndheves uansett på nytt server-side i /admin.
+        const settingsRes = await fetch("/api/admin/settings");
+        setIsAdmin(settingsRes.ok);
+        setStep("loggedIn");
+      })
+      .catch(() => setStep("email"));
+  }, []);
 
   // Kontolagring er midlertidig satt på pause under betatesting (v2.16, se
   // lib/featureFlags.ts) -- vis en forklarende melding i stedet for
@@ -92,22 +119,38 @@ export default function LoggInnPage() {
         return;
       }
 
+      setLoggedInEmail(data.email ?? email);
+      const settingsRes = await fetch("/api/admin/settings");
+      setIsAdmin(settingsRes.ok);
+
       if (!data.hasSavedResult) {
+        setStep("loggedIn");
         setInfo("Du er logget inn, men vi fant ikke noe lagret resultat på denne kontoen ennå.");
         return;
       }
 
+      await fetchSavedResult();
+    } catch {
+      setError("Fikk ikke kontakt med tjenesten. Sjekk nettforbindelsen og prøv igjen.");
+      setLoading(false);
+    }
+  }
+
+  async function fetchSavedResult() {
+    setError(null);
+    setLoading(true);
+    try {
       const resultRes = await fetch("/api/account/result");
       const resultData = await resultRes.json();
       if (!resultRes.ok) {
         setError(resultData.error ?? "Fant ikke det lagrede resultatet.");
+        setStep("loggedIn");
         return;
       }
 
       saveRestoredAccountResult({
         factors: resultData.result.factors,
         facets: resultData.result.facets,
-        o6Score: resultData.result.o6Score,
         savedAt: resultData.result.savedAt,
         // Eldre kontoresultater (før v2.11) har ikke dette feltet -- de kan
         // kun være "full", siden extended-tier ikke fantes den gangen.
@@ -116,9 +159,75 @@ export default function LoggInnPage() {
       router.push("/resultat");
     } catch {
       setError("Fikk ikke kontakt med tjenesten. Sjekk nettforbindelsen og prøv igjen.");
+      setStep("loggedIn");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleLogout() {
+    setLoading(true);
+    try {
+      await fetch("/api/account/logout", { method: "POST" });
+    } finally {
+      setLoggedInEmail(null);
+      setIsAdmin(false);
+      setEmail("");
+      setCode("");
+      setInfo(null);
+      setError(null);
+      setStep("email");
+      setLoading(false);
+    }
+  }
+
+  if (step === "checking") return null;
+
+  if (step === "loggedIn") {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
+        <header className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold text-indigo dark:text-white">Min konto</h1>
+          <p className="text-indigo/70 dark:text-lavender-400/70">
+            Du er logget inn som <span className="font-medium">{loggedInEmail}</span>.
+          </p>
+        </header>
+
+        {info && <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{info}</p>}
+        {error && <p className="text-sm text-factor-stability">{error}</p>}
+
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => void fetchSavedResult()}
+            disabled={loading}
+            className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-indigo disabled:opacity-50"
+          >
+            {loading ? "Henter …" : "Hent lagret resultat"}
+          </button>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="rounded-lg border border-holo-skyText px-5 py-2.5 text-center font-medium text-holo-skyText"
+            >
+              Gå til adminpanel
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loading}
+            className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60"
+          >
+            Logg ut
+          </button>
+        </div>
+
+        <Link href="/" className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60">
+          Tilbake til forsiden
+        </Link>
+      </main>
+    );
   }
 
   return (

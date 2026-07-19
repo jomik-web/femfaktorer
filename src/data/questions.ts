@@ -199,8 +199,8 @@ export const ALL_QUESTIONS: readonly Question[] = [
  * med denne kilden). Hver fasett har 10 spørsmål totalt der; de 6 (eller 5
  * for O1/O2/O3/O5, som allerede har 5 pga. O6-kompensasjon) som IKKE finnes
  * i ALL_QUESTIONS legges til her, domene for domene, til produkteier har
- * sett gjennom hver oversettelse. O6 holdes fortsatt utenfor (se
- * OPTIONAL_O6_QUESTIONS under). Målet er 29 fasetter x 10 = 290 spørsmål
+ * sett gjennom hver oversettelse. O6 holdes fortsatt utenfor (se filhode).
+ * Målet er 29 fasetter x 10 = 290 spørsmål
  * totalt (ALL_QUESTIONS + dette settet), IKKE 300 -- se beslutning
  * 14.07.2026: å fylle Åpenhet-domenet opp til 60 ville krevd en mindre
  * verifiserbar IPIP-kilde, og ble bevisst valgt bort.
@@ -435,7 +435,7 @@ export const EXTENDED_QUESTIONS_C: readonly Question[] = [
  *
  * IKKE jevnt fordelt per domene: N/E/A/C har 6 fasetter x 10 spørsmål = 60
  * hver, mens Åpenhet (O) kun har 5 fasetter (O6/Liberalism er fortsatt
- * utelatt, se OPTIONAL_O6_QUESTIONS under) x 10 = 50. Det er forskjellig fra
+ * utelatt, se filhode) x 10 = 50. Det er forskjellig fra
  * 120-settet, der O var kunstig jevnet ut til 24 via fire "kompensasjons"-
  * spørsmål -- her trengs ikke det trikset, siden hver fasett uansett får sine
  * fulle 10 IPIP-spørsmål. Se assertExtendedQuestionSetIntegrity for vaktposten.
@@ -464,67 +464,15 @@ const EXPECTED_PER_DOMAIN_FULL = 24;
 const EXPECTED_PER_DOMAIN_FREE = 10;
 
 /**
- * O6 (Liberalism) -- HELT VALGFRI TILLEGGSSEKSJON, ikke del av ALL_QUESTIONS/
- * FREE_QUESTIONS og teller IKKE med i de fem hovedfaktorskårene (Åpenhet
- * forblir balansert på 24 spørsmål uansett om denne besvares).
- *
- * Bakgrunn: O6 er i IPIP utelukkende operasjonalisert gjennom politiske og
- * religiøse påstander -- særlig kategori persondata etter GDPR art. 9.
- * Prosjektet utelot fasetten helt i første versjon (Dokument 03 §7/§20.1).
- * Etter brukerens ønske bygges den nå inn igjen som en isolert, eksplisitt
- * samtykkebasert bonusseksjon (GDPR art. 9(2)(a) -- eget, uttrykkelig
- * samtykke, atskilt fra det generelle samtykket til å ta testen). Vises kun
- * etter at hele 120-testen er fullført, med eget samtykke og egen
- * sletteknapp (se src/lib/storage.ts og src/app/test/page.tsx).
- *
- * STATUS: produkteier har besluttet (14.07.2026) at funksjonen beholdes
- * permanent. Bør fortsatt juristgodkjennes (Dokument 07) før reell,
- * offentlig lansering, som resten av personvernrelaterte funksjoner.
+ * O6 (Liberalism) -- utelatt fra testen i sin helhet. I IPIP er fasetten
+ * utelukkende operasjonalisert gjennom politiske og religiøse påstander --
+ * særlig kategori persondata etter GDPR art. 9. Prosjektet utelot fasetten
+ * helt i første versjon (Dokument 03 §7/§20.1). Den ble en periode (14.07.--
+ * 19.07.2026) tilbudt som en isolert, eksplisitt samtykkebasert
+ * tilleggsseksjon, men produkteier besluttet 19.07.2026 å fjerne den helt
+ * (spørsmål, samtykkeflyt, skåring, kontolagring og CSV-verktøy) -- se
+ * git-historikken for den koden dersom den skal gjenopplives.
  */
-export interface OptionalQuestion {
-  id: string;
-  facet: "O6";
-  facetName: "Liberalism";
-  textEn: string;
-  textNo: string;
-  reverse: boolean;
-}
-
-export const OPTIONAL_O6_QUESTIONS: readonly OptionalQuestion[] = [
-  {
-    id: "o6_1",
-    facet: "O6",
-    facetName: "Liberalism",
-    textEn: "Tend to vote for liberal political candidates.",
-    textNo: "Stemmer ofte på liberale/venstreorienterte politiske kandidater.",
-    reverse: false,
-  },
-  {
-    id: "o6_2",
-    facet: "O6",
-    facetName: "Liberalism",
-    textEn: "Believe that there is no absolute right or wrong.",
-    textNo: "Mener det ikke finnes en absolutt rett eller galt.",
-    reverse: false,
-  },
-  {
-    id: "o6_3",
-    facet: "O6",
-    facetName: "Liberalism",
-    textEn: "Tend to vote for conservative political candidates.",
-    textNo: "Stemmer ofte på konservative politiske kandidater.",
-    reverse: true,
-  },
-  {
-    id: "o6_4",
-    facet: "O6",
-    facetName: "Liberalism",
-    textEn: "Believe that we should be tough on crime.",
-    textNo: "Mener vi bør være strenge mot kriminalitet.",
-    reverse: true,
-  },
-] as const;
-
 export function assertQuestionSetIntegrity(): void {
   if (ALL_QUESTIONS.length !== EXPECTED_TOTAL) {
     throw new Error(`Forventet ${EXPECTED_TOTAL} spørsmål totalt, fant ${ALL_QUESTIONS.length}.`);

@@ -9,7 +9,6 @@ import type { FactorResult, FacetResult, ResultTier } from "@/lib/scoring";
 export interface StoredAccountResult {
   factors: FactorResult[];
   facets: FacetResult[];
-  o6Score: number | null;
   /**
    * Hvilken testversjon resultatet er basert på (v2.11) -- "full" (120
    * spørsmål) eller "extended" (290, "Utvidet versjon"). Vises til brukeren
