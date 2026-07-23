@@ -9,6 +9,7 @@ const LINKS = [
   // /slik-fungerer ("Om Dine Fasetter") -- se redirect-filene i de gamle
   // mappene. Personvern flyttet til egen, fullstendig side.
   { href: "/slik-fungerer", label: "Om Dine Fasetter" },
+  { href: "/priser", label: "Nivåer og priser" },
   { href: "/personvern", label: "Personvern" },
   { href: "/hjelp", label: "Hjelp" },
   // Lagret fullversjon-resultat (v2.4) -- gjelder kun fulltesten, se
