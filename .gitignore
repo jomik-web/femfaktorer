@@ -15,3 +15,9 @@ out/
 # OS- og editor-støy
 .DS_Store
 *.log
+
+# Midlertidige FUSE-artefakter (dukker opp når prosjektmappen ligger på et
+# FUSE-basert synk-filsystem som iCloud Drive -- ufarlige, men havnet ved en
+# feil i git tidligere. Mappen ligger ikke lenger på iCloud, men ignorer dem
+# uansett i tilfelle det skjer igjen på et annet synk-filsystem.)
+.fuse_hidden*
