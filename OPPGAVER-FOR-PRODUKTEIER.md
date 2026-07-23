@@ -1,6 +1,27 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 19.07.2026
+Sist oppdatert: 20.07.2026
+
+## Gjenstår -- oversikt (oppdateres fortløpende, se datert changelog under for detaljer)
+
+Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenstår?" alltid kan besvares herfra uten å lete gjennom hele loggen.
+
+- **Partner-/vennekobling** (alle tre nivåvarianter -- skjermbilde for gratis, delbar lenke for Standard, e-postbekreftet + Spir-samtale for Premium). Ikke startet.
+- **Delbare bilder/kort til sosiale medier** (gratisnivået, og trolig alle nivåer). Ikke startet.
+- **Premium-nivåets detaljerte innhold** utover det som allerede er bygget (fasettnivå, utvikling over tid) -- fortsatt ikke spesifisert, se prismodell-dokumentets del 8.
+- **Ubesluttet, uncommitet arbeid liggende i kodebasen fra en tidligere økt** (ikke min): `jspdf`-avhengighet lagt til i `package.json` og en ny fil `src/lib/pdfReport.ts` -- ser ut som et påbegynt spor for PDF-generering, men er ikke i git og ikke ferdigstilt. Rørt ikke ved dette -- si ifra om det skal fullføres, forkastes, eller om noen andre jobber med det parallelt.
+
+## Nytt: grafisk pris-/sammenligningsside (/priser) + prisrettelse (v2.35, 20.07.2026)
+
+Etter ditt ønske om en side som viser de tre nivåene grafisk, med overskriftsrad per nivå og funksjonsrader med avkrysning:
+
+- **Ny side: `/priser`**, lenket fra bunnteksten ("Nivåer og priser"). Viser Gratis (0 kr) / Standard (19 kr inkl. mva -- endret fra 20 kr etter din beskjed) / Premium (99 kr inkl. mva) side ved side, med en funksjonstabell under (avkryssede runde punkter for inkludert/ikke inkludert, tekstverdier der det ikke er binært, f.eks. antall spørsmål).
+- **Kun funksjoner som faktisk er bygget og live er tatt med i selve sammenligningen**: antall spørsmål, analysedybde, fasettnivå-analyse (kun Premium), Spir-samtale, PDF-nedlasting, skylagring, utvikling over tid (kun Premium). Partner-/vennekobling og delbare sosiale medie-kort er IKKE med i selve tabellen siden de ikke er bygget ennå -- nevnt i en egen boks under tabellen i stedet, så siden ikke lover noe som ikke finnes.
+- **Siden sier tydelig at ingen betalingssperre finnes ennå** -- alle tre nivåene er gratis å prøve under betaperioden, uansett hva prisene i tabellen sier. Dette var ditt eksplisitte krav fra i går (18.07.2026).
+- **Prisrettelsen (20 kr -> 19 kr)** er også oppdatert i `FemFaktorer_Forretnings-og-prismodell_v1.3.docx` (ny versjon lagt i dokumentbiblioteket) -- alle tre stedene prisen nevnes i dokumentet (tabellen, konkurrentanalysen, endringsloggen) er rettet.
+- I samme økt: ryddet opp en rekke midlertidige `.fuse_hidden*`-filer som ved en feil havnet i git mens prosjektmappen lå på iCloud (nå flyttet ut av iCloud) -- ingen faktisk kildekode berørt, kun støy fjernet.
+
+Testet: `npx tsc --noEmit` kjører uten feil (ingen faktisk `next build` er mulig i dette utviklingsmiljøet -- se tidligere notater i denne loggen om manglende SWC-binærfil for arm64). Husk `git push`.
 
 ## Nytt: fikset hover-meny-bug + betaversjon i toppmenyen + rød beta-varsel (v2.34, 19.07.2026)
 
