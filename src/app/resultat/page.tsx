@@ -47,6 +47,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Disclosure } from "@/components/ui/Disclosure";
+import { downloadResultPdf } from "@/lib/pdfReport";
 
 const DISPLAY_TO_DOMAIN: Record<DisplayFactor, Domain> = Object.fromEntries(
   (Object.entries(DOMAIN_TO_DISPLAY) as [Domain, DisplayFactor][]).map(([domain, display]) => [display, domain])
@@ -97,6 +98,7 @@ function ResultatContent() {
   const [tier, setTier] = useState<ResultTier | null>(null);
   const [incomplete, setIncomplete] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   // Hvilken hovedkategori-"side" som vises for den fulle testen (v2.3,
   // produkteiers ønske om å dele opp rapporten i én side per hovedkategori
   // i stedet for alt på én lang side). v2.22: kan også være "summary" -- den
@@ -416,7 +418,10 @@ function ResultatContent() {
   // Den avsluttende "Oppsummering"-fanen vises for BÅDE full og extended
   // (facets er tom for "full", så funksjonen faller naturlig tilbake til kun
   // domenenivå-samspill der -- se buildClosingSynthesis sin doc-kommentar).
-  const closing = isDetailed ? buildClosingSynthesis(factors, facets) : null;
+  // `richCombos` gir en bredere oppsummering (flere trekk, flere
+  // kombinasjonssetninger) på Utvidet-tieren, som har den mest presise
+  // fasettdataen å bygge dette på -- se doc-kommentaren i interpretations.ts.
+  const closing = isDetailed ? buildClosingSynthesis(factors, facets, { richCombos: tier === "extended" }) : null;
   // Gratis-tierens egen, korte "samlede" analyse (v2.33) -- egen, enklere
   // variant nederst på siden (ikke en fane, siden gratis-tieren ikke har
   // fane-navigasjon i utgangspunktet).
@@ -431,8 +436,23 @@ function ResultatContent() {
             Din profil
           </h1>
           {isDetailed && (
-            <Button type="button" variant="secondary" size="sm" onClick={() => window.print()} className="print:hidden">
-              Last ned som PDF
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={pdfLoading}
+              onClick={async () => {
+                if (!factors || !tier) return;
+                setPdfLoading(true);
+                try {
+                  await downloadResultPdf({ factors, facets, tier, closingText: closing?.text ?? null });
+                } finally {
+                  setPdfLoading(false);
+                }
+              }}
+              className="print:hidden"
+            >
+              {pdfLoading ? "Lager PDF …" : "Last ned som PDF"}
             </Button>
           )}
         </div>
@@ -485,7 +505,7 @@ function ResultatContent() {
                   <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
                   <div className="mt-3 flex flex-col gap-3 border-t border-indigo/10 pt-3 dark:border-white/10">
                     <div>
-                      <h3 className="text-sm font-medium text-indigo dark:text-white">Jobb</h3>
+                      <h3 className="text-sm font-medium text-indigo dark:text-white">Skole og jobb</h3>
                       <p className="text-indigo/80 dark:text-lavender-400/80">{copy.careerNote}</p>
                     </div>
                     <div>
@@ -663,7 +683,7 @@ function ResultatContent() {
                       {tier === "full" && (
                         <div className="mt-3 flex flex-col gap-3 border-t border-indigo/10 pt-3 dark:border-white/10">
                           <div>
-                            <h3 className="text-sm font-medium text-indigo dark:text-white">Jobb</h3>
+                            <h3 className="text-sm font-medium text-indigo dark:text-white">Skole og jobb</h3>
                             <p className="text-indigo/80 dark:text-lavender-400/80">{copy.careerNote}</p>
                           </div>
                           <div>
@@ -681,7 +701,7 @@ function ResultatContent() {
                       <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
                       <div className="mt-3 flex flex-col gap-3 border-t border-indigo/10 pt-3 dark:border-white/10">
                         <div>
-                          <h3 className="text-sm font-medium text-indigo dark:text-white">I jobbsammenheng</h3>
+                          <h3 className="text-sm font-medium text-indigo dark:text-white">I skole og jobb</h3>
                           <p className="text-indigo/80 dark:text-lavender-400/80">{copy.careerNote}</p>
                         </div>
                         <div>
@@ -767,7 +787,10 @@ function ResultatContent() {
       )}
 
       {BETA_ANSWER_SET_TOOLS_ENABLED && (
-        <section className="rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
+        <section
+          id="csv-verktoy"
+          className="scroll-mt-6 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden"
+        >
           <Disclosure
             title={
               <span className="font-display font-semibold text-indigo dark:text-white">
@@ -792,7 +815,15 @@ function ResultatContent() {
           {!RESULT_ACCOUNT_SAVE_ENABLED && (
             <p className="text-sm font-semibold text-factor-stability">
               Denne funksjonen er ikke i bruk mens vi betatester -- vi har en annen måte å lagre
-              resultatene på under betatestingen, se CSV-verktøyet lenger opp på siden.
+              resultatene på under betatestingen, se{" "}
+              {BETA_ANSWER_SET_TOOLS_ENABLED ? (
+                <a href="#csv-verktoy" className="underline underline-offset-2">
+                  CSV-verktøyet
+                </a>
+              ) : (
+                "CSV-verktøyet"
+              )}
+              .
             </p>
           )}
           {isRestored && (
@@ -813,8 +844,15 @@ function ResultatContent() {
 
           {!RESULT_ACCOUNT_SAVE_ENABLED ? (
             <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-              Kontolagring er satt på pause under betatestingen. Bruk CSV-verktøyet lenger opp på
-              siden for å ta vare på svarene dine mellom oppdateringer i stedet.
+              Kontolagring er satt på pause under betatestingen. Bruk{" "}
+              {BETA_ANSWER_SET_TOOLS_ENABLED ? (
+                <a href="#csv-verktoy" className="underline underline-offset-2">
+                  CSV-verktøyet
+                </a>
+              ) : (
+                "CSV-verktøyet"
+              )}{" "}
+              for å ta vare på svarene dine mellom oppdateringer i stedet.
             </p>
           ) : loggedInEmail ? (
             <div className="flex flex-col gap-2">
