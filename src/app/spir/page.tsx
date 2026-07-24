@@ -15,6 +15,7 @@ import { loadAnswers } from "@/lib/storage";
 import { FACET_ORDER_BY_DOMAIN, FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
 import { DOMAIN_DISPLAY_ORDER } from "@/data/combinationInsights";
 import { SpirHero } from "@/components/SpirHero";
+import { SpirMessageText } from "@/components/SpirMessageText";
 
 interface ChatMessage {
   role: "user" | "fem";
@@ -375,7 +376,7 @@ export default function FemPage() {
                   : "self-start rounded-lg bg-lavender-400 px-4 py-2 dark:bg-white/10"
               }
             >
-              {m.text}
+              <SpirMessageText text={m.text} />
             </div>
           ))}
         {loading && <p className="text-sm text-indigo/50 dark:text-lavender-400/50">Spir skriver …</p>}
