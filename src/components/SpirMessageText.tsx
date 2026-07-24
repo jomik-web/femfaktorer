@@ -33,7 +33,7 @@ export function SpirMessageText({ text }: { text: string }) {
   const lines = text.split("\n").filter((line) => line.trim().length > 0);
 
   return (
-    <>
+    <div className="flex flex-col gap-2">
       {lines.map((line, i) => {
         const headingMatch = line.match(/^#{1,6}\s+(.*)/);
         if (headingMatch) {
@@ -47,6 +47,6 @@ export function SpirMessageText({ text }: { text: string }) {
           <div key={i}>{renderInline(line, `l${i}`)}</div>
         );
       })}
-    </>
+    </div>
   );
 }
