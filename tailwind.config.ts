@@ -38,6 +38,13 @@ const config: Config = {
           50: "#F6F4FC", // side-bakgrunn
           100: "#E9E5F5", // kort/paneler
           400: "#B9B4C9", // deaktivert / grense
+          // 600: rikere periwinkle-fiolett, IKKE rosa (B-kanal tydelig over
+          // R -- se fargekommentar i SpirMessageText-relatert kode). Lagt til
+          // 20.07.2026 fordi Spir-chatboblen (bg-lavender-400) ga for lav
+          // kontrast mot side-bakgrunnen (kun ~1,85:1) til å skille seg
+          // tydelig ut som en bobble. Denne gir ~3,17:1 mot lavender-50 og
+          // fortsatt solid 5,23:1 for indigo-tekst oppå (AA-krav er 4,5:1).
+          600: "#8881CF",
         },
         // Faktorfarger -- justert i to omganger: (1) mer mettet for å matche
         // v2-paletten, (2) hue skjøvet vekk fra nærmeste primærfarge der

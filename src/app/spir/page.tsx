@@ -373,7 +373,7 @@ export default function FemPage() {
               className={
                 m.role === "user"
                   ? "self-end rounded-lg bg-lavender-100 px-4 py-2 dark:bg-holo-sky/20"
-                  : "self-start rounded-lg bg-lavender-400 px-4 py-2 dark:bg-white/10"
+                  : "self-start rounded-lg bg-lavender-600 px-4 py-2 dark:bg-white/10"
               }
             >
               <SpirMessageText text={m.text} />
