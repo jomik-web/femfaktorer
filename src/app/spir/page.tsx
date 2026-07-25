@@ -16,6 +16,7 @@ import { FACET_ORDER_BY_DOMAIN, FACET_INTERPRETATIONS } from "@/data/facetInterp
 import { DOMAIN_DISPLAY_ORDER } from "@/data/combinationInsights";
 import { SpirHero } from "@/components/SpirHero";
 import { SpirMessageText } from "@/components/SpirMessageText";
+import { Button, buttonClassNames } from "@/components/ui/Button";
 
 interface ChatMessage {
   role: "user" | "fem";
@@ -231,7 +232,7 @@ export default function FemPage() {
           Spir er en del av den fulle testen. Fullfør alle 120 spørsmål for å låse opp muligheten
           til å snakke med Spir om resultatet ditt.
         </p>
-        <Link href="/test" className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-white">
+        <Link href="/test" className={buttonClassNames("primary", "sm")}>
           Gå til testen
         </Link>
       </main>
@@ -247,29 +248,31 @@ export default function FemPage() {
         <SpirHero />
         <h1 className="text-xl font-semibold text-indigo dark:text-white">Før du starter</h1>
         <p className="text-indigo/80 dark:text-lavender-400/80">
-          Hvis du starter en samtale med Spir, sendes det beregnede resultatet ditt -- både de fem
-          hovedfaktorene og de om lag 29 underfasettene -- og det du selv skriver, til Anthropic --
-          leverandøren av Spir. Dette gjør at Spir kan gi mer presise svar, blant annet om karriere,
-          relasjoner og sammenhenger mellom flere trekk. Ikke del annen personlig informasjon i
-          meldingene dine enn det som trengs for samtalen. Testsvarene dine forblir lokalt i
-          nettleseren uansett.
+          Starter du en samtale med Spir, sendes resultatet ditt fra hovedfaktorene og
+          underfasettene til Anthropic, leverandøren av Spir. Det du selv skriver i chatten,
+          sendes også dit. Dette gjør at Spir kan gi mer presise svar, blant annet om karriere,
+          relasjoner og sammenhenger mellom flere trekk. Selve testsvarene dine forblir lokalt i
+          nettleseren.
+        </p>
+        <p className="font-semibold text-indigo dark:text-white">
+          Ikke del annen personlig informasjon i meldingene dine enn det som trengs for samtalen.
         </p>
         <p className="text-indigo/80 dark:text-lavender-400/80">Du kan velge hvordan samtalen skal foregå:</p>
         <div className="flex flex-col gap-3">
-          <button
+          <Button
             type="button"
             onClick={() => {
               setConsented(true);
               setMode("guided");
             }}
-            className="rounded-lg bg-holo-sky px-5 py-3 text-left font-medium text-white"
+            className="text-left"
           >
             Gå gjennom resultatet steg for steg med Spir
-            <span className="mt-1 block text-sm font-normal text-white/80">
+            <span className="mt-1 block text-sm font-normal text-indigo/70">
               Spir tar for seg én underkategori om gangen, spør deg om den, og dere går videre
               sammen når du er klar.
             </span>
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => {
@@ -385,14 +388,9 @@ export default function FemPage() {
 
       {mode === "guided" && !guidedDone && (
         <div className="flex flex-wrap items-center gap-4 border-t border-lavender-400 pt-4 dark:border-white/10">
-          <button
-            type="button"
-            onClick={advanceGuided}
-            disabled={loading}
-            className="rounded-lg bg-holo-sky px-5 py-2 font-medium text-white disabled:opacity-50"
-          >
+          <Button type="button" size="sm" onClick={advanceGuided} disabled={loading}>
             Gå videre til neste underkategori →
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => setGuidedDone(true)}
@@ -406,7 +404,7 @@ export default function FemPage() {
 
       {mode === "guided" && guidedDone && (
         <div className="flex flex-wrap items-center gap-3 border-t border-lavender-400 pt-4 pb-4 dark:border-white/10">
-          <Link href="/resultat" className="rounded-lg bg-holo-sky px-5 py-2 font-medium text-white">
+          <Link href="/resultat" className={buttonClassNames("primary", "sm")}>
             Tilbake til resultatet
           </Link>
           <button
@@ -437,13 +435,9 @@ export default function FemPage() {
             placeholder="Spør Spir om resultatet ditt …"
             className="flex-1 rounded-lg border border-lavender-400 px-4 py-2 dark:border-white/20 dark:bg-transparent"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-holo-sky px-5 py-2 font-medium text-white disabled:opacity-50"
-          >
+          <Button type="submit" size="sm" disabled={loading}>
             Send
-          </button>
+          </Button>
         </form>
       )}
     </main>

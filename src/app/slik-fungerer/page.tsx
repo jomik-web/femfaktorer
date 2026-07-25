@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { buttonClassNames } from "@/components/ui/Button";
 
 /**
  * Konsolidert "om"-side (v2.5). Slår sammen innholdet som tidligere lå
@@ -175,15 +176,12 @@ export default function OmFemfaktorerPage() {
           oversikten -- inkludert cookies, hvilke tjenester som er involvert, og dine rettigheter --
           se personvernsiden.
         </p>
-        <Link
-          href="/personvern"
-          className="self-start rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-white"
-        >
+        <Link href="/personvern" className={buttonClassNames("primary", "sm", "self-start")}>
           Les hele personvernoversikten
         </Link>
       </section>
 
-      <Link href="/test" className="self-start rounded-lg bg-holo-sky px-6 py-3 font-medium text-white">
+      <Link href="/test" className={buttonClassNames("primary", "md", "self-start")}>
         Start testen
       </Link>
     </main>

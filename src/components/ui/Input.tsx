@@ -18,10 +18,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         ref={ref}
         className={[
           "w-full rounded-lg border bg-white px-4 py-2.5 text-indigo placeholder:text-lavender-400",
-          "transition-colors focus:outline-none focus:ring-2 focus:ring-holo-sky/40",
+          // holo-skyText, ikke holo-sky -- samme WCAG 1.4.11-fiks som resten
+          // av fokusindikatorene i appen (kvalitetsrevisjon 2026-07-24).
+          "transition-colors focus:outline-none focus:ring-2 focus:ring-holo-skyText/40",
           invalid
             ? "border-factor-stability focus:border-factor-stability"
-            : "border-lavender-400/60 focus:border-holo-sky",
+            : "border-lavender-400/60 focus:border-holo-skyText",
           className,
         ].join(" ")}
         {...props}

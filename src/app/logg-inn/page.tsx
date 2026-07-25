@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveRestoredAccountResult } from "@/lib/storage";
 import { ACCOUNT_SAVE_ENABLED } from "@/lib/featureFlags";
+import { Button, buttonClassNames } from "@/components/ui/Button";
 
 type Step = "checking" | "loggedIn" | "email" | "code";
 
@@ -69,7 +70,7 @@ export default function LoggInnPage() {
             resultatsiden, og laste den opp igjen senere.
           </p>
         </header>
-        <Link href="/resultat" className="rounded-lg bg-holo-sky px-5 py-2.5 text-center font-medium text-white">
+        <Link href="/resultat" className={buttonClassNames("primary", "sm", "text-center")}>
           Gå til resultatsiden
         </Link>
         <Link href="/" className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60">
@@ -254,13 +255,9 @@ export default function LoggInnPage() {
             placeholder="navn@eksempel.no"
             className="rounded-lg border border-lavender-400 px-4 py-2 dark:border-white/20 dark:bg-transparent"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-white disabled:opacity-50"
-          >
+          <Button type="submit" size="sm" disabled={loading}>
             {loading ? "Sender kode …" : "Send meg en kode"}
-          </button>
+          </Button>
         </form>
       ) : (
         <form onSubmit={verifyCode} className="flex flex-col gap-3">
@@ -280,13 +277,9 @@ export default function LoggInnPage() {
             placeholder="123456"
             className="rounded-lg border border-lavender-400 px-4 py-2 tracking-[0.3em] dark:border-white/20 dark:bg-transparent"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-white disabled:opacity-50"
-          >
+          <Button type="submit" size="sm" disabled={loading}>
             {loading ? "Bekrefter …" : "Logg inn"}
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => {

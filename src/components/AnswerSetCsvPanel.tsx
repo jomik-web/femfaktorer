@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loadAnswers, saveAnswers } from "@/lib/storage";
 import { buildAnswerSetCsv, parseAnswerSetCsv } from "@/lib/devTools/answerSetCsv";
+import { Button } from "@/components/ui/Button";
 
 export interface AnswerSetCsvPanelProps {
   /**
@@ -133,13 +134,9 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-3">
         {!hideDownload && (
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="rounded-lg bg-holo-sky px-5 py-2.5 text-center font-medium text-white"
-          >
+          <Button type="button" size="sm" onClick={handleDownload}>
             Last ned svarene som CSV
-          </button>
+          </Button>
         )}
         <label className="cursor-pointer rounded-lg border border-holo-skyText px-5 py-2.5 text-center font-medium text-holo-skyText">
           {importing ? "Laster inn …" : "Last opp et svarsett"}

@@ -7,4 +7,4 @@
  * loggen sin. Husk å oppdatere denne konstanten sammen med hver ny
  * changelog-oppføring.
  */
-export const APP_VERSION = "2.35";
+export const APP_VERSION = "2.36";

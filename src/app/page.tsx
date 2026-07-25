@@ -3,15 +3,16 @@ import { FREE_QUESTIONS } from "@/data/questions";
 import SpirMascot from "@/components/SpirMascot";
 import { FactorIcon } from "@/components/FactorIcon";
 import { PageBackground } from "@/components/ui/PageBackground";
+import { buttonClassNames } from "@/components/ui/Button";
 import type { DisplayFactor } from "@/lib/scoring";
 
-// Klasser hentet 1:1 fra Button (variant="primary" size="lg") -- Link kan
-// ikke bruke <Button> direkte (den er en <button>), men skal se identisk ut.
-const PRIMARY_LG_LINK_CLASSES =
-  "font-display font-semibold transition-all duration-150 " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-holo-sky focus-visible:ring-offset-2 " +
-  "bg-holo-sky text-indigo shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98] " +
-  "px-8 py-4 text-lg rounded-2xl";
+// Bruker den delte buttonClassNames()-byggeren fra Button (variant="primary"
+// size="lg") -- Link kan ikke bruke <Button> direkte (den er en <button>),
+// men skal se identisk ut. Var tidligere en lokal, duplisert konstant her --
+// slått sammen med Button-komponentets egen kilde (kvalitetsrevisjon
+// 2026-07-24) slik at fremtidige fargeendringer (som fokusring-fiksen i
+// samme revisjon) ikke må gjøres flere steder.
+const PRIMARY_LG_LINK_CLASSES = buttonClassNames("primary", "lg");
 
 const FACTORS: DisplayFactor[] = [
   "openness",

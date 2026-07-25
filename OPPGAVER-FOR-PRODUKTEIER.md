@@ -1,6 +1,6 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 20.07.2026
+Sist oppdatert: 24.07.2026
 
 ## Gjenstår -- oversikt (oppdateres fortløpende, se datert changelog under for detaljer)
 
@@ -8,8 +8,24 @@ Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenst�
 
 - **Partner-/vennekobling** (alle tre nivåvarianter -- skjermbilde for gratis, delbar lenke for Standard, e-postbekreftet + Spir-samtale for Premium). Ikke startet.
 - **Delbare bilder/kort til sosiale medier** (gratisnivået, og trolig alle nivåer). Ikke startet.
+- **PDF-nedlasting (`src/lib/pdfReport.ts`/jsPDF) er FERDIG og live**, ikke ubesluttet arbeid som tidligere logget her -- denne oversikten var kommet ute av synk med kodestatus (funnet i kvalitetsrevisjonen 24.07.2026). Kun kodesplittet i denne runden slik at avhengigheten ikke lastes for besøkende som ikke bruker den.
+- **SEO er bevisst utsatt** (metadata per side, sitemap.xml, robots.txt, Open Graph-tagger) til domene er valgt -- se kvalitetsrevisjonen 24.07.2026, kategori 7.
+- **CSP, DPA/DPIA, jurist-gjennomgang, org.nr.** -- fortsatt bevisst utsatt, krever din oppfølging (uendret fra tidligere oppføringer).
 - **Premium-nivåets detaljerte innhold** utover det som allerede er bygget (fasettnivå, utvikling over tid) -- fortsatt ikke spesifisert, se prismodell-dokumentets del 8.
 - **Ubesluttet, uncommitet arbeid liggende i kodebasen fra en tidligere økt** (ikke min): `jspdf`-avhengighet lagt til i `package.json` og en ny fil `src/lib/pdfReport.ts` -- ser ut som et påbegynt spor for PDF-generering, men er ikke i git og ikke ferdigstilt. Rørt ikke ved dette -- si ifra om det skal fullføres, forkastes, eller om noen andre jobber med det parallelt.
+
+## Nytt: rettet seks funn fra kvalitetsrevisjonen 24.07.2026 (v2.36, 24.07.2026)
+
+Etter kvalitetsrevisjonen i dag (`Kvalitetsrevisjon_DineFasetter_2026-07-24.docx`) ba du meg gjøre det jeg mente var best for opplevelsen på funn #1, og gjennomføre #2, #3, #5 og #7 som foreslått i revisjonen, samt legge til testene fra #6 selv. SEO (#4) venter til senere, som avtalt. Følgende er gjort:
+
+- **Toppmenyen (`SiteNav.tsx`) er nå responsiv.** Hadde tidligere null breakpoints -- risiko for sammenklemt/ødelagt navigasjon på smale skjermer. Under `md`-breakpunktet er den vanlige lenkelisten nå skjult til fordel for en hamburgerknapp (med `aria-expanded`/`aria-controls`, lukkes ved sidebytte eller Escape) som åpner et enkelt, stablet mobilpanel med de samme lenkene, inkludert rapportvalgene (50/120/290) inline.
+- **Kontrastbruddet (WCAG 1.4.3) er rettet ved roten, ikke punktvis.** `bg-holo-sky` + `text-white` (~2,04:1 kontrast, under 4,5:1-kravet) fantes i 12+ ad hoc-knapper i `slik-fungerer`, `logg-inn`, `spir` og `AnswerSetCsvPanel` -- nøyaktig samme feilklasse som ble "rettet" i forrige revisjon (19.07.2026) og deretter kom tilbake i ny form. Denne gangen er alle disse knappene enten byttet til det delte `<Button>`-komponentet, eller (der det måtte være en `<Link>`) til en ny, eksportert `buttonClassNames()`-byggerfunksjon i `Button.tsx` som garanterer identisk styling. To eksisterende, lokalt dupliserte kopier av akkurat denne knappestilen (`page.tsx`, `resultat/page.tsx`) er samtidig slått sammen til samme kilde.
+- **Krisevarselet og ikke-diagnostisk-forbeholdet er nå alltid synlige på resultatsiden**, ikke skjult bak en lukket boks som måtte klikkes opp. Kun det mindre kritiske, nivåspesifikke fotnote-innholdet ("basert på 50/120/290 spørsmål") er fortsatt bak klikk.
+- **jsPDF lastes nå kun ved klikk** på "Last ned som PDF" (dynamisk import), i stedet for i resultatsidens initiale bunt for alle besøkende uansett bruk.
+- **Fokusindikatoren bruker nå `holo-skyText` i stedet for `holo-sky`** overalt (global `:focus-visible`, `Button`, `AnswerScale`, `Input`) -- samme WCAG 1.4.11-fiks som kontrastbruddet over, siden fokusringen tidligere arvet den samme utilstrekkelige fargen.
+- **Lagt til to nye testfiler** (`src/lib/spir/responseValidator.test.ts`, `src/lib/account/otp.test.ts`) som låser de to tidligere, udokumenterte produksjonsbugsene i Spir-validatoren (v2.14, v2.20-v2.21) og dekker hele OTP-flyten (kode, utløp, forsøksgrense, engangsbruk, resend-sperre).
+
+**Testet:** `npx tsc --noEmit` kjører uten feil. `npx vitest run` kunne derimot IKKE kjøres i denne økten -- sandkassen mangler en Linux-kompatibel native `rollup`-binærfil (kun `rollup-darwin-arm64` finnes i `node_modules`, samme kjente begrensning som er dokumentert tidligere i denne loggen for SWC). Testlogikken er i stedet verifisert manuelt ved å kjøre begge filenes assertions direkte via Nodes innebygde TypeScript-støtte (alle 19 sjekker besto) -- men selve vitest-kommandoen bør kjøres lokalt eller i Netlifys bygg før du stoler fullt på dem. SEO (funn #4 i revisjonen) er bevisst IKKE gjort denne runden, som avtalt. Husk `git push`.
 
 ## Nytt: grafisk pris-/sammenligningsside (/priser) + prisrettelse (v2.35, 20.07.2026)
 

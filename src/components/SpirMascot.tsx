@@ -86,20 +86,27 @@ export function SpirBody({ gradientId }: { gradientId: string }) {
   );
 }
 
-/** Gullkjede + anheng -- identisk i alle uttrykk. */
+/**
+ * Tynn gullkjede + liten anheng -- identisk i alle uttrykk.
+ *
+ * v2.1 -- kjeden ble gjort tynnere og anhenget mindre (uten tykk ring-kant)
+ * etter en gjennomgang av kjønnskoding i figurens uttrykk: en tykk kjede med
+ * stor rund medaljong leste tydelig maskulint ("bling"/rapper-estetikk),
+ * mens en tynn kjede beholder signaturdetaljen uten den koblingen. Resten av
+ * figuren (form, farger, positur, solbriller) var allerede nøytral og er
+ * uendret.
+ */
 export function SpirChain({ gradientId }: { gradientId: string }) {
   return (
     <>
       <path
-        d="M70,142 Q96,162 122,140"
+        d="M74,140 Q96,156 118,140"
         stroke={`url(#${gradientId})`}
-        strokeWidth={5}
+        strokeWidth={2}
         fill="none"
         strokeLinecap="round"
-        strokeDasharray="1,8"
       />
-      <circle cx={96} cy={163} r={7} fill={`url(#${gradientId})`} />
-      <circle cx={96} cy={163} r={7} fill="none" stroke="#8A6A1A" strokeWidth={1.3} />
+      <circle cx={96} cy={157} r={3.2} fill={`url(#${gradientId})`} />
     </>
   );
 }

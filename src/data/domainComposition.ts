@@ -397,3 +397,37 @@ export function buildFacetAwareNote(
 
   return note;
 }
+
+/**
+ * v2.36 (produkteiers ønske 24.07.2026): Standard-tieren (120 spm) skal
+ * ikke vise selve fasettlisten/-grafene lenger -- det er en Premium/
+ * Utvidet-eksklusiv funksjon, se prissammenligningen i /priser. Den skal
+ * likevel nevne de TRE mest utpregede underkategoriene ved navn, vevd inn
+ * som én løpende setning i hovedteksten, i stedet for å droppe fasettnivået
+ * helt. Bevisst enklere enn buildFacetAwareNote over: ingen konkrete
+ * "signatur"-eksempler og ingen stereotyp-presisering -- den ekstra dybden
+ * skal fortsatt være det som skiller Utvidet fra Standard (se v2.35-notatet
+ * om "premiumfølelse" over). Denne er en kort smakebit, ikke en analyse.
+ */
+export function buildTopFacetsMention(facetsForDomain: FacetResult[]): string {
+  if (facetsForDomain.length === 0) return "";
+
+  const withDistance: DrivingFacet[] = facetsForDomain.map((facet) => ({
+    facet,
+    distanceFromMid: Math.abs(facet.score - 50),
+  }));
+  withDistance.sort((a, b) => b.distanceFromMid - a.distanceFromMid);
+
+  const top = withDistance.slice(0, 3);
+  const labels = top.map((d) => FACET_INTERPRETATIONS[d.facet.facet]?.label ?? d.facet.facet);
+  if (labels.length === 0 || !labels[0]) return "";
+
+  const namesJoined =
+    labels.length <= 1
+      ? labels[0]!
+      : labels.length === 2
+        ? `${labels[0]} og ${labels[1]}`
+        : `${labels.slice(0, -1).join(", ")} og ${labels[labels.length - 1]}`;
+
+  return `Det er særlig underkategoriene ${namesJoined} som gir dette resultatet sitt tydeligste preg.`;
+}

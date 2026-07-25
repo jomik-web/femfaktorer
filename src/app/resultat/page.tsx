@@ -37,17 +37,16 @@ import {
   type FacetCombinationInsight,
 } from "@/data/combinationInsights";
 import { computeAccountResultExpiry, type StoredAccountResult } from "@/lib/account/types";
-import { buildFacetDrivenOverview, buildFacetAwareNote } from "@/data/domainComposition";
+import { buildFacetDrivenOverview, buildFacetAwareNote, buildTopFacetsMention } from "@/data/domainComposition";
 import { ACCOUNT_SAVE_ENABLED, RESULT_ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
 import { FactorIcon } from "@/components/FactorIcon";
 import { FactorHero } from "@/components/FactorHero";
 import SpirMascot from "@/components/SpirMascot";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassNames } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Disclosure } from "@/components/ui/Disclosure";
-import { downloadResultPdf } from "@/lib/pdfReport";
 
 const DISPLAY_TO_DOMAIN: Record<DisplayFactor, Domain> = Object.fromEntries(
   (Object.entries(DOMAIN_TO_DISPLAY) as [Domain, DisplayFactor][]).map(([domain, display]) => [display, domain])
@@ -64,13 +63,12 @@ const FACTOR_BG: Record<DisplayFactor, string> = {
   stability: "bg-factor-stability",
 };
 
-// Klasser hentet 1:1 fra Button (variant="primary" size="md") -- Link kan
-// ikke bruke <Button> direkte (den er en <button>), men skal se identisk ut.
-const PRIMARY_MD_LINK_CLASSES =
-  "font-display font-semibold transition-all duration-150 inline-block " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-holo-sky focus-visible:ring-offset-2 " +
-  "bg-holo-sky text-indigo shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98] " +
-  "px-6 py-3 text-base rounded-xl";
+// Bruker den delte buttonClassNames()-byggeren fra Button (variant="primary"
+// size="md") -- Link kan ikke bruke <Button> direkte (den er en <button>),
+// men skal se identisk ut. Var tidligere en lokal, duplisert konstant her --
+// slått sammen med Button-komponentets egen kilde (kvalitetsrevisjon
+// 2026-07-24) slik at fremtidige fargeendringer ikke må gjøres flere steder.
+const PRIMARY_MD_LINK_CLASSES = buttonClassNames("primary", "md");
 
 function questionSetForTier(tier: ResultTier): readonly Question[] {
   return tier === "extended" ? ALL_QUESTIONS_EXTENDED : tier === "full" ? ALL_QUESTIONS : FREE_QUESTIONS;
@@ -178,11 +176,18 @@ function ResultatContent() {
     if (chosenTier && chosenFactors) {
       setFactors(chosenFactors);
       setTier(chosenTier);
-      // Fasettskår (underkategorier) vises nå KUN for Utvidet versjon (290,
-      // v2.33, produkteiers ønske) -- Standard (120) skal ikke lenger vise
-      // underkategorier, selv om de teknisk sett er beregnbare fra 120-settet.
+      // Fasettskår (underkategorier) vises som EGEN LISTE/graf nå KUN for
+      // Utvidet versjon (290, v2.33, produkteiers ønske) -- Standard (120)
+      // skal ikke lenger vise underkategoriene enkeltvis. v2.36: Standard
+      // beregner likevel fasettene sine internt nå, KUN for å kunne nevne de
+      // tre mest utpregede underkategoriene ved navn i løpende tekst (se
+      // buildTopFacetsMention i domainComposition.ts og guarden lenger ned i
+      // denne filen som fortsatt skjuler selve Underkategorier-seksjonen for
+      // "full").
       if (chosenTier === "extended") {
         setFacets(computeFacetResults(stored.answers, ALL_QUESTIONS_EXTENDED));
+      } else if (chosenTier === "full") {
+        setFacets(computeFacetResults(stored.answers, ALL_QUESTIONS));
       }
 
       setHydrated(true);
@@ -445,6 +450,11 @@ function ResultatContent() {
                 if (!factors || !tier) return;
                 setPdfLoading(true);
                 try {
+                  // Lastes kun ved klikk (kvalitetsrevisjon 2026-07-24): jsPDF
+                  // er en middels tung avhengighet som tidligere ble lastet
+                  // for ALLE besøkende på resultatsiden via en statisk
+                  // toppimport, selv de som aldri trykker denne knappen.
+                  const { downloadResultPdf } = await import("@/lib/pdfReport");
                   await downloadResultPdf({ factors, facets, tier, closingText: closing?.text ?? null });
                 } finally {
                   setPdfLoading(false);
@@ -456,26 +466,36 @@ function ResultatContent() {
             </Button>
           )}
         </div>
-        <Disclosure title="Viktig å vite om resultatet">
+        {/* Ikke-diagnostisk-forbeholdet og krisehenvisningen er BEVISST alltid
+            synlige, ikke inni Disclosure-en under -- v2.24-beslutningen var at
+            krisehenvisningen skal vises uansett skår, noe en lukket-som-
+            standard boks bak et klikk motvirket i praksis (kvalitetsrevisjon
+            2026-07-24, høyt funn). Kun det mindre kritiske, nivåspesifikke
+            fotnote-innholdet er fortsatt skjult bak klikk. */}
+        <div className="flex flex-col gap-1">
           <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{NON_DIAGNOSTIC_NOTICE}</p>
           <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{CRISIS_NOTICE}</p>
-          {tier === "free" && (
-            <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-              Dette er et foreløpig resultat, basert på de første 50 av 120 spørsmål.
-            </p>
-          )}
-          {tier === "full" && (
-            <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-              Basert på fullversjonen (alle 120 spørsmål).
-            </p>
-          )}
-          {tier === "extended" && (
-            <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-              Basert på Utvidet versjon (alle 290 spørsmål) -- det mest presise resultatet Dine Fasetter
-              kan gi, med 10 spørsmål per underkategori i stedet for 4-5.
-            </p>
-          )}
-        </Disclosure>
+        </div>
+        {(tier === "free" || tier === "full" || tier === "extended") && (
+          <Disclosure title="Mer om dette resultatnivået">
+            {tier === "free" && (
+              <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+                Dette er et foreløpig resultat, basert på de første 50 av 120 spørsmål.
+              </p>
+            )}
+            {tier === "full" && (
+              <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+                Basert på fullversjonen (alle 120 spørsmål).
+              </p>
+            )}
+            {tier === "extended" && (
+              <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+                Basert på Utvidet versjon (alle 290 spørsmål) -- det mest presise resultatet Dine Fasetter
+                kan gi, med 10 spørsmål per underkategori i stedet for 4-5.
+              </p>
+            )}
+          </Disclosure>
+        )}
       </header>
 
       {tier === "free" && (
@@ -548,6 +568,17 @@ function ResultatContent() {
 
       {isDetailed && (
         <>
+          {/* v2.36 (produkteiers ønske 24.07.2026): samme samlede oversikt
+              over alle fem hovedfaktorene som gratis-tieren viser øverst
+              (se seksjonen over for tier === "free") -- ga tidligere bare
+              ÉN faktor om gangen inni fane-visningen under, uten et
+              helhetsbilde før man begynner å bla i fanene. */}
+          <section className="flex flex-col gap-6">
+            {factors.map((f) => (
+              <RoughFactorIndicator key={f.factor} factor={f.factor} label={f.label} score={f.score} />
+            ))}
+          </section>
+
           <nav
             className="flex flex-wrap gap-2 print:hidden"
             aria-label="Velg hvilken hovedkategori som vises"
@@ -599,7 +630,14 @@ function ResultatContent() {
               // v2.18: gjenreist fasettbevissthet -- nevner hvilke(n)
               // underkategori(er) som driver hovedkategoriskåren, som en
               // egen linje i tillegg til (ikke i stedet for) synthesis-teksten.
-              const facetAwareNote = buildFacetAwareNote(f.factor, f.score, facetsForDomain);
+              // v2.36: Standard (120) får en enklere, tre-fasetters variant
+              // uten "premium"-signatureksemplene -- se domainComposition.ts.
+              const facetAwareNote =
+                tier === "extended"
+                  ? buildFacetAwareNote(f.factor, f.score, facetsForDomain)
+                  : tier === "full"
+                    ? buildTopFacetsMention(facetsForDomain)
+                    : "";
               const domainCombos: CombinationInsight[] = domainCombosByDomain.get(domain) ?? [];
               const facetCombos: FacetCombinationInsight[] = facetCombosByDomain.get(domain) ?? [];
               // Ny struktur (domenedefinisjon -> fasetter -> én sammenhengende
@@ -627,7 +665,12 @@ function ResultatContent() {
                     <p className="text-sm text-indigo/60 dark:text-lavender-400/60">{DOMAIN_DEFINITIONS[f.factor]}</p>
                   </div>
 
-                  {facetsForDomain.length > 0 && (
+                  {/* v2.36: selve fasettlisten/-grafene er en Premium/Utvidet-
+                      eksklusiv (se /priser) -- Standard (120) beregner nå
+                      facetsForDomain internt (se useEffect over), men skal
+                      ikke vise denne seksjonen, kun den kortere
+                      facetAwareNote-setningen lenger ned. */}
+                  {tier === "extended" && facetsForDomain.length > 0 && (
                     <div className="flex flex-col gap-4">
                       <h3 className="font-display font-semibold text-indigo dark:text-white">Underkategorier</h3>
                       <div className="flex flex-col gap-5">
@@ -760,7 +803,10 @@ function ResultatContent() {
             >
               <FactorHero factor="summary" className="rounded-2xl" />
               <h2 className="font-display text-xl font-semibold text-indigo dark:text-white">Hva betyr dette for deg?</h2>
-              {splitIntoParagraphs(closing.text).map((p, i) => (
+              {/* v2.36: Utvidet (290) deles i flere avsnitt enn Standard
+                  (120) -- en STRUKTURELL forskjell, ikke bare avhengig av at
+                  richCombos-teksten tilfeldigvis blir lang nok av seg selv. */}
+              {splitIntoParagraphs(closing.text, tier === "extended" ? 3 : 2).map((p, i) => (
                 <p key={i} className="text-indigo/80 dark:text-lavender-400/80">
                   {p}
                 </p>

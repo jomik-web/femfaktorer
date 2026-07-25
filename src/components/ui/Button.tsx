@@ -16,8 +16,8 @@ import { ButtonHTMLAttributes, forwardRef } from "react";
  * personlighet enn Inter på korte, iøynefallende tekstbiter.
  */
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
-type ButtonSize = "sm" | "md" | "lg";
+export type ButtonVariant = "primary" | "secondary" | "ghost";
+export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -39,21 +39,34 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
   lg: "px-8 py-4 text-lg rounded-2xl",
 };
 
+/**
+ * Delt klassebygger for knappestil -- brukes av <Button> selv, men også
+ * eksportert slik at navigasjonselementer som MÅ være en <Link>/<a> (og
+ * derfor ikke kan bruke <Button>, som alltid rendrer <button>) kan få
+ * identisk, WCAG-korrekt styling i stedet for å hardkode f.eks.
+ * "bg-holo-sky ... text-white" lokalt i hver fil (se kvalitetsrevisjon
+ * 2026-07-24, kritisk funn #2 -- kontrastbrudd som spredte seg nettopp
+ * fordi knappestil ble kopiert manuelt i stedet for delt).
+ */
+export function buttonClassNames(
+  variant: ButtonVariant = "primary",
+  size: ButtonSize = "md",
+  className = ""
+): string {
+  return [
+    "font-display font-semibold transition-all duration-150 inline-block",
+    "disabled:opacity-40 disabled:pointer-events-none",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-holo-skyText focus-visible:ring-offset-2",
+    VARIANT_CLASSES[variant],
+    SIZE_CLASSES[size],
+    className,
+  ].join(" ");
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", size = "md", className = "", children, ...props }, ref) => {
     return (
-      <button
-        ref={ref}
-        className={[
-          "font-display font-semibold transition-all duration-150",
-          "disabled:opacity-40 disabled:pointer-events-none",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-holo-sky focus-visible:ring-offset-2",
-          VARIANT_CLASSES[variant],
-          SIZE_CLASSES[size],
-          className,
-        ].join(" ")}
-        {...props}
-      >
+      <button ref={ref} className={buttonClassNames(variant, size, className)} {...props}>
         {children}
       </button>
     );

@@ -12,9 +12,12 @@
     font-feature-settings: "cv11", "ss01";
   }
 
-  /* WCAG 2.2 AA: synlig fokusmarkør på alle interaktive elementer (Dokument 02 §20) */
+  /* WCAG 2.2 AA: synlig fokusmarkør på alle interaktive elementer (Dokument 02 §20).
+     Bruker holo-skyText, ikke holo-sky -- holo-sky gir kun ~2:1 kontrast mot hvit
+     bakgrunn (under WCAG 1.4.11-kravet på 3:1 for UI-indikatorer). skyText gir
+     ~5:1 mot lys og ~3,6:1 mot mørk bakgrunn (kvalitetsrevisjon 2026-07-24). */
   :focus-visible {
-    @apply outline outline-2 outline-offset-2 outline-holo-sky;
+    @apply outline outline-2 outline-offset-2 outline-holo-skyText;
   }
 
   /* Respekter redusert bevegelse (Dokument 02 §6.5) */

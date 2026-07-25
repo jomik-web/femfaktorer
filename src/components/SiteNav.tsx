@@ -46,6 +46,7 @@ export function SiteNav() {
   const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [reportMenuOpen, setReportMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unlocked, setUnlocked] = useState<Record<ResultTier, boolean>>({
     free: false,
     full: false,
@@ -105,6 +106,22 @@ export function SiteNav() {
     };
   }, []);
 
+  // Lukk mobilmenyen automatisk ved sidebytte -- ellers ville den blitt
+  // stående åpen over neste side etter et lenkeklikk.
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Mobilmeny: lukk med Escape (samme tastaturstøtte som rapportvalg-menyen).
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
   // Lukk undermenyen ved klikk utenfor, eller ved Escape (tastaturstøtte).
   useEffect(() => {
     if (!reportMenuOpen) return;
@@ -139,7 +156,42 @@ export function SiteNav() {
             Beta v{APP_VERSION}
           </span>
         </Link>
-        <ul className="flex items-center gap-4 text-sm">
+
+        {/* Mobilmeny-knapp (kvalitetsrevisjon 2026-07-24, kritisk funn):
+            menyen under hadde tidligere ingen responsiv strategi i det hele
+            tatt (0 breakpoints), med risiko for overflow/sammenklemming på
+            smale skjermer. Under md-breakpoktet skjules listen til fordel
+            for denne knappen + panelet lenger ned. */}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((v) => !v)}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobil-meny"
+          aria-label={mobileMenuOpen ? "Lukk meny" : "Åpne meny"}
+          className="rounded p-1.5 text-indigo hover:bg-lavender-100 dark:text-white dark:hover:bg-white/10 md:hidden"
+        >
+          <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+            {mobileMenuOpen ? (
+              <path
+                d="M5,5 L17,17 M17,5 L5,17"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                fill="none"
+                strokeLinecap="round"
+              />
+            ) : (
+              <path
+                d="M3,6 L19,6 M3,11 L19,11 M3,16 L19,16"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                fill="none"
+                strokeLinecap="round"
+              />
+            )}
+          </svg>
+        </button>
+
+        <ul className="hidden items-center gap-4 text-sm md:flex">
           {LINKS_BEFORE_RESULT.map((link) => {
             const active = pathname === link.href;
             return (
@@ -277,6 +329,110 @@ export function SiteNav() {
           )}
         </ul>
       </nav>
+
+      {/* Mobilpanel -- flat, vertikal liste av de samme lenkene som
+          desktop-menyen over, inkludert rapportvalgene inline (uten egen
+          hover-undermeny, som ikke gir mening på berøring). Lukkes ved
+          sidebytte, Escape, eller ny knappeklikk (se useEffect-ene over). */}
+      {mobileMenuOpen && (
+        <div id="mobil-meny" className="border-t border-lavender-400 bg-white px-6 py-3 dark:border-white/10 dark:bg-indigo md:hidden">
+          <ul className="flex flex-col gap-1 text-sm">
+            {LINKS_BEFORE_RESULT.map((link) => {
+              const active = pathname === link.href;
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={active ? "page" : undefined}
+                    className={
+                      "block rounded px-2 py-2 " +
+                      (active
+                        ? "font-medium text-holo-skyText"
+                        : "text-indigo/70 hover:text-holo-skyText dark:text-lavender-400/70")
+                    }
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
+
+            <li>
+              <Link
+                href="/resultat"
+                aria-current={resultActive ? "page" : undefined}
+                className={
+                  "block rounded px-2 py-2 " +
+                  (resultActive
+                    ? "font-medium text-holo-skyText"
+                    : "text-indigo/70 hover:text-holo-skyText dark:text-lavender-400/70")
+                }
+              >
+                Resultat
+              </Link>
+              {anyUnlocked && (
+                <ul className="flex flex-col gap-1 pl-4">
+                  {REPORT_OPTIONS.map((opt) => {
+                    const isUnlocked = unlocked[opt.unlockKey];
+                    return (
+                      <li key={opt.tier}>
+                        {isUnlocked ? (
+                          <Link
+                            href={`/resultat?tier=${opt.tier}`}
+                            className="block rounded px-2 py-1.5 text-indigo/70 hover:text-holo-skyText dark:text-lavender-400/70"
+                          >
+                            {opt.label}
+                          </Link>
+                        ) : (
+                          <span aria-disabled="true" className="block cursor-not-allowed px-2 py-1.5 text-indigo/30 dark:text-lavender-400/30">
+                            {opt.label}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
+
+            {LINKS_AFTER_RESULT.map((link) => {
+              const active = pathname === link.href;
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={active ? "page" : undefined}
+                    className={
+                      "block rounded px-2 py-2 " +
+                      (active
+                        ? "font-medium text-holo-skyText"
+                        : "text-indigo/70 hover:text-holo-skyText dark:text-lavender-400/70")
+                    }
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
+            {ACCOUNT_SAVE_ENABLED && (
+              <li>
+                <Link
+                  href="/logg-inn"
+                  aria-current={pathname === "/logg-inn" ? "page" : undefined}
+                  className={
+                    "block rounded px-2 py-2 " +
+                    (pathname === "/logg-inn"
+                      ? "font-medium text-holo-skyText"
+                      : "text-indigo/70 hover:text-holo-skyText dark:text-lavender-400/70")
+                  }
+                >
+                  {!checked ? "Konto" : loggedInEmail ? "Min konto" : "Logg inn"}
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
     </header>
   );
 }

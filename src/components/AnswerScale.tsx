@@ -36,7 +36,7 @@ export function AnswerScale({ questionId, value, onAnswer }: AnswerScaleProps) {
             onClick={() => onAnswer(option.value)}
             className={[
               "flex-1 rounded-lg border px-4 py-3 text-sm font-medium transition-colors",
-              "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-holo-sky",
+              "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-holo-skyText",
               selected
                 ? "border-holo-sky bg-lavender-100 text-indigo dark:bg-holo-sky/20 dark:text-white"
                 : "border-lavender-400 bg-white text-indigo hover:border-holo-sky dark:bg-transparent dark:text-lavender-400 dark:border-white/20",
