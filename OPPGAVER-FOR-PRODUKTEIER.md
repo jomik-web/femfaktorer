@@ -29,6 +29,13 @@ Du ba om at kortet med det Spir-motivet som passer brukeren best skal vises i li
 
 **Testet:** `npx tsc --noEmit` kjører uten feil. Selve bildekomposisjonen (særlig story-formatet) er visuelt verifisert ved å bygge frittstående SVG-testfiler med ekte farge-/bane-data og rendre dem til PNG via LibreOffice, siden sandkassen ikke kan kjøre en ekte Next.js-bygg (samme kjente SWC/esbuild-begrensning som er dokumentert tidligere). Husk `git push`.
 
+**Oppdatert samme dag, etter din tilbakemelding fra localhost:** Det liggende lenkeformatet (1200×630) hadde en synlig feil -- kant-til-kant-beskjæringen kuttet Spir-motivet på en måte som så ødelagt/tilfeldig ut, i stedet for det pene, buede motivet som brukes ellers i rapporten. I stedet for å bare rette beskjæringen, tok jeg et steg tilbake og undersøkte hvordan Spotify Wrapped, Duolingo og andre løser akkurat denne delingsflyten:
+
+- Rekker med plattformikoner (X/Facebook/WhatsApp/LinkedIn/e-post) er i praksis nesten aldri i bruk -- flere kilder viser under 0,3 % av trafikken, og en leserundersøkelse fra CSS-Tricks fant at 60 % aldri klikker på dem. De delte dessuten feil ting hos oss (en lenke til testen, ikke selve bildet). Fjernet.
+- Spotify Wrapped og Duolingo satser i stedet alt på ett ferdig, vakkert bilde + én tydelig del-knapp -- Duolingo fikk 5–10x mer deling bare av å gjøre selve kortet finere. Vi følger samme mønster nå: kun **Del bildet** (native deleark) og **Last ned bildet** (reserve for desktop).
+- **Lenkeformatet (1200×630) er fjernet fra kortet** -- det fantes primært for lenkedelingen som nå er borte. Igjen står **Firkant** og **Story**, som allerede brukte det pene, buede motivet uendret, ikke den brutte beskjæringen.
+- **Forklaringsteksten er kuttet** fra to setninger til én kort linje.
+
 ## Nytt: rettet seks funn fra kvalitetsrevisjonen 24.07.2026 (v2.36, 24.07.2026)
 
 Etter kvalitetsrevisjonen i dag (`Kvalitetsrevisjon_DineFasetter_2026-07-24.docx`) ba du meg gjøre det jeg mente var best for opplevelsen på funn #1, og gjennomføre #2, #3, #5 og #7 som foreslått i revisjonen, samt legge til testene fra #6 selv. SEO (#4) venter til senere, som avtalt. Følgende er gjort:

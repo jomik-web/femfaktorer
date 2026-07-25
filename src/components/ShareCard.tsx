@@ -10,21 +10,22 @@ import {
   svgElementToPngBlob,
   downloadBlob,
   shareImageFile,
-  buildPlatformShareUrls,
   type ShareFormat,
 } from "@/lib/shareCard";
 
 /**
- * Delbart Spir-motiv-kort (v2.37, produkteiers ønske 25.07.2026), vist til
- * slutt på rapporten (se resultat/page.tsx). Viser motivet for faktoren
- * som peker seg tydeligst ut hos brukeren (se `pickDominantFactor`), i tre
- * ferdigkomponerte formater tilpasset ulike sosiale medier -- IKKE bare
- * samme bilde skalert, se lib/shareCard.ts filhode og formatvalgene under.
+ * Delbart Spir-motiv-kort (v2.37, produkteiers ønske 25.07.2026, forenklet
+ * 25.07.2026 etter tilbakemelding), vist til slutt på rapporten (se
+ * resultat/page.tsx). Viser motivet for faktoren som peker seg tydeligst ut
+ * hos brukeren (se `pickDominantFactor`), i to ferdigkomponerte formater
+ * (Firkant/Story) -- samme prinsipp som Spotify Wrapped og Duolingo bruker
+ * for delbare resultatkort, se lib/shareCard.ts filhode.
  *
  * Alt skjer i nettleseren: bildet genereres på klientsiden (SVG -> canvas
  * -> PNG), lastes aldri opp til en server, og krever ingen innlogging på
  * noe sosialt medie -- brukeren deler via sin egen enhets native deleark,
- * eller laster ned bildet og legger det ved selv.
+ * eller laster ned bildet og legger det ved selv. Kun to knapper -- ingen
+ * rad med plattformlenker, se filhode i lib/shareCard.ts for hvorfor.
  */
 export function ShareCard({ factors }: { factors: FactorResult[] }) {
   const dominant = useMemo(() => pickDominantFactor(factors), [factors]);
@@ -37,19 +38,13 @@ export function ShareCard({ factors }: { factors: FactorResult[] }) {
 
   const squareRef = useRef<SVGSVGElement>(null);
   const storyRef = useRef<SVGSVGElement>(null);
-  const linkRef = useRef<SVGSVGElement>(null);
   const refs: Record<ShareFormat, React.RefObject<SVGSVGElement | null>> = {
     square: squareRef,
     story: storyRef,
-    link: linkRef,
   };
 
   const uidBase = useId();
   const spec = SHARE_FORMATS[format];
-
-  const siteUrl =
-    (typeof window !== "undefined" && window.location.origin) || "https://dinefasetter.no";
-  const platformUrls = buildPlatformShareUrls(siteUrl);
 
   async function renderCurrentToBlob(): Promise<Blob | null> {
     const svg = refs[format].current;
@@ -101,9 +96,7 @@ export function ShareCard({ factors }: { factors: FactorResult[] }) {
       <div className="flex flex-col gap-1">
         <h2 className="font-display font-semibold text-indigo dark:text-white">Del resultatet ditt</h2>
         <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-          Dette kortet viser {dominant.label.toLowerCase()} -- trekket som peker seg tydeligst ut i
-          profilen din. Bildet lages i nettleseren din og lastes aldri opp noe sted -- du deler det
-          selv, uten å logge inn på noen sosiale medier fra oss.
+          Bildet lages i nettleseren din -- ingen innlogging.
         </p>
       </div>
 
@@ -155,14 +148,6 @@ export function ShareCard({ factors }: { factors: FactorResult[] }) {
             uid={`${uidBase}-preview`}
             visible={format === "story"}
           />
-          <CardMarkup
-            format="link"
-            factor={dominant.factor}
-            label={dominant.label}
-            tagline={tagline}
-            uid={`${uidBase}-preview`}
-            visible={format === "link"}
-          />
         </svg>
       </div>
 
@@ -190,16 +175,6 @@ export function ShareCard({ factors }: { factors: FactorResult[] }) {
             visible
           />
         </svg>
-        <svg ref={linkRef} viewBox="0 0 1200 630" width={1200} height={630}>
-          <CardMarkup
-            format="link"
-            factor={dominant.factor}
-            label={dominant.label}
-            tagline={tagline}
-            uid={`${uidBase}-link`}
-            visible
-          />
-        </svg>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -223,29 +198,6 @@ export function ShareCard({ factors }: { factors: FactorResult[] }) {
         </button>
       </div>
       {feedback && <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{feedback}</p>}
-
-      <div className="flex flex-col gap-2 border-t border-indigo/10 pt-3 dark:border-white/10">
-        <p className="text-xs text-indigo/60 dark:text-lavender-400/60">
-          Vil du heller dele en lenke til testen, uten bildet vedlagt automatisk?
-        </p>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <a href={platformUrls.x} target="_blank" rel="noopener noreferrer" className="text-holo-skyText underline underline-offset-2">
-            X
-          </a>
-          <a href={platformUrls.facebook} target="_blank" rel="noopener noreferrer" className="text-holo-skyText underline underline-offset-2">
-            Facebook
-          </a>
-          <a href={platformUrls.whatsapp} target="_blank" rel="noopener noreferrer" className="text-holo-skyText underline underline-offset-2">
-            WhatsApp
-          </a>
-          <a href={platformUrls.linkedin} target="_blank" rel="noopener noreferrer" className="text-holo-skyText underline underline-offset-2">
-            LinkedIn
-          </a>
-          <a href={platformUrls.email} className="text-holo-skyText underline underline-offset-2">
-            E-post
-          </a>
-        </div>
-      </div>
     </section>
   );
 }
@@ -264,13 +216,13 @@ interface CardMarkupProps {
 const PANEL_BG = COLORS.indigo;
 
 /**
- * Selve komposisjonen: motiv + tekstpanel/scrim, forskjellig oppsett per
- * format (se lib/shareCard.ts filhode for resonnementet bak hvert valg).
- * `visible` styrer kun om DENNE varianten faktisk tegnes i forhåndsvisnings-
- * `<svg>`-en (som inneholder alle tre oppå hverandre) -- eksport-SVG-ene
- * bruker alltid `visible=true` siden de har én variant hver for seg selv.
+ * Selve komposisjonen: motiv + tekstpanel, forskjellig oppsett per format
+ * (se lib/shareCard.ts filhode for resonnementet bak hvert valg). `visible`
+ * styrer kun om DENNE varianten faktisk tegnes i forhåndsvisnings-`<svg>`-en
+ * (som inneholder begge oppå hverandre) -- eksport-SVG-ene bruker alltid
+ * `visible=true` siden de har én variant hver for seg selv.
  */
-/** Felles bunntekst (ordmerke + disclaimer) -- identisk plassering (i px fra bunnen) på alle tre formater. */
+/** Felles bunntekst (ordmerke + disclaimer) -- identisk plassering (i px fra bunnen) på begge formater. */
 function CardFooter({ width, totalHeight, color }: { width: number; totalHeight: number; color: string }) {
   return (
     <>
@@ -305,48 +257,13 @@ function CardMarkup({ format, factor, label, tagline, uid, visible }: CardMarkup
   const factorColor = COLORS[factor as keyof typeof COLORS] ?? COLORS.holoSky;
   const glowId = `glow-${uid}`;
 
-  if (format === "link") {
-    // Liggende lenkekort: motivet dekker HELE flaten kant-til-kant (skalert
-    // til å fylle høyden 630, med et lite beskjæringstrekk i bredden) --
-    // rektangel-klipp i stedet for den bølgete masken, se
-    // FactorHeroContent sin `edgeToEdge`-modus. Mørk scrim nederst for lesbar tekst.
-    const scale = 630 / VIEWBOX_HEIGHT;
-    const scaledWidth = VIEWBOX_WIDTH * scale;
-    const xOffset = (1200 - scaledWidth) / 2;
-    const scrimId = `scrim-${uid}`;
-    return (
-      <>
-        <rect width={1200} height={630} fill={PANEL_BG} />
-        <g transform={`translate(${xOffset},0) scale(${scale})`}>
-          <FactorHeroContent factor={factor} uid={uid} edgeToEdge />
-        </g>
-        <defs>
-          <linearGradient id={scrimId} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={PANEL_BG} stopOpacity={0} />
-            <stop offset="100%" stopColor={PANEL_BG} stopOpacity={0.92} />
-          </linearGradient>
-        </defs>
-        <rect x={0} y={380} width={1200} height={250} fill={`url(#${scrimId})`} />
-        <text x={48} y={500} fontFamily="Arial, sans-serif" fontWeight={700} fontSize={52} fill="white">
-          {label}
-        </text>
-        <text x={48} y={548} fontFamily="Arial, sans-serif" fontSize={30} fill={COLORS.lavender100}>
-          {tagline}
-        </text>
-        <text x={48} y={598} fontFamily="Arial, sans-serif" fontSize={22} fill={COLORS.lavender100} opacity={0.7}>
-          Dine Fasetter -- en norsk personlighetstest
-        </text>
-      </>
-    );
-  }
-
   if (format === "story") {
     // Story: et rent kvadratisk/bredde-tilpasset motiv etterlot et altfor
     // stort, tomt mørkt felt under på et så høyt lerret (bekreftet visuelt
-    // under utvikling) -- løst med samme kant-til-kant-beskjæring som det
-    // liggende formatet, men til et TALLERE bånd (~720px), pluss en myk
-    // fargeglød bak teksten (samme visuelle grep som gløden bak Spir på
-    // forsiden) for å unngå et flatt, livløst tomrom.
+    // under utvikling) -- løst med kant-til-kant-beskjæring til et TALLERE
+    // bånd (~720px), pluss en myk fargeglød bak teksten (samme visuelle
+    // grep som gløden bak Spir på forsiden) for å unngå et flatt, livløst
+    // tomrom.
     const motifHeight = 720;
     const scale = motifHeight / VIEWBOX_HEIGHT;
     const scaledWidth = VIEWBOX_WIDTH * scale;
