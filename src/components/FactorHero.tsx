@@ -32,11 +32,11 @@ import type { DisplayFactor } from "@/lib/scoring";
 export type HeroKey = DisplayFactor | "summary";
 
 /** Skala brukt til å gjøre hele motivet ca. 50% høyere (900x260 -> 900x390). */
-const HEIGHT_SCALE = 1.5;
-const VIEWBOX_WIDTH = 900;
-const VIEWBOX_HEIGHT = 260 * HEIGHT_SCALE;
+export const HEIGHT_SCALE = 1.5;
+export const VIEWBOX_WIDTH = 900;
+export const VIEWBOX_HEIGHT = 260 * HEIGHT_SCALE;
 
-const COLORS = {
+export const COLORS = {
   openness: "#8B7CE8",
   conscientiousness: "#4173E6",
   extraversion: "#FF7033",
@@ -75,7 +75,7 @@ const COLORS = {
 // stykke til høyre (se StabilityScene), mot de lavere fjelltoppene, som
 // alene fjerner klippingen (bølgen der er allerede høy nok) -- den svakere
 // dippen er en ekstra, generell demping av selve toppbølgen.
-const WAVE_PATHS: Record<HeroKey, string> = {
+export const WAVE_PATHS: Record<HeroKey, string> = {
   stability:
     "M10.18,39 C45.8,15.0 144.2,14.5 213.8,21 C283.4,27.5 349.5,50.0 427.6,49.5 C505.7,49.0 605.8,24.5 682.13,18 C758.5,11.5 850.8,12.0 885.75,39 C920.7,66.0 889.5,139.0 891.86,180 C894.2,221.0 904.4,262.3 900,285 C895.6,307.8 883.0,308.5 865.38,316.5 C847.7,324.5 821.3,332.9 794.12,333 C767.0,333.1 736.4,317.5 702.49,317.25 C668.6,317.0 627.8,333.6 590.5,331.5 C553.2,329.4 507.4,312.9 478.51,304.5 C449.7,296.1 439.5,279.4 417.42,281.1 C395.4,282.9 373.3,306.4 346.15,315 C319.0,323.6 285.1,334.0 254.52,333 C224.0,332.0 193.4,309.3 162.9,309 C132.4,308.8 97.7,335.5 71.27,331.5 C44.8,327.5 15.9,312.8 4.07,285 C-7.8,257.3 -1.0,206.0 0,165 C1.0,124.0 -25.5,63.0 10.18,39 Z",
   openness:
@@ -335,7 +335,13 @@ function SummaryScene({ uid }: { uid: string }) {
   );
 }
 
-const SCENES: Record<HeroKey, (props: { uid: string }) => React.ReactElement> = {
+/**
+ * v2.37: eksportert slik at lib/shareCard.ts (delbart avslutningskort) kan
+ * gjenbruke NØYAKTIG samme scene-tegning som selve rapporten, i stedet for
+ * å duplisere den -- kun selve komposisjonen rundt (bakgrunn, tekst,
+ * plassering per delingsformat) er forskjellig der.
+ */
+export const SCENES: Record<HeroKey, (props: { uid: string }) => React.ReactElement> = {
   stability: StabilityScene,
   openness: OpennessScene,
   conscientiousness: ConscientiousnessScene,
@@ -349,30 +355,42 @@ export interface FactorHeroProps {
   className?: string;
 }
 
+export interface FactorHeroContentProps {
+  factor: HeroKey;
+  uid: string;
+  /** Bruk en enkel rektangel-klipp i stedet for den bølgete masken (v2.37,
+   * se lib/shareCard.ts) -- for det liggende delingsformatet, der motivet
+   * er ment å dekke HELE kortet kant-til-kant (som et vanlig lenke-
+   * forhåndsvisningsbilde), ikke tone ut mot en bakgrunn. */
+  edgeToEdge?: boolean;
+}
+
 /**
- * Stort landskapsmotiv med håndtegnet, bølgete kant som toner gradvis ut
- * mot gjennomsiktig (viser sidens bakgrunn bak). viewBox 900x260 -- sett
- * bredde via className (f.eks. w-full) og la høyden følge aspect-ratioen.
+ * v2.37: selve masken+scenen, UTEN den ytre `<svg>`/viewBox -- brukt av
+ * BÅDE `FactorHero` under (uendret oppførsel på selve rapportsiden) OG av
+ * lib/shareCard.ts sine delingskort, som trenger å plassere akkurat denne
+ * grafikken i en annen ytre `<svg>` med annen størrelse/bakgrunn/tekst
+ * rundt. Returnerer en Fragment, ikke en `<svg>` -- må selv plasseres inni
+ * en forelder-`<svg>` med viewBox 0 0 900 {VIEWBOX_HEIGHT} (eller skaleres
+ * via en omsluttende `<g transform="scale(...)">`).
  */
-export function FactorHero({ factor, className = "" }: FactorHeroProps) {
-  const uid = useId();
+export function FactorHeroContent({ factor, uid, edgeToEdge = false }: FactorHeroContentProps) {
   const maskId = `heroMask-${uid}`;
   const blurId = `heroBlur-${uid}`;
   const Scene = SCENES[factor];
 
   return (
-    <svg
-      viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-      className={["block h-auto w-full", className].join(" ")}
-      role="img"
-      aria-hidden="true"
-    >
+    <>
       <defs>
         <filter id={blurId} x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="7" />
         </filter>
         <mask id={maskId} maskUnits="userSpaceOnUse" x={0} y={0} width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT}>
-          <path d={WAVE_PATHS[factor]} fill="white" filter={`url(#${blurId})`} />
+          {edgeToEdge ? (
+            <rect x={0} y={0} width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT} fill="white" />
+          ) : (
+            <path d={WAVE_PATHS[factor]} fill="white" filter={`url(#${blurId})`} />
+          )}
         </mask>
       </defs>
       <g mask={`url(#${maskId})`}>
@@ -382,6 +400,26 @@ export function FactorHero({ factor, className = "" }: FactorHeroProps) {
           <Scene uid={uid} />
         </g>
       </g>
+    </>
+  );
+}
+
+/**
+ * Stort landskapsmotiv med håndtegnet, bølgete kant som toner gradvis ut
+ * mot gjennomsiktig (viser sidens bakgrunn bak). viewBox 900x260 -- sett
+ * bredde via className (f.eks. w-full) og la høyden følge aspect-ratioen.
+ */
+export function FactorHero({ factor, className = "" }: FactorHeroProps) {
+  const uid = useId();
+
+  return (
+    <svg
+      viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
+      className={["block h-auto w-full", className].join(" ")}
+      role="img"
+      aria-hidden="true"
+    >
+      <FactorHeroContent factor={factor} uid={uid} />
     </svg>
   );
 }

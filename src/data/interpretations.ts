@@ -137,6 +137,18 @@ export interface Interpretation {
    * SMS -- ikke angst eller uro generelt).
    */
   funFact: string;
+  /**
+   * NYTT FELT (v2.37, produkteiers ønske om et delbart "Spir-motiv"-kort til
+   * slutt i rapporten). Kort, slagordaktig setning (mål: 3-8 ord) ment for
+   * OVERLEGG PÅ ET BILDE (se lib/shareCard.ts) -- IKKE en tolkning i seg
+   * selv, og skal derfor ALDRI stå alene som forklaring andre steder enn på
+   * selve delingsbildet. Bevisst uten tallskår (skåren kan endre seg neste
+   * gang noen tar testen, og et konkret tall føles fort mer eksponerende å
+   * dele offentlig enn en kort, varm karakteristikk). Fungerer likt for
+   * høyt/lavt bånd -- begge ytterpunkter er formulert som en styrke å kjenne
+   * seg igjen i, aldri som et problem.
+   */
+  shareTagline: string;
 }
 
 type Copy = Record<DisplayFactor, Record<Band, Interpretation>>;
@@ -183,6 +195,7 @@ export const INTERPRETATIONS: Copy = {
         "Din styrke ligger i å gjøre det som allerede virker, enda bedre -- ikke i å finne opp noe helt nytt. Bruk det bevisst: du er gjerne den som får et etablert system til å gå enda rundere.",
       funFact:
         "Du er den i vennegjengen som bestiller nøyaktig samme rett hver eneste gang -- og ser ingen grunn til å fikse noe som ikke er ødelagt.",
+      shareTagline: "Trygg i det som allerede virker",
     },
     mid: {
       overview:
@@ -202,6 +215,7 @@ export const INTERPRETATIONS: Copy = {
         "Du har begge modiene tilgjengelig, og det gir deg et reelt valg -- ikke bare en vane -- når noe nytt dukker opp. Verdt å legge merke til hvilke situasjoner som faktisk får deg til å velge det uprøvde.",
       funFact:
         "Du er helt åpen for å prøve den nye sushiplassen -- helt til du står i døra og likevel bestiller det du pleier.",
+      shareTagline: "Nysgjerrig med begge beina på jorden",
     },
     high: {
       overview:
@@ -221,6 +235,7 @@ export const INTERPRETATIONS: Copy = {
         "Ideene dine har mest verdi når de faktisk lander et sted -- en skisse, et prosjekt, en samtale som går videre. Uten det blir nysgjerrigheten fort en serie løse tråder.",
       funFact:
         "Du har antagelig et browservindu med 30 faner om alt fra keramikk til gammelegyptisk historie akkurat nå -- pluss en halvferdig strikkepinne fra i fjor.",
+      shareTagline: "Alltid på jakt etter noe nytt å utforske",
     },
   },
   conscientiousness: {
@@ -242,6 +257,7 @@ export const INTERPRETATIONS: Copy = {
         "Du er sjelden den som bremser noe med for mye planlegging -- den fleksibiliteten er en reell ressurs når ting endrer seg raskt. Skriv ned det du faktisk har lovet noen, så det ikke bare lever i hodet ditt.",
       funFact:
         "Skrivebordet ditt kan se ut som et arkeologisk utgravningsfelt, men du finner kvitteringen fra 2022 på null komma niks hvis noen spør.",
+      shareTagline: "Fleksibel, spontan og overraskende effektiv",
     },
     mid: {
       overview:
@@ -261,6 +277,7 @@ export const INTERPRETATIONS: Copy = {
         "Du velger struktur der den faktisk trengs, i stedet for å bruke den overalt av vane. Det er en undervurdert ferdighet -- mange bruker enten for mye eller for lite tid på planlegging, uansett situasjon.",
       funFact:
         "Du har en to-do-liste. Den er et sted. Den er sikkert ganske grei, egentlig.",
+      shareTagline: "Strukturert akkurat når det trengs",
     },
     high: {
       overview:
@@ -280,6 +297,7 @@ export const INTERPRETATIONS: Copy = {
         "Ordet ditt veier tungt for folk rundt deg, nettopp fordi du sjelden bryter det. Pass på at den samme påliteligheten ikke stille blir en forventning du legger på deg selv i alt du gjør.",
       funFact:
         "Kalenderen din er fargekodet, sokkeskuffen sortert etter tykkelse, og du har mest sannsynlig en reservekopi av reservekopien.",
+      shareTagline: "Pålitelig til fingerspissene",
     },
   },
   extraversion: {
@@ -301,6 +319,7 @@ export const INTERPRETATIONS: Copy = {
         "Energien din er en ressurs som må forvaltes bevisst, ikke brukes opp automatisk i enhver sosial sammenheng. Å velge bort noe sosialt er ikke et tegn på at noe er galt -- det er ofte riktig prioritering for deg.",
       funFact:
         "Du har regnet ut nøyaktig hvor lenge et bursdagsselskap må vare før du kan smyge deg ut uten at noen legger merke til det.",
+      shareTagline: "Finner roen i eget selskap",
     },
     mid: {
       overview:
@@ -320,6 +339,7 @@ export const INTERPRETATIONS: Copy = {
         "Du trenger sjelden ekstreme løsninger for å ha det bra sosialt -- verken mye alenetid eller mye selskap over lang tid. Den fleksibiliteten er lett å overse som en styrke, nettopp fordi den ikke skaper problemer.",
       funFact:
         "Du blir gjerne med på festen -- men sjekker rolig klokka rundt time to for å se når det blir sosialt akseptabelt å dra.",
+      shareTagline: "Balanse mellom folk og fred",
     },
     high: {
       overview:
@@ -339,6 +359,7 @@ export const INTERPRETATIONS: Copy = {
         "Andre merker fort når du er i rommet, og det gir deg en reell innflytelse på stemningen rundt deg. Bruk den bevisst -- den samme energien kan løfte en gruppe, eller ta unødvendig mye plass.",
       funFact:
         "Du kjenner navnet på postbudet, bussjåføren og sikkert naboens katt -- og heisturen er aldri helt stille når du er der.",
+      shareTagline: "Energien din smitter på alle rundt deg",
     },
   },
   agreeableness: {
@@ -360,6 +381,7 @@ export const INTERPRETATIONS: Copy = {
         "Du er sjelden den som lar andre bestemme premissene for deg -- det er en styrke i forhandlinger og pressede situasjoner. Vurder likevel innimellom om saken faktisk er verdt like mye som prinsippet.",
       funFact:
         "Når gruppechatten spør «hva synes dere om forslaget», er du den som faktisk svarer -- med fullstendige setninger og en klar mening.",
+      shareTagline: "Tydelig og ærlig, alltid",
     },
     mid: {
       overview:
@@ -379,6 +401,7 @@ export const INTERPRETATIONS: Copy = {
         "Du velger sjelden side automatisk -- verken alltid deg selv eller alltid andre. Den dømmekraften er lettere å ta for gitt enn den burde være.",
       funFact:
         "«Det er helt greit for meg,» sier du -- og mener det, som regel, nesten alltid.",
+      shareTagline: "Balansert mellom deg selv og andre",
     },
     high: {
       overview:
@@ -398,6 +421,7 @@ export const INTERPRETATIONS: Copy = {
         "Du er sjelden den som skaper en konflikt, men vær obs på hvor ofte du unngår en du faktisk burde tatt. Noen ganger er det mest omsorgsfulle å si tydelig fra.",
       funFact:
         "Du sier unnskyld til møbler du dunker borti, og ender ofte opp med maten ingen andre ville ha, bare for at alle skal bli fornøyde.",
+      shareTagline: "Varm og støttende, alltid til stede",
     },
   },
   stability: {
@@ -419,6 +443,7 @@ export const INTERPRETATIONS: Copy = {
         "Følsomheten din er ikke bare noe å håndtere -- den gjør deg også i stand til å fange opp ting andre går glipp av. Faste holdepunkter hjelper deg mer enn viljestyrke gjør, når presset øker.",
       funFact:
         "Du har med stor sannsynlighet overtenkt en SMS i 20 minutter før du til slutt sendte «ok».",
+      shareTagline: "Kjenner følelsene sine godt",
     },
     mid: {
       overview:
@@ -438,6 +463,7 @@ export const INTERPRETATIONS: Copy = {
         "Du trenger sjelden store grep for å holde deg noenlunde stødig -- roen din kommer stort sett av seg selv. Det gjør det lett å glemme å bygge opp reserver før en faktisk krevende periode kommer.",
       funFact:
         "Noe kjipt skjer, du blir litt satt ut -- og så er du stort sett tilbake til vanlig humør før neste episode er ferdig.",
+      shareTagline: "Stø, men fortsatt menneskelig",
     },
     high: {
       overview:
@@ -457,6 +483,7 @@ export const INTERPRETATIONS: Copy = {
         "Roen din er en ressurs andre merker og lener seg på, kanskje mer enn du selv legger merke til. Spør innimellom hvordan de faktisk har det -- den samme roen kan gjøre deg vanskelig å lese for dem.",
       funFact:
         "Mens andre får panikk over en sprukket vannledning, googler du rolig etter rørlegger mens du fortsetter å spise lunsjen din.",
+      shareTagline: "Roen selv når alt annet snurrer",
     },
   },
 };
@@ -559,6 +586,27 @@ function lowerFirst(word: string): string {
  * spm) beholder det opprinnelige, kortere omfanget siden fasettdataen der er
  * mindre presis.
  */
+
+/**
+ * v2.37: plukker faktoren som "peker seg tydeligst ut" -- brukt til å velge
+ * hvilket Spir-motiv (se components/FactorHero.tsx) som vises på det
+ * delbare avslutningskortet (se lib/shareCard.ts). Samme prinsipp som
+ * `buildClosingSynthesis` under bruker for å velge "definerende" trekk
+ * (avstand fra midtpunktet 50, IKKE bare høyeste tall) -- det treffer
+ * riktig for både svært høye OG svært lave skårer, siden begge er like
+ * "tydelige" som personlighetstrekk. Faller ALDRI tilbake på "ingen
+ * faktor" -- selv en helt midt-på-treet-profil trenger ett kort å vise,
+ * så her plukkes rett og slett den minst midtstilte av de fem, uansett bånd.
+ */
+export function pickDominantFactor(factors: FactorResult[]): FactorResult {
+  const sorted = [...factors].sort((a, b) => Math.abs(b.score - 50) - Math.abs(a.score - 50));
+  const top = sorted[0];
+  if (!top) {
+    throw new Error("pickDominantFactor krever minst én faktor -- fikk en tom liste.");
+  }
+  return top;
+}
+
 export function buildClosingSynthesis(
   factors: FactorResult[],
   facets: FacetResult[],
@@ -590,18 +638,29 @@ export function buildClosingSynthesis(
   // Kuraterte kombinasjonsfunn (hovedfaktor- og fasettnivå) som involverer
   // minst ett av de mest fremtredende trekkene -- fasettnivå først, siden
   // det gir en mer PRESIS "hvorfor"-forklaring enn hovedfaktornivå alene.
+  //
+  // v2.36 (produkteiers ønske 24.07.2026): fasettnivå-kombinasjoner skal KUN
+  // brukes når `richCombos` (Utvidet/290) er satt -- Standard (120) beregner
+  // nå fasetter internt (for buildTopFacetsMention, se domainComposition.ts),
+  // men skal aldri få fasettnivå-FUNN vevd inn i oppsummeringen, siden det er
+  // nettopp den typen analyse som skal skille Utvidet fra Standard (se
+  // prissammenligningen i /priser). Uten denne sperren ville Standard kunne
+  // få akkurat samme kombinasjonssetning som Utvidet, siden fasettdataen nå
+  // finnes der også (bare mindre presis).
   const definingFactors = new Set(defining.map((f) => f.factor));
-  const matchedFacetCombos = matchFacetCombinationInsightsFlat(facets, bandFor).filter((c) => {
-    const domainA = FACET_INTERPRETATIONS[c.facetA]?.domain;
-    const domainB = FACET_INTERPRETATIONS[c.facetB]?.domain;
-    return (domainA && definingFactors.has(DOMAIN_TO_DISPLAY[domainA])) || (domainB && definingFactors.has(DOMAIN_TO_DISPLAY[domainB]));
-  });
+  const matchedFacetCombos = options.richCombos
+    ? matchFacetCombinationInsightsFlat(facets, bandFor).filter((c) => {
+        const domainA = FACET_INTERPRETATIONS[c.facetA]?.domain;
+        const domainB = FACET_INTERPRETATIONS[c.facetB]?.domain;
+        return (domainA && definingFactors.has(DOMAIN_TO_DISPLAY[domainA])) || (domainB && definingFactors.has(DOMAIN_TO_DISPLAY[domainB]));
+      })
+    : [];
   const matchedDomainCombos = matchCombinationInsights(factors, bandFor).filter(
     (c) => definingFactors.has(c.factorA) || definingFactors.has(c.factorB)
   );
 
   const comboSentences: string[] = [];
-  const maxFacetCombos = options.richCombos ? 2 : 1;
+  const maxFacetCombos = options.richCombos ? 2 : 0;
   const maxTotalCombos = options.richCombos ? 4 : 2;
   for (const c of matchedFacetCombos.slice(0, maxFacetCombos)) {
     const labelA = lowerFirst(FACET_INTERPRETATIONS[c.facetA]?.label ?? c.facetA);
@@ -621,7 +680,26 @@ export function buildClosingSynthesis(
     );
   }
 
+  // v2.36: Utvidet-tieren (290) skal ALLTID ha noe reelt mer enn Standard i
+  // denne oppsummeringen -- ikke bare "flere setninger NÅR dataen tilfeldigvis
+  // gir grunnlag for det" (kombinasjonsfunn over avhenger av at et treff
+  // faktisk finnes, og kan i praksis bli likt mellom nivåene for en person med
+  // få ekstreme hovedfaktorer). Denne siste setningen er derfor GARANTERT
+  // unik for Utvidet: den peker ut enkeltfasetten som avviker mest fra midten
+  // i HELE profilen (ikke bare innenfor de definerende hovedkategoriene
+  // over) -- noe kun den presise 290-spørsmålsmålingen gir godt grunnlag for.
+  let precisionSentence = "";
+  if (options.richCombos && facets.length > 0) {
+    const mostExtreme = [...facets].sort((a, b) => Math.abs(b.score - 50) - Math.abs(a.score - 50))[0];
+    if (mostExtreme) {
+      const label = FACET_INTERPRETATIONS[mostExtreme.facet]?.label ?? mostExtreme.facet;
+      precisionSentence = `Ser vi på hele profilen din under ett, er det underkategorien ${lowerFirst(label)} som avviker aller mest fra gjennomsnittet -- en detalj Utvidet versjon fanger opp mer presist enn de kortere nivåene.`;
+    }
+  }
+
   return {
-    text: [opener, ...hooks, ...comboSentences, CLOSING_LINE].join(" "),
+    text: [opener, ...hooks, ...comboSentences, precisionSentence, CLOSING_LINE]
+      .filter((s) => s.length > 0)
+      .join(" "),
   };
 }

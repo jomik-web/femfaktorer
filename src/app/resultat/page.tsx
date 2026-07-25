@@ -40,6 +40,7 @@ import { computeAccountResultExpiry, type StoredAccountResult } from "@/lib/acco
 import { buildFacetDrivenOverview, buildFacetAwareNote, buildTopFacetsMention } from "@/data/domainComposition";
 import { ACCOUNT_SAVE_ENABLED, RESULT_ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
+import { ShareCard } from "@/components/ShareCard";
 import { FactorIcon } from "@/components/FactorIcon";
 import { FactorHero } from "@/components/FactorHero";
 import SpirMascot from "@/components/SpirMascot";
@@ -563,6 +564,10 @@ function ResultatContent() {
               ))}
             </section>
           )}
+
+          {/* v2.37: delbart Spir-motiv-kort -- til slutt på rapporten, gjelder
+              alle tre nivåer (produkteiers eksplisitte ønske 25.07.2026). */}
+          <ShareCard factors={factors} />
         </>
       )}
 
@@ -813,6 +818,11 @@ function ResultatContent() {
               ))}
             </section>
           )}
+
+          {/* v2.37: delbart Spir-motiv-kort -- til slutt på rapporten, uansett
+              hvilken fane/hovedkategori som er aktiv (produkteiers eksplisitte
+              ønske 25.07.2026), gjelder alle tre nivåer. */}
+          <ShareCard factors={factors} />
         </>
       )}
 

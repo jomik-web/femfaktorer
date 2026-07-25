@@ -1,18 +1,33 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 24.07.2026
+Sist oppdatert: 25.07.2026
 
 ## Gjenstår -- oversikt (oppdateres fortløpende, se datert changelog under for detaljer)
 
 Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenstår?" alltid kan besvares herfra uten å lete gjennom hele loggen.
 
 - **Partner-/vennekobling** (alle tre nivåvarianter -- skjermbilde for gratis, delbar lenke for Standard, e-postbekreftet + Spir-samtale for Premium). Ikke startet.
-- **Delbare bilder/kort til sosiale medier** (gratisnivået, og trolig alle nivåer). Ikke startet.
+- **Delbare bilder/kort til sosiale medier er FERDIG og live** (v2.37, 25.07.2026) -- delbart Spir-motiv-kort til slutt på rapporten, alle tre nivåer, tre skreddersydde formater. Se changelog under.
 - **PDF-nedlasting (`src/lib/pdfReport.ts`/jsPDF) er FERDIG og live**, ikke ubesluttet arbeid som tidligere logget her -- denne oversikten var kommet ute av synk med kodestatus (funnet i kvalitetsrevisjonen 24.07.2026). Kun kodesplittet i denne runden slik at avhengigheten ikke lastes for besøkende som ikke bruker den.
 - **SEO er bevisst utsatt** (metadata per side, sitemap.xml, robots.txt, Open Graph-tagger) til domene er valgt -- se kvalitetsrevisjonen 24.07.2026, kategori 7.
 - **CSP, DPA/DPIA, jurist-gjennomgang, org.nr.** -- fortsatt bevisst utsatt, krever din oppfølging (uendret fra tidligere oppføringer).
 - **Premium-nivåets detaljerte innhold** utover det som allerede er bygget (fasettnivå, utvikling over tid) -- fortsatt ikke spesifisert, se prismodell-dokumentets del 8.
 - **Ubesluttet, uncommitet arbeid liggende i kodebasen fra en tidligere økt** (ikke min): `jspdf`-avhengighet lagt til i `package.json` og en ny fil `src/lib/pdfReport.ts` -- ser ut som et påbegynt spor for PDF-generering, men er ikke i git og ikke ferdigstilt. Rørt ikke ved dette -- si ifra om det skal fullføres, forkastes, eller om noen andre jobber med det parallelt.
+
+## Nytt: delbart Spir-motiv-kort til slutt på rapporten (v2.37, 25.07.2026)
+
+Du ba om at kortet med det Spir-motivet som passer brukeren best skal vises i liggende, full bredde til slutt på rapporten, og at brukeren skal kunne dele det på sosiale medier med minst mulig egeninnsats -- uten å laste opp innlogging eller annen personlig informasjon om sine kontoer, og med riktig format per plattform. Løsningen er bygget helt uten server-opplasting:
+
+- **`ShareCard`-komponenten** viser det motivet som er mest utpreget for brukeren (den faktoren med størst avstand fra midtpunktet 50, ikke nødvendigvis høyest skår -- samme prinsipp som brukes i avslutningsteksten), sammen med en kort, positiv "tagline" (`shareTagline` i `interpretations.ts`, én per faktor/nivå, 15 nye tekster).
+- **Tre skreddersydde bildeformater** genereres direkte i nettleseren (SVG → canvas → PNG), ett per hovedbruksområde -- ikke bare én størrelse skalert opp/ned:
+  - *Kvadrat* (1080×1080) -- Instagram-feed, Facebook-innlegg.
+  - *Story* (1080×1920) -- Instagram/Snapchat/Facebook Story, bildet fyller hele høyden med en mykt fargelagt glød bak teksten.
+  - *Lenkeforhåndsvisning* (1200×630) -- standard OG-bildeformat for e-post/lenkedeling, med gradert bunnfelt for lesbar tekst.
+- **Deling skjer på brukerens egen enhet.** På mobil med støtte for Web Share API (nyere iOS/Android) åpnes den innebygde delemenyen med selve bildet vedlagt -- brukeren velger app selv, ingen innlogging involvert. Der det ikke støttes (typisk desktop), lastes bildet ned lokalt, og brukeren kan i tillegg åpne en ferdigutfylt delelenke for X, Facebook, WhatsApp, LinkedIn eller e-post -- disse lenkene bruker en generisk tekst (ikke den personlige taglinen), slik at ingen spesifikk personlighetsegenskap limes inn som rå tekst uten bildet ved siden av.
+- **Gjelder alle tre nivåer** (gratis, Standard, Premium), som besluttet.
+- **Ingen sosiale mediekontoer, tokens eller personlig informasjon håndteres** noe sted i løsningen -- verken av nettsiden eller av meg.
+
+**Testet:** `npx tsc --noEmit` kjører uten feil. Selve bildekomposisjonen (særlig story-formatet) er visuelt verifisert ved å bygge frittstående SVG-testfiler med ekte farge-/bane-data og rendre dem til PNG via LibreOffice, siden sandkassen ikke kan kjøre en ekte Next.js-bygg (samme kjente SWC/esbuild-begrensning som er dokumentert tidligere). Husk `git push`.
 
 ## Nytt: rettet seks funn fra kvalitetsrevisjonen 24.07.2026 (v2.36, 24.07.2026)
 
