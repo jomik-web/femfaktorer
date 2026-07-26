@@ -565,9 +565,11 @@ function ResultatContent() {
             </section>
           )}
 
-          {/* v2.37: delbart Spir-motiv-kort -- til slutt på rapporten, gjelder
-              alle tre nivåer (produkteiers eksplisitte ønske 25.07.2026). */}
-          <ShareCard factors={factors} />
+          {/* v2.37/v2.38: delbart Spir-kort -- til slutt på rapporten, gjelder
+              alle tre nivåer (produkteiers eksplisitte ønske 25.07.2026).
+              `facets` er alltid tom for "free" her (se useEffect over), så
+              ShareCard faller automatisk tilbake til domenekortet. */}
+          <ShareCard factors={factors} facets={facets} />
         </>
       )}
 
@@ -819,10 +821,12 @@ function ResultatContent() {
             </section>
           )}
 
-          {/* v2.37: delbart Spir-motiv-kort -- til slutt på rapporten, uansett
+          {/* v2.37/v2.38: delbart Spir-kort -- til slutt på rapporten, uansett
               hvilken fane/hovedkategori som er aktiv (produkteiers eksplisitte
-              ønske 25.07.2026), gjelder alle tre nivåer. */}
-          <ShareCard factors={factors} />
+              ønske 25.07.2026), gjelder alle tre nivåer. Her er `facets`
+              populert for "full"/"extended" (se useEffect over), så disse
+              brukerne får meme-kort-velgeren når kort finnes for profilen. */}
+          <ShareCard factors={factors} facets={facets} />
         </>
       )}
 
