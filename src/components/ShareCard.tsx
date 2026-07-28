@@ -2,8 +2,9 @@
 
 import { useId, useMemo, useRef, useState } from "react";
 import { FactorHeroContent, COLORS, VIEWBOX_WIDTH, VIEWBOX_HEIGHT } from "@/components/FactorHero";
-import type { FactorResult } from "@/lib/scoring";
+import type { FactorResult, FacetResult } from "@/lib/scoring";
 import { bandFor, INTERPRETATIONS, pickDominantFactor } from "@/data/interpretations";
+import { pickMemeCards, pickDomainMemeCard, type MemeCardAsset } from "@/data/memeCards";
 import {
   SHARE_FORMATS,
   GENERIC_SHARE_TEXT,
@@ -14,20 +15,227 @@ import {
 } from "@/lib/shareCard";
 
 /**
- * Delbart Spir-motiv-kort (v2.37, produkteiers ønske 25.07.2026, forenklet
- * 25.07.2026 etter tilbakemelding), vist til slutt på rapporten (se
- * resultat/page.tsx). Viser motivet for faktoren som peker seg tydeligst ut
- * hos brukeren (se `pickDominantFactor`), i to ferdigkomponerte formater
- * (Firkant/Story) -- samme prinsipp som Spotify Wrapped og Duolingo bruker
- * for delbare resultatkort, se lib/shareCard.ts filhode.
+ * Delbart Spir-kort, vist til slutt på rapporten (se resultat/page.tsx).
  *
- * Alt skjer i nettleseren: bildet genereres på klientsiden (SVG -> canvas
- * -> PNG), lastes aldri opp til en server, og krever ingen innlogging på
- * noe sosialt medie -- brukeren deler via sin egen enhets native deleark,
- * eller laster ned bildet og legger det ved selv. Kun to knapper -- ingen
- * rad med plattformlenker, se filhode i lib/shareCard.ts for hvorfor.
+ * v2.38 (produkteiers ønske 26.07.2026): når brukeren har fasettdata (full/
+ * utvidet-tier) OG minst én av dens mest utpregede fasetter har et ferdig
+ * AI-illustrert meme-kort (se data/memeCards.ts), vises 2-3 alternative
+ * meme-kort å velge mellom -- de fasettene som ligger lengst fra midten
+ * (50), altså de mest "utpregede"/meme-bare, IKKE nødvendigvis den samme
+ * fasetten som driver hovedkategoriteksten andre steder i rapporten.
+ * Brukeren velger selv hvilket av de foreslåtte kortene som skal deles.
+ *
+ * v3.0 (produkteiers ønske 27.07.2026): gratis-tieren (50 spørsmål) har
+ * ALDRI fasettdata, så `pickMemeCards` returnerer alltid tomt for disse
+ * brukerne -- de faller nå isteden tilbake på ETT domenenivå-kort (bredt
+ * sitat, ikke låst til én fasett-nyanse, se `pickDomainMemeCard` og
+ * DOMAIN_MEME_CARDS i data/memeCards.ts) fremfor å hoppe rett til det
+ * gamle SVG-kortet.
+ *
+ * FALLBACK til det opprinnelige, SVG-genererte domenekortet (v2.37) når
+ * verken fasett- eller domenenivå-kort finnes for brukerens profil ennå
+ * (typisk: en tidlig fase i meme-kort-produksjonen der akkurat DENNE
+ * brukerens mest utpregede kategori ikke er dekket ennå), ELLER dersom
+ * bildefilen faktisk feiler å laste i nettleseren (se `onError` under --
+ * DOMAIN_MEME_CARDS kan inneholde placeholder-stier til bilder som ennå
+ * ikke er produsert, se filhode i data/memeCards.ts) -- se
+ * `pickDominantFactor`/CardMarkup under.
+ *
+ * Alt skjer i nettleseren: ingen opplasting til en server, ingen innlogging
+ * på noe sosialt medie -- brukeren deler via sin egen enhets native
+ * deleark, eller laster ned bildet og legger det ved selv.
  */
-export function ShareCard({ factors }: { factors: FactorResult[] }) {
+export function ShareCard({ factors, facets }: { factors: FactorResult[]; facets?: FacetResult[] }) {
+  const memeCandidates = useMemo(() => pickMemeCards(facets ?? [], 3), [facets]);
+  const domainCandidate = useMemo(
+    () => (memeCandidates.length === 0 ? pickDomainMemeCard(factors) : null),
+    [memeCandidates, factors]
+  );
+  const [artUnavailable, setArtUnavailable] = useState(false);
+
+  if (memeCandidates.length > 0 && !artUnavailable) {
+    const items = memeCandidates.map((c) => ({ key: c.facet.facet, asset: c.asset }));
+    return <MemeShareCard items={items} onArtMissing={() => setArtUnavailable(true)} />;
+  }
+  if (domainCandidate && !artUnavailable) {
+    const items = [{ key: domainCandidate.factor.factor, asset: domainCandidate.asset }];
+    return <MemeShareCard items={items} onArtMissing={() => setArtUnavailable(true)} />;
+  }
+  return <DomainShareCard factors={factors} />;
+}
+
+// ---------- v2.38/v3.0: meme-kort-modus (fasett- ELLER domenenivå, faktiske illustrasjoner) ----------
+
+/** Story vises som standard og står til venstre i formatvelgeren (produkteiers ønske 26.07.2026) -- IKKE samme rekkefølge som SHARE_FORMATS-objektet (der square står først av historiske årsaker). */
+const FORMAT_ORDER: ShareFormat[] = ["story", "square"];
+
+/** Ett delbart kort-alternativ -- `key` er fasettkoden ("C6") eller domenenavnet ("stability"), avhengig av om ShareCard fant fasett- eller domenenivå-kandidater (se ShareCard over). */
+interface MemeShareItem {
+  key: string;
+  asset: MemeCardAsset;
+}
+
+function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtMissing: () => void }) {
+  const [selectedKey, setSelectedKey] = useState(items[0]!.key);
+  const [format, setFormat] = useState<ShareFormat>("story");
+  const [busy, setBusy] = useState<"share" | "download" | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  const selected = items.find((c) => c.key === selectedKey) ?? items[0]!;
+  const spec = SHARE_FORMATS[format];
+  const imgSrc = format === "square" ? selected.asset.square : selected.asset.story;
+
+  async function fetchCurrentAsBlob(): Promise<Blob | null> {
+    try {
+      const res = await fetch(imgSrc);
+      if (!res.ok) throw new Error("Bildet kunne ikke hentes.");
+      return await res.blob();
+    } catch {
+      setFeedback("Klarte ikke å laste bildet akkurat nå -- prøv igjen.");
+      return null;
+    }
+  }
+
+  async function handleShare() {
+    setBusy("share");
+    setFeedback(null);
+    const blob = await fetchCurrentAsBlob();
+    if (!blob) {
+      setBusy(null);
+      return;
+    }
+    const shared = await shareImageFile(blob, spec.filename, GENERIC_SHARE_TEXT);
+    if (!shared) {
+      downloadBlob(blob, spec.filename);
+      setFeedback("Bildet ble lastet ned i stedet -- del det manuelt fra nedlastingene dine.");
+    }
+    setBusy(null);
+  }
+
+  async function handleDownload() {
+    setBusy("download");
+    setFeedback(null);
+    const blob = await fetchCurrentAsBlob();
+    if (blob) {
+      downloadBlob(blob, spec.filename);
+      setFeedback("Bildet er lastet ned.");
+    }
+    setBusy(null);
+  }
+
+  const nativeShareLikelySupported =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  return (
+    <section className="flex flex-col gap-4 rounded-2xl border border-holo-sky/45 bg-gold-light/6 p-5 print:hidden dark:border-white/15 dark:bg-gold-light/3">
+      <div className="flex flex-col gap-1">
+        <h2 className="font-display font-semibold text-indigo dark:text-white">Del resultatet ditt</h2>
+        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
+          Spir har laget noen kort ut fra det som peker seg mest ut i profilen din -- velg det du liker best.
+        </p>
+      </div>
+
+      {/* Formatvelger -- Story til venstre og vist som standard (produkteiers ønske 26.07.2026). */}
+      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Velg delingsformat">
+        {FORMAT_ORDER.map((key) => {
+          const active = format === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setFormat(key)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                active
+                  ? "bg-holo-sky text-indigo"
+                  : "bg-lavender-100 text-indigo/70 hover:bg-lavender-400/30 dark:bg-white/10 dark:text-lavender-400/70"
+              }`}
+            >
+              {SHARE_FORMATS[key].label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-xs text-indigo/50 dark:text-lavender-400/50">{spec.platforms}</p>
+
+      {/* Kort-velger OG forhåndsvisning i ett (v2.39, produkteiers ønske
+          26.07.2026): de faktiske kandidat-bildene vises side ved side (på
+          bredere skjermer) eller under hverandre (mobil) -- IKKE tekst-piller
+          med utdrag av sitatet lenger. Bildene selv ER forhåndsvisningen; det
+          valgte kortet får en tydelig ring-markering. Alle vises i samme
+          format som er valgt over (story/firkant). Bevisst naturlig aspect
+          ratio (height: auto) -- se data/memeCards.ts filhode om hvorfor
+          kortene ikke er 100 % ensartede i høyde. */}
+      <div
+        className="flex flex-col gap-4 sm:flex-row sm:items-start"
+        role="radiogroup"
+        aria-label="Velg hvilket kort som vises"
+      >
+        {items.map((c) => {
+          const active = c.key === selectedKey;
+          const src = format === "square" ? c.asset.square : c.asset.story;
+          return (
+            <button
+              key={c.key}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setSelectedKey(c.key)}
+              className={`flex flex-col gap-2 rounded-xl p-1 text-left transition-shadow ${
+                items.length > 1 ? "sm:w-1/3" : "sm:max-w-xs"
+              } ${
+                active
+                  ? "ring-2 ring-holo-sky ring-offset-2 ring-offset-lavender-100 dark:ring-offset-transparent"
+                  : "opacity-80 hover:opacity-100"
+              }`}
+            >
+              <span className="overflow-hidden rounded-xl">
+                {/* eslint-disable-next-line @next/next/no-img-element -- statisk, ferdig-komponert bilde, ikke egnet for next/image-optimalisering */}
+                <img
+                  src={src}
+                  alt={`Delbart kort: ${c.asset.quote}`}
+                  className="block h-auto w-full"
+                  // Bildet finnes ikke ennå (typisk domenenivå-kort før
+                  // ChatGPT-batchen er produsert, se DOMAIN_MEME_CARDS i
+                  // data/memeCards.ts) -- fall tilbake til det gamle
+                  // SVG-domenekortet i stedet for et synlig ødelagt bilde.
+                  onError={onArtMissing}
+                />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        {nativeShareLikelySupported && (
+          <button
+            type="button"
+            onClick={() => void handleShare()}
+            disabled={busy !== null}
+            className="rounded-xl bg-holo-sky px-5 py-2.5 text-sm font-semibold text-indigo shadow-sm hover:opacity-90 disabled:opacity-50"
+          >
+            {busy === "share" ? "Åpner deleark …" : "Del bildet"}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => void handleDownload()}
+          disabled={busy !== null}
+          className="rounded-xl bg-lavender-100 px-5 py-2.5 text-sm font-semibold text-indigo hover:bg-lavender-400/40 disabled:opacity-50 dark:bg-white/10 dark:text-white"
+        >
+          {busy === "download" ? "Laster ned …" : "Last ned bildet"}
+        </button>
+      </div>
+      {feedback && <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{feedback}</p>}
+    </section>
+  );
+}
+
+// ---------- v2.37: fallback -- SVG-generert domenekort (ingen meme-kort tilgjengelig ennå) ----------
+
+function DomainShareCard({ factors }: { factors: FactorResult[] }) {
   const dominant = useMemo(() => pickDominantFactor(factors), [factors]);
   const band = bandFor(dominant.score);
   const tagline = INTERPRETATIONS[dominant.factor][band].shareTagline;
@@ -92,7 +300,7 @@ export function ShareCard({ factors }: { factors: FactorResult[] }) {
     typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-lavender-400/30 bg-lavender-100/40 p-5 print:hidden dark:border-white/10 dark:bg-white/5">
+    <section className="flex flex-col gap-4 rounded-2xl border border-holo-sky/45 bg-gold-light/6 p-5 print:hidden dark:border-white/15 dark:bg-gold-light/3">
       <div className="flex flex-col gap-1">
         <h2 className="font-display font-semibold text-indigo dark:text-white">Del resultatet ditt</h2>
         <p className="text-sm text-indigo/70 dark:text-lavender-400/70">

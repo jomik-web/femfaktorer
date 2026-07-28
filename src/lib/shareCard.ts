@@ -54,9 +54,8 @@ export const SHARE_FORMATS: Record<ShareFormat, ShareFormatSpec> = {
   },
 };
 
-/** Tekst som følger med når bildet deles via native deleark (f.eks. forhåndsutfylt i Meldinger/e-post). */
-export const GENERIC_SHARE_TEXT =
-  "Jeg tok den norske personlighetstesten Dine Fasetter -- prøv den du også:";
+/** Tekst som følger med når bildet deles via native deleark (f.eks. forhåndsutfylt i Meldinger/e-post). Forkortet og gjort mindre formell 26.07.2026 (produkteiers ønske -- den gamle teksten var for omstendlig). */
+export const GENERIC_SHARE_TEXT = "Tok Dine Fasetter -- dette kom ut. Din tur:";
 
 /**
  * Serialiserer et allerede rendret `<svg>`-element til en PNG-Blob, i
