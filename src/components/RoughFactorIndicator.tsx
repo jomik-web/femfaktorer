@@ -8,10 +8,18 @@ const FACTOR_COLOR_CLASS: Record<DisplayFactor, string> = {
   stability: "bg-factor-stability",
 };
 
-const ZONE_LABELS = ["Svært lavt", "Lavt", "Middels", "Høyt", "Svært høyt"] as const;
+export const ZONE_LABELS = ["Svært lavt", "Lavt", "Middels", "Høyt", "Svært høyt"] as const;
 
-/** 0-19 -> sone 0, 20-39 -> sone 1, ... 80-100 -> sone 4 (5 like brede soner à 20 poeng). */
-function zoneIndexFor(score: number): number {
+/**
+ * 0-19 -> sone 0, 20-39 -> sone 1, ... 80-100 -> sone 4 (5 like brede soner à
+ * 20 poeng). Eksportert (v2.39, produkteiers ønske 28.07.2026) -- PDF-
+ * eksporten (lib/pdfReport.ts) viste tidligere et eksakt tall og en
+ * kontinuerlig stolpe per underkategori, i strid med akkurat den
+ * "falsk presisjon"-begrunnelsen som fikk denne komponenten til å ERSTATTE
+ * FactorScale overalt på nettsiden (se doc-kommentaren under) -- PDF-en
+ * gjenbruker nå samme sone-logikk i stedet for å duplisere den.
+ */
+export function zoneIndexFor(score: number): number {
   return Math.min(4, Math.max(0, Math.floor(score / 20)));
 }
 
@@ -38,7 +46,7 @@ function lowerFirst(word: string): string {
   return word.length > 0 ? word.charAt(0).toLowerCase() + word.slice(1) : word;
 }
 
-function zoneLabelFor(label: string, zoneIndex: number): string {
+export function zoneLabelFor(label: string, zoneIndex: number): string {
   const poles = poleWords(label);
   if (!poles || zoneIndex === 2) return ZONE_LABELS[zoneIndex] ?? "Middels";
   const intensity = zoneIndex === 0 || zoneIndex === 4 ? "Svært høy" : "Høy";

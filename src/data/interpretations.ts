@@ -149,6 +149,29 @@ export interface Interpretation {
    * seg igjen i, aldri som et problem.
    */
   shareTagline: string;
+  /**
+   * NYTT FELT (v2.38, produkteiers ønske 26.07.2026, kvalitetssammenligning
+   * mot en konkurrent-PDF): konkurrenten hadde en tydelig "hva gjør jeg med
+   * dette"-vinkling (styrker/svakheter/vekst) som Dine Fasetter manglet --
+   * hele rapporten var ren beskrivelse uten en fremover-rettet handlingsdel.
+   * `balanced` beskriver hvordan AKKURAT DETTE BÅNDET ser ut når det brukes
+   * godt, `unbalanced` beskriver hvordan DET SAMME BÅNDET (ikke det motsatte
+   * båndet) kan tippe over i noe som skaper friksjon dersom det får stå helt
+   * ukontrollert, og `rebalancing` peker på en retning å bygge videre i --
+   * ALDRI en pålagt endring ("du bør/må"), alltid noe brukeren "kan" eller
+   * "kan prøve". `exercise` er ETT konkret, lite, gjennomførbart forslag til
+   * handling i løpet av en uke -- ikke terapi eller kliniske teknikker, se
+   * samme forsiktighetsprinsipp som resten av filen (aldri kategorisk eller
+   * diagnostisk). Vises i egen seksjon per hovedkategori, i ALLE tre
+   * resultatnivåer (gratis/full/utvidet) og i PDF-eksporten -- se
+   * resultat/page.tsx og lib/pdfReport.ts.
+   */
+  growth: {
+    balanced: string;
+    unbalanced: string;
+    rebalancing: string;
+    exercise: string;
+  };
 }
 
 type Copy = Record<DisplayFactor, Record<Band, Interpretation>>;
@@ -196,6 +219,16 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Du er den i vennegjengen som bestiller nøyaktig samme rett hver eneste gang -- og ser ingen grunn til å fikse noe som ikke er ødelagt.",
       shareTagline: "Trygg i det som allerede virker",
+      growth: {
+        balanced:
+          "Brukt godt gjør denne forankringen deg til den som får et system til å fungere enda bedre, i stedet for å kaste det ut for noe nytt og uprøvd.",
+        unbalanced:
+          "Ubalansert kan det samme trekket gjøre deg avvisende overfor gode forslag bare fordi de er ukjente, eller få deg til å holde fast på en løsning lenge etter at den har sluttet å tjene deg.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å bevisst sette av litt plass til det uprøvde i situasjoner med lav risiko, der en ny idé ikke koster deg noe å teste.",
+        exercise:
+          "Prøv én liten ting denne uken du normalt ville hoppet over -- en ny rute til jobben, en rett du ikke pleier å bestille -- og legg merke til hva som faktisk skjer.",
+      },
     },
     mid: {
       overview:
@@ -216,6 +249,16 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Du er helt åpen for å prøve den nye sushiplassen -- helt til du står i døra og likevel bestiller det du pleier.",
       shareTagline: "Nysgjerrig med begge beina på jorden",
+      growth: {
+        balanced:
+          "Brukt godt gir denne fleksibiliteten deg et reelt valg -- du velger det nye når det faktisk er verdt det, og det kjente når det tjener situasjonen best.",
+        unbalanced:
+          "Ubalansert kan vekslingen bli passiv i stedet for aktiv -- du havner i det som er lettest tilgjengelig der og da, i stedet for å faktisk velge.",
+        rebalancing:
+          "Du kan bygge videre på dette ved å legge merke til hvilke situasjoner som faktisk trigger nysgjerrigheten din, og oppsøke litt mer av dem bevisst.",
+        exercise:
+          "Sett av ti minutter denne uken til å spørre deg selv om et valg du tar er noe du faktisk velger, eller bare det som skjedde å dukke opp.",
+      },
     },
     high: {
       overview:
@@ -236,6 +279,15 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Du har antagelig et browservindu med 30 faner om alt fra keramikk til gammelegyptisk historie akkurat nå -- pluss en halvferdig strikkepinne fra i fjor.",
       shareTagline: "Alltid på jakt etter noe nytt å utforske",
+      growth: {
+        balanced:
+          "Brukt godt lander nysgjerrigheten din i noe konkret -- et prosjekt, en tekst, en løsning som faktisk blir ferdig.",
+        unbalanced:
+          "Ubalansert kan den samme nysgjerrigheten spre deg for tynt utover, slik at ingenting av det du starter på faktisk blir fullført.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å bevisst velge ut én idé av gangen å følge helt til den er ferdig, i stedet for å hoppe videre til den neste.",
+        exercise: "Velg én ting du har startet, men ikke fullført, og bruk en time denne uken på bare den.",
+      },
     },
   },
   conscientiousness: {
@@ -258,6 +310,16 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Skrivebordet ditt kan se ut som et arkeologisk utgravningsfelt, men du finner kvitteringen fra 2022 på null komma niks hvis noen spør.",
       shareTagline: "Fleksibel, spontan og overraskende effektiv",
+      growth: {
+        balanced:
+          "Brukt godt gjør fleksibiliteten din deg til den som takler en brå omveltning uten å miste fotfestet.",
+        unbalanced:
+          "Ubalansert kan den samme fleksibiliteten gjøre at ting du faktisk har lovet noen, glipper fordi det ikke fantes noe system som fanget det opp.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å legge inn ett lite system -- en huskeliste, en kalenderpåminnelse -- kun for det du faktisk har lovet andre.",
+        exercise:
+          "Skriv ned de tre tingene du har lovet noen denne uken, på ett sted, og sjekk listen igjen om noen dager.",
+      },
     },
     mid: {
       overview:
@@ -278,6 +340,16 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Du har en to-do-liste. Den er et sted. Den er sikkert ganske grei, egentlig.",
       shareTagline: "Strukturert akkurat når det trengs",
+      growth: {
+        balanced:
+          "Brukt godt velger du struktur akkurat der den trengs, og lar resten være fritt -- en reell styrke fremfor bare en vane.",
+        unbalanced:
+          "Ubalansert kan det bli tilfeldig hvilke oppgaver som får struktur og hvilke som ikke gjør det, uten at du egentlig har valgt det bevisst.",
+        rebalancing:
+          "Du kan bygge videre på dette ved å legge merke til hvilke oppgaver som faktisk trenger en plan, og gi dem det bevisst, fremfor at det avgjøres av humør.",
+        exercise:
+          "Velg én tilbakevendende oppgave denne uken og bestem bevisst, på forhånd, hvor mye struktur den faktisk trenger.",
+      },
     },
     high: {
       overview:
@@ -298,6 +370,16 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Kalenderen din er fargekodet, sokkeskuffen sortert etter tykkelse, og du har mest sannsynlig en reservekopi av reservekopien.",
       shareTagline: "Pålitelig til fingerspissene",
+      growth: {
+        balanced:
+          "Brukt godt gjør grundigheten din deg til noen andre kan stole blindt på, uten at det går på bekostning av deg selv.",
+        unbalanced:
+          "Ubalansert kan de samme høye kravene gjøre det vanskelig å akseptere at noe er godt nok, eller å slippe kontrollen over til andre.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å bevisst la én liten ting være godt nok i stedet for perfekt, og legge merke til hva som faktisk skjer.",
+        exercise:
+          "Velg en oppgave denne uken der du bevisst stopper ved godt nok, og legg merke til om noen faktisk reagerer negativt.",
+      },
     },
   },
   extraversion: {
@@ -320,6 +402,16 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Du har regnet ut nøyaktig hvor lenge et bursdagsselskap må vare før du kan smyge deg ut uten at noen legger merke til det.",
       shareTagline: "Finner roen i eget selskap",
+      growth: {
+        balanced:
+          "Brukt godt gir roen din deg dybde andre sjelden rekker -- konsentrasjon som varer, og samtaler som går under overflaten.",
+        unbalanced:
+          "Ubalansert kan behovet for ro bli en unnskyldning for å takke nei til ting som faktisk kunne gitt deg noe godt.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å bevisst si ja til én sosial ting i uken du normalt ville unngått, uten å binde deg til mer enn det.",
+        exercise:
+          "Ta initiativ til én kort, avgrenset samtale denne uken -- en kollega, en nabo -- og legg merke til hvordan det faktisk kjentes etterpå.",
+      },
     },
     mid: {
       overview:
@@ -340,6 +432,15 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Du blir gjerne med på festen -- men sjekker rolig klokka rundt time to for å se når det blir sosialt akseptabelt å dra.",
       shareTagline: "Balanse mellom folk og fred",
+      growth: {
+        balanced:
+          "Brukt godt gir denne balansen deg reell frihet til å velge sosialt eller alene etter hva situasjonen faktisk ber om.",
+        unbalanced:
+          "Ubalansert kan valget bli tilfeldig i stedet for bevisst -- du blir med fordi det skjedde å skje, ikke fordi du faktisk ønsket det.",
+        rebalancing:
+          "Du kan bygge videre på dette ved å sjekke inn med deg selv før du sier ja eller nei til noe sosialt: gir dette deg noe, eller tapper det deg?",
+        exercise: "Før en enkel liste denne uken over hvilke sosiale situasjoner som ga deg energi, og hvilke som tappet deg.",
+      },
     },
     high: {
       overview:
@@ -360,6 +461,15 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Du kjenner navnet på postbudet, bussjåføren og sikkert naboens katt -- og heisturen er aldri helt stille når du er der.",
       shareTagline: "Energien din smitter på alle rundt deg",
+      growth: {
+        balanced:
+          "Brukt godt smitter energien din over på andre og løfter en gruppe, uten at du trenger å fylle hvert eneste ledige tidsrom.",
+        unbalanced:
+          "Ubalansert kan behovet for aktivitet gjøre det vanskelig å tåle stillhet, og en fullstappet kalender kan tappe deg mer enn den gir.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å bevisst planlegge inn noe alenetid, på samme måte som du planlegger inn det sosiale.",
+        exercise: "Sett av én kveld denne uken helt uten planer, og legg merke til hvordan det faktisk kjentes.",
+      },
     },
   },
   agreeableness: {
@@ -382,6 +492,14 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Når gruppechatten spør «hva synes dere om forslaget», er du den som faktisk svarer -- med fullstendige setninger og en klar mening.",
       shareTagline: "Tydelig og ærlig, alltid",
+      growth: {
+        balanced: "Brukt godt gjør tydeligheten din deg til noen som tør å ta beslutninger andre kvier seg for.",
+        unbalanced:
+          "Ubalansert kan den samme tydeligheten gjøre at andres perspektiv aldri egentlig slipper til, selv når det faktisk hadde noe for seg.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å bevisst stille ett spørsmål om den andres syn før du sier din egen mening høyt.",
+        exercise: "I neste uenighet denne uken, still ett oppfølgingsspørsmål før du svarer med din egen mening.",
+      },
     },
     mid: {
       overview:
@@ -402,6 +520,15 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "«Det er helt greit for meg,» sier du -- og mener det, som regel, nesten alltid.",
       shareTagline: "Balansert mellom deg selv og andre",
+      growth: {
+        balanced:
+          "Brukt godt gir den jevne vektingen din deg dømmekraft til å vite når du bør gi etter, og når du bør holde på ditt.",
+        unbalanced:
+          "Ubalansert kan det bli tilfeldig hvem som vinner frem -- ikke fordi saken faktisk taler for det, men fordi det ene alternativet var lettest der og da.",
+        rebalancing:
+          "Du kan bygge videre på dette ved å spørre deg selv, før du gir deg i en diskusjon, om du gir etter fordi saken taler for det, eller for å unngå friksjon.",
+        exercise: "Legg merke til én situasjon denne uken der du ga etter, og spør deg selv i etterkant om det egentlig var riktig.",
+      },
     },
     high: {
       overview:
@@ -422,6 +549,14 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Du sier unnskyld til møbler du dunker borti, og ender ofte opp med maten ingen andre ville ha, bare for at alle skal bli fornøyde.",
       shareTagline: "Varm og støttende, alltid til stede",
+      growth: {
+        balanced: "Brukt godt gjør omtanken din deg til noen folk faktisk stoler på og lener seg trygt på.",
+        unbalanced:
+          "Ubalansert kan det samme trekket gjøre det vanskelig å si nei, selv når prisen du betaler selv blir for høy.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å øve på å si nei til én liten ting, uten å forklare deg i det uendelige.",
+        exercise: "Si nei til én liten forespørsel denne uken -- noe lite -- og legg merke til at verden ikke går under.",
+      },
     },
   },
   stability: {
@@ -444,6 +579,15 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Du har med stor sannsynlighet overtenkt en SMS i 20 minutter før du til slutt sendte «ok».",
       shareTagline: "Kjenner følelsene sine godt",
+      growth: {
+        balanced:
+          "Brukt godt gjør følsomheten din deg oppmerksom på nyanser andre går glipp av, i stemninger og mennesker rundt deg.",
+        unbalanced: "Ubalansert kan bekymringer vokse seg større enn situasjonen faktisk tilsier, og ta mer plass enn de trenger.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å bygge inn faste holdepunkter i hverdagen -- en rutine, et sted, en person -- som du kan lene deg på når presset øker.",
+        exercise:
+          "Identifiser én fast rutine eller ett fast holdepunkt du kan bruke aktivt neste gang uro melder seg denne uken.",
+      },
     },
     mid: {
       overview:
@@ -464,6 +608,15 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Noe kjipt skjer, du blir litt satt ut -- og så er du stort sett tilbake til vanlig humør før neste episode er ferdig.",
       shareTagline: "Stø, men fortsatt menneskelig",
+      growth: {
+        balanced:
+          "Brukt godt gir den jevne linjen din deg en stødig grunnmur, uten at du blir uberørt av det som faktisk er krevende.",
+        unbalanced:
+          "Ubalansert kan denne roen bli en sovepute -- du bygger ikke opp reserver før en periode som faktisk er krevende, fordi ingenting har krevd det av deg ennå.",
+        rebalancing:
+          "Du kan bygge videre på dette ved å bevisst legge inn små pusterom også i rolige perioder, som en reserve til senere.",
+        exercise: "Legg inn én bevisst pause denne uken, selv om ingenting akkurat nå krever den.",
+      },
     },
     high: {
       overview:
@@ -484,6 +637,15 @@ export const INTERPRETATIONS: Copy = {
       funFact:
         "Mens andre får panikk over en sprukket vannledning, googler du rolig etter rørlegger mens du fortsetter å spise lunsjen din.",
       shareTagline: "Roen selv når alt annet snurrer",
+      growth: {
+        balanced:
+          "Brukt godt gjør roen din deg til en stødig støtte for andre, og gir deg selv klarhet til å tenke rett under press.",
+        unbalanced:
+          "Ubalansert kan den samme roen gjøre at du overser reelle varselsignaler, eller at andres bekymringer virker overdrevne fra der du står.",
+        rebalancing:
+          "Du kan bygge videre på styrken din ved å bevisst spørre folk rundt deg hvordan de faktisk har det, i stedet for å anta at alt er greit fordi du selv er rolig.",
+        exercise: "Spør én person denne uken, konkret og direkte, hvordan de faktisk har det -- og lytt uten å avfeie svaret.",
+      },
     },
   },
 };

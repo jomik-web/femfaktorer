@@ -28,6 +28,7 @@ import {
   bandFor,
   buildClosingSynthesis,
   splitIntoParagraphs,
+  type Interpretation,
 } from "@/data/interpretations";
 import { FACET_INTERPRETATIONS, FACET_ORDER_BY_DOMAIN, facetInterpretationFor } from "@/data/facetInterpretations";
 import {
@@ -73,6 +74,38 @@ const PRIMARY_MD_LINK_CLASSES = buttonClassNames("primary", "md");
 
 function questionSetForTier(tier: ResultTier): readonly Question[] {
   return tier === "extended" ? ALL_QUESTIONS_EXTENDED : tier === "full" ? ALL_QUESTIONS : FREE_QUESTIONS;
+}
+
+/**
+ * v2.38 (produkteiers ønske 26.07.2026, kvalitetssammenligning mot en
+ * konkurrent-PDF): kort "hva gjør jeg med dette"-seksjon per hovedkategori --
+ * Balansert/Ubalansert/Bygg videre + én konkret øvelse (se `growth`-feltet i
+ * interpretations.ts). Vises i ALLE tre resultatnivåer og i PDF-eksporten
+ * (lib/pdfReport.ts har en tilsvarende, men egen tegnet versjon siden jsPDF
+ * ikke kan gjenbruke JSX).
+ */
+function GrowthSection({ growth }: { growth: Interpretation["growth"] }) {
+  return (
+    <div className="mt-3 flex flex-col gap-2 border-t border-indigo/10 pt-3 dark:border-white/10">
+      <h3 className="text-sm font-medium text-indigo dark:text-white">Balansert og ubalansert</h3>
+      <p className="text-indigo/80 dark:text-lavender-400/80">
+        <span className="font-medium text-indigo dark:text-white">Balansert: </span>
+        {growth.balanced}
+      </p>
+      <p className="text-indigo/80 dark:text-lavender-400/80">
+        <span className="font-medium text-indigo dark:text-white">Ubalansert: </span>
+        {growth.unbalanced}
+      </p>
+      <p className="text-indigo/80 dark:text-lavender-400/80">
+        <span className="font-medium text-indigo dark:text-white">Bygg videre: </span>
+        {growth.rebalancing}
+      </p>
+      <p className="mt-1 text-sm text-indigo/70 dark:text-lavender-400/70">
+        <span className="font-medium text-indigo dark:text-white">Prøv denne uken: </span>
+        {growth.exercise}
+      </p>
+    </div>
+  );
 }
 
 /**
@@ -535,6 +568,7 @@ function ResultatContent() {
                       <p className="mt-1 text-indigo/80 dark:text-lavender-400/80">{copy.partnerNote}</p>
                     </div>
                   </div>
+                  {copy.growth && <GrowthSection growth={copy.growth} />}
                   {copy.funFact && (
                     <aside
                       className="mt-1 flex items-start gap-3 rounded-xl border border-dashed border-holo-sky/40 bg-white/50 p-3 print:hidden dark:bg-white/5"
@@ -743,6 +777,7 @@ function ResultatContent() {
                           </div>
                         </div>
                       )}
+                      {copy.growth && <GrowthSection growth={copy.growth} />}
                     </article>
                   ) : (
                     <article className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
@@ -759,6 +794,7 @@ function ResultatContent() {
                           <p className="text-indigo/80 dark:text-lavender-400/80">{copy.relationshipNote}</p>
                         </div>
                       </div>
+                      {copy.growth && <GrowthSection growth={copy.growth} />}
                     </article>
                   )}
 
