@@ -1,10 +1,13 @@
 import { jsPDF, GState } from "jspdf";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import type { Domain } from "@/data/questions";
 import type { DisplayFactor, FactorResult, FacetResult, ResultTier } from "@/lib/scoring";
 import { DOMAIN_TO_DISPLAY } from "@/lib/scoring";
 import { INTERPRETATIONS, DOMAIN_DEFINITIONS, NON_DIAGNOSTIC_NOTICE, CRISIS_NOTICE, bandFor } from "@/data/interpretations";
 import { FACET_INTERPRETATIONS, FACET_ORDER_BY_DOMAIN, facetInterpretationFor } from "@/data/facetInterpretations";
 import { zoneIndexFor, zoneLabelFor } from "@/components/RoughFactorIndicator";
+import { FactorHeroContent, VIEWBOX_WIDTH as HERO_VIEWBOX_WIDTH, VIEWBOX_HEIGHT as HERO_VIEWBOX_HEIGHT } from "@/components/FactorHero";
 
 /**
  * v2.37 (produkteiers ønske 26.07.2026, kvalitetssammenligning mot en
@@ -104,29 +107,73 @@ const SPIR_MASCOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20
  * Returnerer `null` ved feil (f.eks. i et miljø uten Image/canvas) -- da
  * hoppes bildet bare over, resten av rapporten genereres uansett.
  */
-async function loadSpirMascotDataUrl(): Promise<string | null> {
+/**
+ * v2.40 (produkteiers ønske 28.07.2026): felles rasteriserings-hjelper --
+ * trukket ut av det som opprinnelig kun var Spir-illustrasjonens egen
+ * funksjon, slik at domene-motivene (se `loadFactorHeroDataUrl` under) kan
+ * gjenbruke samme canvas-omvei i stedet for å duplisere den.
+ */
+async function rasterizeSvgToPngDataUrl(svgMarkup: string, widthPx: number, heightPx: number): Promise<string | null> {
   if (typeof window === "undefined" || typeof document === "undefined") return null;
   try {
-    const blob = new Blob([SPIR_MASCOT_SVG], { type: "image/svg+xml;charset=utf-8" });
+    const blob = new Blob([svgMarkup], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     try {
       const img = await new Promise<HTMLImageElement>((resolve, reject) => {
         const image = new Image();
         image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error("Kunne ikke laste Spir-illustrasjonen."));
+        image.onerror = () => reject(new Error("Kunne ikke laste illustrasjonen."));
         image.src = url;
       });
-      const size = 800;
       const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
+      canvas.width = widthPx;
+      canvas.height = heightPx;
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
-      ctx.drawImage(img, 0, 0, size, size);
+      ctx.drawImage(img, 0, 0, widthPx, heightPx);
       return canvas.toDataURL("image/png");
     } finally {
       URL.revokeObjectURL(url);
     }
+  } catch {
+    return null;
+  }
+}
+
+async function loadSpirMascotDataUrl(): Promise<string | null> {
+  return rasterizeSvgToPngDataUrl(SPIR_MASCOT_SVG, 800, 800);
+}
+
+/**
+ * v2.40 (produkteiers ønske 28.07.2026, presisert etter oppklaring: motivene
+ * skal knyttes til de 5 HOVEDKATEGORIENE, ikke underkategoriene): de samme
+ * hånd-tegnede landskapsmotivene som allerede står øverst på hver
+ * hovedkategori-seksjon PÅ NETTSIDEN (FactorHero.tsx, "store motiv"-serien)
+ * fantes ikke i PDF-en i det hele tatt -- lagt til her.
+ *
+ * Gjenbruker `FactorHeroContent` (den indre scenen+masken, UTEN den ytre
+ * `<svg>`) direkte -- IKKE duplisert som en statisk streng slik Spir-
+ * mascoten måtte gjøres, siden dette er ren, hook-fri JSX som kan
+ * serialiseres trygt med `renderToStaticMarkup` (samme teknikk som
+ * ShareCard.tsx allerede bruker til å gjenbruke NØYAKTIG samme scene i
+ * delekortene, se dens filhode). Wrapper selv resultatet i en minimal
+ * `<svg>` med eksplisitt `xmlns` (React sin JSX-utgave mangler dette
+ * attributtet, som kreves for at en frittstående SVG-streng skal rendres
+ * riktig utenfor en HTML-dokumentkontekst).
+ */
+async function loadFactorHeroDataUrl(factor: DisplayFactor): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const content = createElement(FactorHeroContent, { factor, uid: `pdf-${factor}` });
+    const svgRoot = createElement(
+      "svg",
+      { xmlns: "http://www.w3.org/2000/svg", viewBox: `0 0 ${HERO_VIEWBOX_WIDTH} ${HERO_VIEWBOX_HEIGHT}` },
+      content
+    );
+    const markup = renderToStaticMarkup(svgRoot);
+    const widthPx = 1400;
+    const heightPx = Math.round((widthPx * HERO_VIEWBOX_HEIGHT) / HERO_VIEWBOX_WIDTH);
+    return await rasterizeSvgToPngDataUrl(markup, widthPx, heightPx);
   } catch {
     return null;
   }
@@ -415,6 +462,18 @@ async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
   for (const f of input.factors) {
     doc.addPage();
     y = MARGIN;
+
+    // v2.40: samme motiv som står øverst på denne hovedkategorien på
+    // nettsiden -- se `loadFactorHeroDataUrl` sin doc-kommentar.
+    const heroDataUrl = await loadFactorHeroDataUrl(f.factor);
+    if (heroDataUrl) {
+      const heroWidth = CONTENT_WIDTH;
+      const heroHeight = (heroWidth * HERO_VIEWBOX_HEIGHT) / HERO_VIEWBOX_WIDTH;
+      ensureSpace(heroHeight + 4);
+      doc.addImage(heroDataUrl, "PNG", MARGIN, y, heroWidth, heroHeight);
+      y += heroHeight + 4;
+    }
+
     heading(f.label, 14);
     paragraph(DOMAIN_DEFINITIONS[f.factor], 8.5, GRAY_RGB);
     doc.setTextColor(...INDIGO_RGB);
