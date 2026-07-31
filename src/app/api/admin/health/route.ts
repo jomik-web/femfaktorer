@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminEmail } from "@/lib/admin/auth";
 import { readStore } from "@/lib/admin/store";
 import { QUESTION_SET_FINGERPRINT, QUESTION_SET_REVISION } from "@/data/questionSetVersion";
+import { relyingParty } from "@/lib/account/passkeys";
 
 export const runtime = "nodejs";
 
@@ -32,6 +33,8 @@ export async function GET() {
   } catch {
     blobsOk = false;
   }
+
+  const passkeyRp = relyingParty();
 
   const checks = [
     {
@@ -66,6 +69,14 @@ export async function GET() {
       detail: process.env.ACCOUNT_OTP_PEPPER
         ? "Satt."
         : "ACCOUNT_OTP_PEPPER mangler -- innlogging vil feile.",
+    },
+    {
+      key: "passkey",
+      label: "Passkey-innlogging",
+      ok: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
+      detail: process.env.NEXT_PUBLIC_SITE_URL
+        ? `Bundet til ${passkeyRp.rpID}. Passkeys registrert her virker IKKE på et annet domene -- ved domenebytte må alle registrere enhetene sine på nytt.`
+        : "NEXT_PUBLIC_SITE_URL mangler -- passkey-innlogging vil feile. Uten den antas localhost, som ikke stemmer i produksjon.",
     },
     {
       key: "plausible",

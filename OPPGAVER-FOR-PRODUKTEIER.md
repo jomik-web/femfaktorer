@@ -41,6 +41,42 @@ Fem funn -- to var allerede løst som en direkte SIDEEFFEKT av gårsdagens kapit
 
 **Testet:** `npx tsc --noEmit` kjører uten feil etter begge kodefiksene (PDF-parallellisering + Spir-caching). Selve ytelsesgevinsten (raskere PDF-generering, raskere Spir-svar) er IKKE tidsmålt av meg -- **kjenn selv etter om PDF-nedlastingen og Spir-samtalen føles raskere** enn før, siden dette er nettopp den typen endring som er vanskelig å bekrefte uten en ekte, varm produksjonsinstans.
 
+## Nytt: passkey -- logg inn uten kode på e-post (v2.47, 31.07.2026)
+
+Du kan nå logge inn med Face ID, fingeravtrykk, PIN eller en fysisk nøkkel (YubiKey) i stedet for å vente på engangskode.
+
+### Slik tar du det i bruk
+
+1. Logg inn som vanlig med e-post og kode.
+2. På «Min konto» dukker det opp en boks: **«Logg inn uten kode»**. Trykk «Registrer denne enheten».
+3. Enheten spør om Face ID / fingeravtrykk / PIN. Bekreft.
+4. Neste gang står det **«Logg inn med passkey»** øverst på innloggingssiden. Ett trykk, så er du inne.
+
+Gjenta punkt 1–3 på hver enhet du vil bruke. Registrerte enheter listes opp med navn og dato, og kan fjernes enkeltvis.
+
+### Hvorfor dette er trygt nå, når det ikke var det før
+
+Passkey-innlogging fantes tidligere og ble fjernet i v2.28 fordi registreringen var **helt åpen** -- hvem som helst kunne registrert seg som admin før du rakk det selv.
+
+Denne gangen er registreringen bare mulig **fra en økt du allerede er innlogget i**, og passkeyen knyttes til nøyaktig den e-postadressen økten tilhører. Adressen leses fra økten, aldri fra forespørselen. Det finnes altså ingen vei inn som ikke går gjennom e-postbekreftelse minst én gang. Hullet er lukket ved konstruksjon, ikke ved en ekstra sjekk som kan glemmes.
+
+En passkey gir heller ikke admin-tilgang i seg selv -- den logger deg inn som en e-postadresse, og om den adressen er admin avgjøres som før av rollelista.
+
+### Fire ting du bør vite
+
+- **E-postkoden forsvinner ikke.** Den er reserveveien hvis du mister enhetene dine. Ikke be meg fjerne den.
+- **Passkeys er bundet til nettadressen.** De du registrerer på `legendary-travesseiro-4b8f65.netlify.app` vil **ikke** virke når du går over til eget domene. Da må alle registrere enhetene på nytt. Dette kan ikke omgås -- det er nettopp denne bindingen som gjør passkeys motstandsdyktige mot phishing. **Vurder derfor å vente med å be betatestere registrere passkeys til domenet er på plass.**
+- **Krever at `NEXT_PUBLIC_SITE_URL` er riktig satt i Netlify.** Peker den et annet sted enn adressen folk faktisk bruker, feiler registreringen med en kryptisk melding. Drift-fanen viser nå hvilket domene passkeys er bundet til -- sjekk den først hvis noe ikke virker.
+- **Ingen biometri sendes til oss.** Fingeravtrykk og ansikt håndteres i sin helhet av enheten din. Vi lagrer en offentlig nøkkel, en tilfeldig id og et enhetsnavn -- den private nøkkelen forlater aldri enheten.
+
+### Teknisk
+
+Nye filer: `src/lib/account/passkeys.ts` (lagring, omvendt indeks, kortlevde utfordringer), fire ruter under `src/app/api/account/passkey/`, samt `PasskeyPanel.tsx` og `PasskeyLoginButton.tsx`. `@simplewebauthn/server` og `@simplewebauthn/browser` er lagt inn igjen -- de ble fjernet i v2.46 sammen med den gamle koden, og er nå tilbake i en riktig oppsatt form.
+
+Innlogging skjer uten at du skriver e-postadresse: nettleseren finner selv passkeyene for nettstedet. Det krever at legitimasjonen lagres på enheten (`residentKey: "required"`), og en omvendt indeks fra legitimasjons-id til konto. Endepunktet som starter innlogging røper bevisst ikke hvilke kontoer som har passkeys.
+
+Personvernerklæringen er utvidet med et punkt om hva som lagres.
+
 ## Nytt: adminpanel, bruksstatistikk og anonym forskningsdata (v2.46, 31.07.2026)
 
 Den største enkeltrunden så langt. Bakgrunnen er dokumentet `Adminpanel_Forslag_2026-07-31.md` i prosjektmappa -- les det først hvis noe her er uklart, det forklarer hvorfor hvert punkt finnes.

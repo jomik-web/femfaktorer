@@ -245,6 +245,16 @@ export default function PersonvernPage() {
             hovedfaktorene og fasettene) -- aldri de rå svarene du ga.
           </li>
           <li>
+            -- <strong>Passkey (valgfritt).</strong> Er du innlogget, kan du registrere enheten din
+            slik at du siden logger inn med Face ID, fingeravtrykk eller PIN i stedet for å vente på
+            en kode. Vi lagrer da en offentlig nøkkel, en tilfeldig legitimasjons-id og et navn du
+            selv velger på enheten. <strong>Den private nøkkelen forlater aldri enheten din</strong>
+            -- vi har den ikke, og kan derfor ikke bruke den til noe. Vi mottar heller ikke
+            fingeravtrykket eller ansiktet ditt; det håndteres i sin helhet av enheten din, og vi
+            får bare vite at den godkjente deg. Du kan fjerne registrerte enheter når som helst på
+            innloggingssiden, og engangskode på e-post fungerer alltid som reservevei.
+          </li>
+          <li>
             -- Innlogging skjer med en engangskode sendt til e-posten din, ikke passord. Koden
             sendes via e-posttjenesten Resend.
           </li>

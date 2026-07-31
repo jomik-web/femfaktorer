@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveRestoredAccountResult } from "@/lib/storage";
 import { useFlags } from "@/components/FlagsProvider";
+import { PasskeyPanel } from "@/components/PasskeyPanel";
+import { PasskeyLoginButton } from "@/components/PasskeyLoginButton";
 import { Button, buttonClassNames } from "@/components/ui/Button";
 
 type Step = "checking" | "loggedIn" | "email" | "code";
@@ -199,6 +201,11 @@ export default function LoggInnPage() {
         {info && <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{info}</p>}
         {error && <p className="text-sm text-factor-stability">{error}</p>}
 
+        {/* v2.47: registrering av passkey ligger her, bak innlogging -- det
+            er nettopp dét som lukker sikkerhetshullet den gamle
+            passkey-løsningen hadde (se lib/account/passkeys.ts). */}
+        <PasskeyPanel />
+
         <div className="flex flex-col gap-3">
           <button
             type="button"
@@ -242,6 +249,26 @@ export default function LoggInnPage() {
           ingen passord -- du logger inn med en kode vi sender til e-posten din.
         </p>
       </header>
+
+      {/* v2.47: passkey står ØVERST, før e-postskjemaet. Har du registrert
+          en enhet, er dette den raskeste veien inn -- og da skal den ikke
+          ligge under et skjema du uansett ikke trenger å fylle ut.
+          Knappen skjuler seg selv i nettlesere uten støtte. */}
+      {step === "email" && (
+        <>
+          <PasskeyLoginButton
+            onSuccess={(loggedInAs) => {
+              setLoggedInEmail(loggedInAs);
+              setStep("loggedIn");
+            }}
+          />
+          <div className="flex items-center gap-3">
+            <span className="h-px flex-1 bg-lavender-400 dark:bg-white/15" />
+            <span className="text-xs text-indigo/45 dark:text-lavender-400/45">eller</span>
+            <span className="h-px flex-1 bg-lavender-400 dark:bg-white/15" />
+          </div>
+        </>
+      )}
 
       {step === "email" ? (
         <form onSubmit={requestCode} className="flex flex-col gap-3">
