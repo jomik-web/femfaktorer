@@ -41,6 +41,36 @@ Fem funn -- to var allerede løst som en direkte SIDEEFFEKT av gårsdagens kapit
 
 **Testet:** `npx tsc --noEmit` kjører uten feil etter begge kodefiksene (PDF-parallellisering + Spir-caching). Selve ytelsesgevinsten (raskere PDF-generering, raskere Spir-svar) er IKKE tidsmålt av meg -- **kjenn selv etter om PDF-nedlastingen og Spir-samtalen føles raskere** enn før, siden dette er nettopp den typen endring som er vanskelig å bekrefte uten en ekte, varm produksjonsinstans.
 
+## Nytt: bedre feilmeldinger for passkey (v2.48-2.49, 31.07.2026)
+
+Passkey virket ikke ved første forsøk, og feilsøkingen tok lengre tid enn den skulle. Årsaken var ikke koden, men **hvilken adresse siden ble åpnet fra**.
+
+### Hva som faktisk var galt
+
+Adressen som ble brukt var en Netlify-**permalink**:
+
+```
+https://6a6cbdef368d0a000831c447--legendary-travesseiro-4b8f65.netlify.app/
+```
+
+Prefikset foran de to bindestrekene gjør dette til et **helt annet domene** i nettleserens øyne. Passkey er kryptografisk bundet til `legendary-travesseiro-4b8f65.netlify.app`, så nettleseren avviste registreringen. Med hovedadressen virket alt umiddelbart.
+
+**Regel å ta med videre:** permalinken peker på én bestemt utrulling og er nyttig når du vil se en gammel versjon. Men den oppfører seg som et fremmed domene for alt som har med innlogging og identitet å gjøre. Send den aldri til betatestere -- bruk alltid hovedadressen uten prefiks.
+
+### To rettelser så dette ikke kan skje ubemerket igjen
+
+- **v2.48: feilmeldingene sier nå hva som er galt.** Den første versjonen skrev "Registreringen ble avbrutt" for alt uventet -- altså ble en ekte feil presentert som om du selv hadde trykket avbryt. Ny `src/lib/account/passkeyErrors.ts` oversetter nettleserens feil til noe man kan handle på, og sier hva neste steg er. Serveren sier også fra hvis `NEXT_PUBLIC_SITE_URL` mangler, i stedet for stille å gjette på localhost.
+- **v2.49: siden advarer FØR du trykker.** Står du på feil adresse, vises en gul boks som sier hvilket domene passkey er bundet til, hvilket du står på, og med en lenke rett til riktig sted. `/api/flags` returnerer nå `passkeyRpID` til dette formålet -- det er nettstedets eget domene, ingen hemmelighet.
+
+### Lærdom for lokal testing
+
+`.env.local` gjelder **bare maskinen din** og følger verken med til GitHub eller Netlify. Alt som skal gjelde den publiserte siden må legges inn separat under Site configuration → Environment variables i Netlify.
+
+To ting som fortsatt står åpne fra denne runden:
+
+- **Innlogging virker ikke på localhost** med vanlig `npm run dev`, fordi Netlify Blobs ikke har kontakt der. Bruk `netlify dev` i stedet, eller test på den publiserte adressen.
+- **`RESEND_FROM_ADDRESS` er satt til en @gmail.com-adresse.** Resend krever et domene du selv har verifisert hos dem. Det virker for deg som kontoeier, men vil ikke virke for andre brukere før et eget domene er verifisert.
+
 ## Nytt: passkey -- logg inn uten kode på e-post (v2.47, 31.07.2026)
 
 Du kan nå logge inn med Face ID, fingeravtrykk, PIN eller en fysisk nøkkel (YubiKey) i stedet for å vente på engangskode.
