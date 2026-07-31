@@ -31,6 +31,12 @@ export interface RuntimeFlags {
   accountSaveEnabled: boolean;
   resultAccountSaveEnabled: boolean;
   betaAnswerSetToolsEnabled: boolean;
+  /**
+   * v2.49: domenet passkeys er bundet til. Tom streng betyr "vet ikke ennå"
+   * (svaret er ikke kommet) -- da skal ingen advarsel vises, siden vi ikke
+   * har grunnlag for å påstå at noe er galt.
+   */
+  passkeyRpID: string;
 }
 
 /** Verdiene som gjelder inntil noe annet er hentet -- og hvis henting feiler. */
@@ -38,6 +44,7 @@ export const DEFAULT_FLAGS: RuntimeFlags = {
   accountSaveEnabled: ACCOUNT_SAVE_ENABLED,
   resultAccountSaveEnabled: RESULT_ACCOUNT_SAVE_ENABLED,
   betaAnswerSetToolsEnabled: BETA_ANSWER_SET_TOOLS_ENABLED,
+  passkeyRpID: "",
 };
 
 const FlagsContext = createContext<RuntimeFlags>(DEFAULT_FLAGS);
@@ -52,7 +59,8 @@ function isRuntimeFlags(value: unknown): value is RuntimeFlags {
   return (
     typeof v.accountSaveEnabled === "boolean" &&
     typeof v.resultAccountSaveEnabled === "boolean" &&
-    typeof v.betaAnswerSetToolsEnabled === "boolean"
+    typeof v.betaAnswerSetToolsEnabled === "boolean" &&
+    typeof v.passkeyRpID === "string"
   );
 }
 

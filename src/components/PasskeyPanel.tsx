@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { startRegistration } from "@simplewebauthn/browser";
 import { buttonClassNames } from "@/components/ui/Button";
 import { passkeyErrorMessage } from "@/lib/account/passkeyErrors";
+import { useFlags } from "@/components/FlagsProvider";
 
 /**
  * Registrerte passkeys for den innloggede kontoen (v2.47, 31.07.2026).
@@ -55,6 +56,17 @@ export function PasskeyPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [currentHost, setCurrentHost] = useState("");
+
+  const { passkeyRpID } = useFlags();
+
+  useEffect(() => {
+    setCurrentHost(window.location.hostname);
+  }, []);
+
+  // Bare en advarsel når vi VET begge deler. Tom rpID betyr at svaret fra
+  // /api/flags ikke er kommet ennå -- da skal vi ikke skremme noen.
+  const wrongDomain = Boolean(passkeyRpID && currentHost && passkeyRpID !== currentHost);
 
   useEffect(() => {
     // PublicKeyCredential finnes ikke i eldre nettlesere, og heller ikke på
@@ -151,6 +163,29 @@ export function PasskeyPanel() {
           stedet for å vente på en kode på e-post.
         </p>
       </div>
+
+      {/* v2.49: advar FØR man trykker, ikke etterpå. En Netlify-permalink
+          (`<hash>--sitenavn.netlify.app`) er et annet domene enn hovedadressen,
+          og nettleseren avviser da registreringen med en feil som er nesten
+          umulig å tolke uten å vite akkurat dette. */}
+      {wrongDomain && (
+        <div className="flex flex-col gap-1 rounded-lg border border-gold-dark/50 bg-gold-light/20 p-4 dark:border-gold/30 dark:bg-gold-dark/15">
+          <p className="text-sm font-medium text-indigo dark:text-white">
+            Du står på feil adresse for passkey
+          </p>
+          <p className="text-xs text-indigo/75 dark:text-lavender-400/80">
+            Passkey er bundet til <strong>{passkeyRpID}</strong>, men du er på{" "}
+            <strong>{currentHost}</strong>. Registrering vil bli avvist av nettleseren. Gå til
+            hovedadressen og prøv der:
+          </p>
+          <a
+            href={`https://${passkeyRpID}/logg-inn`}
+            className="text-xs text-holo-skyText underline underline-offset-2"
+          >
+            https://{passkeyRpID}/logg-inn
+          </a>
+        </div>
+      )}
 
       {passkeys && passkeys.length > 0 && (
         <ul className="flex flex-col gap-2">

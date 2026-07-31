@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readStore } from "@/lib/admin/store";
+import { relyingParty } from "@/lib/account/passkeys";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,16 @@ export async function GET() {
       accountSaveEnabled: settings.accountSaveEnabled,
       resultAccountSaveEnabled: settings.resultAccountSaveEnabled,
       betaAnswerSetToolsEnabled: settings.betaAnswerSetToolsEnabled,
+      /**
+       * v2.49: hvilket domene passkeys er bundet til. Trygt å eksponere --
+       * det er nettstedets eget domene, ikke en hemmelighet.
+       *
+       * Klienten bruker det til å ADVARE FØR man trykker, i stedet for å la
+       * nettleseren avvise etterpå. Bakgrunn: en Netlify-permalink
+       * (`<hash>--sitenavn.netlify.app`) er et annet domene enn hovedadressen,
+       * og feilen den gir er nesten umulig å tolke uten å vite dette.
+       */
+      passkeyRpID: relyingParty().rpID,
     },
     {
       // Kort mellomlagring: en brytersk endring skal slå gjennom raskt, men
