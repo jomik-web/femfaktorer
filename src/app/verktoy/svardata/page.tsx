@@ -12,12 +12,22 @@ import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
  * igjen senere, slik at du kan bygge faste, gjenbrukbare svarsett å teste
  * rapporttekst og Spir-samtale mot mens resten av tjenesten er under
  * utvikling. Selve last ned/last opp-logikken ligger i den delte
- * komponenten AnswerSetCsvPanel (samme komponent som de synlige
- * betatest-knappene på /resultat bruker, se lib/featureFlags.ts).
+ * komponenten AnswerSetCsvPanel.
  *
- * Denne siden er BEVISST holdt utenfor menyen (og utenfor betaflagget) --
- * den forblir tilgjengelig for deg som et permanent utviklerverktøy også
- * etter at betatest-knappene på /resultat fjernes igjen.
+ * v2.43 (Kvalitetsrevisjon 31.07.2026, kap. 2, middels alvorlighet):
+ * resultatsiden hadde tidligere SIN EGEN, synlige CSV-seksjon
+ * ("Betatest: ta vare på svarene dine", bak BETA_ANSWER_SET_TOOLS_ENABLED)
+ * i tillegg til denne siden -- to steder med identisk funksjonalitet gjorde
+ * resultatsiden lengre enn nødvendig. Den synlige seksjonen er fjernet;
+ * /resultat lenker nå hit i stedet (se de to stedene som nevner
+ * "CSV-verktøyet" i resultat/page.tsx). Denne siden dekker derfor NÅ begge
+ * behov: produkteierens faste testsvarsett, OG betatesteres ønske om å ta
+ * vare på svarene sine mellom oppdateringer (se avsnittet under).
+ *
+ * Denne siden er BEVISST holdt utenfor menyen -- den forblir tilgjengelig
+ * som et permanent verktøy også etter at betaperioden er over, i motsetning
+ * til den fjernede seksjonen på /resultat (som var bak et fjernbart
+ * feature-flagg, se lib/featureFlags.ts).
  *
  * Ingen egen tilgangskontroll: siden opererer kun på DENNE nettleserens
  * egen lokale lagring, ikke andre brukeres data, så det er ikke noe
@@ -45,11 +55,11 @@ export default function SvardataVerktoyPage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-indigo dark:text-white">Verktøy: svardata</h1>
         <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-          Kun for utvikling -- ikke en del av den vanlige tjenesten. Her kan du laste ned et fast
-          svarsett (CSV) og laste det inn igjen senere, slik at du kan teste rapporten og
-          Spir-samtalen mot et kjent, uforandret svarsett mens resten av tjenesten fortsatt endrer
-          seg. Filen kan også redigeres for hånd i Excel -- endre tallene i "svar"-kolonnen
-          (1-5, tomt = ubesvart) for å bygge et helt oppdiktet svarsett fra bunnen av.
+          Her kan du laste ned svarene dine som en fil (CSV) og laste dem inn igjen senere -- enten
+          fordi du er en betatester som vil ta vare på svarene dine mellom oppdateringer av testen,
+          eller fordi du vil teste rapporten og Spir-samtalen mot et kjent, uforandret svarsett.
+          Filen kan også redigeres for hånd i Excel -- endre tallene i "svar"-kolonnen (1-5, tomt =
+          ubesvart) for å bygge et helt oppdiktet svarsett fra bunnen av.
         </p>
       </header>
 
@@ -60,9 +70,14 @@ export default function SvardataVerktoyPage() {
         <AnswerSetCsvPanel afterImport="navigate" />
       </section>
 
-      <Link href="/" className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60">
-        Tilbake til forsiden
-      </Link>
+      <div className="flex flex-wrap gap-4">
+        <Link href="/resultat" className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60">
+          Tilbake til resultatet
+        </Link>
+        <Link href="/" className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60">
+          Tilbake til forsiden
+        </Link>
+      </div>
     </main>
   );
 }

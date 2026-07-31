@@ -289,7 +289,12 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
   const band = bandFor(dominant.score);
   const tagline = INTERPRETATIONS[dominant.factor][band].shareTagline;
 
-  const [format, setFormat] = useState<ShareFormat>("square");
+  // v2.43 (Kvalitetsrevisjon 31.07.2026, kap. 2, lav alvorlighet): var "square"
+  // her, mens MemeShareCard over bruker "story" som standard -- en liten,
+  // meningsløs inkonsistens mellom de to variantene av samme funksjon.
+  // Unifisert til "story" begge steder (produkteiers begrunnelse for at
+  // story skal være standard, se FORMAT_ORDER-kommentaren over).
+  const [format, setFormat] = useState<ShareFormat>("story");
   const [busy, setBusy] = useState<"share" | "download" | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 

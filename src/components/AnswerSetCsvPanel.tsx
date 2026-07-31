@@ -39,8 +39,15 @@ function isIOS(): boolean {
  * Delt last ned/last opp-panel for CSV-svarsett (v2.16, 15.07.2026).
  * Selve bygge-/parselogikken ligger i lib/devTools/answerSetCsv.ts og er
  * uavhengig av UI -- se den filens doc-kommentar for formatdetaljer.
- * Brukt både av den skjulte utviklersiden (/verktoy/svardata) og av de
- * synlige betatest-knappene på /resultat.
+ *
+ * v2.43 (Kvalitetsrevisjon 31.07.2026, kap. 2): brukt av den skjulte
+ * verktøysiden (/verktoy/svardata, som nå dekker BÅDE produkteierens
+ * testverktøy og betatesteres ønske om å ta vare på svarene sine), og av
+ * gjenopprettings-panelet på /resultat sin "fant ikke resultat"-tilstand
+ * (hideDownload-varianten). Den tidligere synlige CSV-seksjonen midt i selve
+ * resultatrapporten er fjernet -- se resultat/page.tsx sin git-historikk --
+ * fordi den gjorde en allerede lang side lengre uten å tilby noe
+ * /verktoy/svardata ikke allerede dekket.
  */
 export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = false }: AnswerSetCsvPanelProps) {
   const router = useRouter();

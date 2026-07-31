@@ -895,29 +895,6 @@ function ResultatContent() {
         </section>
       )}
 
-      {BETA_ANSWER_SET_TOOLS_ENABLED && (
-        <section
-          id="csv-verktoy"
-          className="scroll-mt-6 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden"
-        >
-          <Disclosure
-            title={
-              <span className="font-display font-semibold text-indigo dark:text-white">
-                Betatest: ta vare på svarene dine
-              </span>
-            }
-          >
-            <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-              Testen kan bli oppdatert innimellom mens vi jobber videre med Dine Fasetter. Last ned
-              svarene dine som en fil nå, så slipper du å svare på alt på nytt etter en oppdatering
-              -- last filen opp igjen her for å se resultatet med én gang. Denne muligheten fjernes
-              igjen når betatestingen er ferdig.
-            </p>
-            <AnswerSetCsvPanel afterImport="reload" />
-          </Disclosure>
-        </section>
-      )}
-
       {ACCOUNT_SAVE_ENABLED && isDetailed && accountChecked && (
         <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
           <h2 className="font-display font-semibold text-indigo dark:text-white">Lagre resultatet ditt</h2>
@@ -926,9 +903,9 @@ function ResultatContent() {
               Denne funksjonen er ikke i bruk mens vi betatester -- vi har en annen måte å lagre
               resultatene på under betatestingen, se{" "}
               {BETA_ANSWER_SET_TOOLS_ENABLED ? (
-                <a href="#csv-verktoy" className="underline underline-offset-2">
+                <Link href="/verktoy/svardata" className="underline underline-offset-2">
                   CSV-verktøyet
-                </a>
+                </Link>
               ) : (
                 "CSV-verktøyet"
               )}
@@ -955,9 +932,9 @@ function ResultatContent() {
             <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
               Kontolagring er satt på pause under betatestingen. Bruk{" "}
               {BETA_ANSWER_SET_TOOLS_ENABLED ? (
-                <a href="#csv-verktoy" className="underline underline-offset-2">
+                <Link href="/verktoy/svardata" className="underline underline-offset-2">
                   CSV-verktøyet
-                </a>
+                </Link>
               ) : (
                 "CSV-verktøyet"
               )}{" "}
