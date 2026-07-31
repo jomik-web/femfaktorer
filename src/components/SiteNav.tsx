@@ -19,6 +19,21 @@ const LINKS_BEFORE_RESULT = [
 ];
 const LINKS_AFTER_RESULT = [{ href: "/spir", label: "Spir" }];
 
+// Verktøy-undermenyen (v2.44, produkteiers ønske 31.07.2026). Kontolagringen
+// lå tidligere som en full seksjon på /resultat og fylte mye plass med å
+// forklare en funksjon som er avslått under betatestingen -- den hører hjemme
+// blant verktøyene, ikke i selve rapporten.
+//
+// I motsetning til REPORT_OPTIONS over er disse ALLTID klikkbare: de handler
+// om å ta vare på data, ikke om å vise et resultat som må være fullført
+// først. Sidene sier selv fra hvis det ikke er noe å lagre ennå.
+//
+// Holdes manuelt i synk med TOOLS-listen i app/verktoy/page.tsx.
+const VERKTOY_OPTIONS = [
+  { href: "/verktoy/svardata", label: "Svardata" },
+  { href: "/verktoy/lagre-resultat", label: "Lagre resultatet" },
+] as const;
+
 // Rapportvalg-undermenyen under "Resultat" (v2.33, produkteiers ønske
 // 19.07.2026): en bruker som har fullført 120 eller 290 spørsmål skal kunne
 // velge hvilket av de fullførte rapportnivåene som vises, ikke bare det
@@ -46,6 +61,7 @@ export function SiteNav() {
   const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [reportMenuOpen, setReportMenuOpen] = useState(false);
+  const [verktoyMenuOpen, setVerktoyMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unlocked, setUnlocked] = useState<Record<ResultTier, boolean>>({
     free: false,
@@ -54,6 +70,8 @@ export function SiteNav() {
   });
   const reportMenuRef = useRef<HTMLLIElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const verktoyMenuRef = useRef<HTMLLIElement>(null);
+  const verktoyCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // v2.42 (Kvalitetsrevisjon 31.07.2026, kap. 1, lav alvorlighet): mobilpanelet
   // flyttet tidligere ALDRI fokus -- det ble stående på hamburgerknappen både
   // ved åpning og lukking. Ikke et WCAG-brudd i seg selv (panelet er ikke
@@ -84,6 +102,18 @@ export function SiteNav() {
     closeTimeoutRef.current = setTimeout(() => setReportMenuOpen(false), 200);
   }
 
+  // Samme "bro"-mønster som rapportmenyen over, av samme grunn (v2.34-fiksen).
+  function openVerktoyMenu() {
+    if (verktoyCloseTimeoutRef.current) {
+      clearTimeout(verktoyCloseTimeoutRef.current);
+      verktoyCloseTimeoutRef.current = null;
+    }
+    setVerktoyMenuOpen(true);
+  }
+  function scheduleCloseVerktoyMenu() {
+    verktoyCloseTimeoutRef.current = setTimeout(() => setVerktoyMenuOpen(false), 200);
+  }
+
   useEffect(() => {
     if (!ACCOUNT_SAVE_ENABLED) return;
     fetch("/api/account/me")
@@ -112,6 +142,7 @@ export function SiteNav() {
   useEffect(() => {
     return () => {
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+      if (verktoyCloseTimeoutRef.current) clearTimeout(verktoyCloseTimeoutRef.current);
     };
   }, []);
 
@@ -159,10 +190,30 @@ export function SiteNav() {
     };
   }, [reportMenuOpen]);
 
+  // Samme lukkeatferd for verktøymenyen (klikk utenfor / Escape).
+  useEffect(() => {
+    if (!verktoyMenuOpen) return;
+    function handlePointerDown(e: MouseEvent) {
+      if (verktoyMenuRef.current && !verktoyMenuRef.current.contains(e.target as Node)) {
+        setVerktoyMenuOpen(false);
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setVerktoyMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [verktoyMenuOpen]);
+
   if (pathname?.startsWith("/admin")) return null;
 
   const anyUnlocked = unlocked.free || unlocked.full || unlocked.extended;
   const resultActive = pathname === "/resultat";
+  const verktoyActive = pathname?.startsWith("/verktoy") ?? false;
 
   return (
     <header className="sticky top-0 z-10 border-b border-lavender-400 bg-white/90 backdrop-blur dark:border-white/10 dark:bg-indigo/90">
@@ -331,6 +382,65 @@ export function SiteNav() {
               </li>
             );
           })}
+          {/* Verktøy (v2.44) -- samme rollover-mønster som rapportvalg over. */}
+          <li
+            key="/verktoy"
+            ref={verktoyMenuRef}
+            className="relative"
+            onMouseEnter={openVerktoyMenu}
+            onMouseLeave={scheduleCloseVerktoyMenu}
+          >
+            <div className="flex items-center gap-0.5">
+              <Link
+                href="/verktoy"
+                aria-current={verktoyActive ? "page" : undefined}
+                className={
+                  verktoyActive
+                    ? "font-medium text-holo-skyText"
+                    : "text-indigo/70 hover:text-holo-skyText dark:text-lavender-400/70"
+                }
+              >
+                Verktøy
+              </Link>
+              <button
+                type="button"
+                aria-expanded={verktoyMenuOpen}
+                aria-controls="verktoy-undermeny"
+                aria-label="Vis verktøy"
+                onClick={() => setVerktoyMenuOpen((v) => !v)}
+                className="rounded p-0.5 text-indigo/50 hover:text-holo-skyText dark:text-lavender-400/50"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                  <path d="M1,3 L5,7 L9,3" stroke="currentColor" strokeWidth={1.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+
+            {verktoyMenuOpen && (
+              <div className="absolute left-0 top-full z-20 w-48 pt-2">
+                <ul
+                  id="verktoy-undermeny"
+                  role="menu"
+                  aria-label="Velg verktøy"
+                  className="rounded-xl border border-lavender-400/40 bg-white py-1.5 shadow-md dark:border-white/10 dark:bg-indigo"
+                >
+                  {VERKTOY_OPTIONS.map((opt) => (
+                    <li key={opt.href} role="none">
+                      <Link
+                        role="menuitem"
+                        href={opt.href}
+                        onClick={() => setVerktoyMenuOpen(false)}
+                        className="block px-3 py-1.5 text-indigo hover:bg-lavender-100 dark:text-white dark:hover:bg-white/10"
+                      >
+                        {opt.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </li>
+
           {ACCOUNT_SAVE_ENABLED && (
             <li>
               <Link
@@ -434,6 +544,35 @@ export function SiteNav() {
                 </li>
               );
             })}
+            {/* Verktøy med undervalgene inline -- samme mønster som
+                rapportvalgene over (ingen hover-undermeny på berøring). */}
+            <li>
+              <Link
+                href="/verktoy"
+                aria-current={verktoyActive ? "page" : undefined}
+                className={
+                  "block rounded px-2 py-2 " +
+                  (verktoyActive
+                    ? "font-medium text-holo-skyText"
+                    : "text-indigo/70 hover:text-holo-skyText dark:text-lavender-400/70")
+                }
+              >
+                Verktøy
+              </Link>
+              <ul className="flex flex-col gap-1 pl-4">
+                {VERKTOY_OPTIONS.map((opt) => (
+                  <li key={opt.href}>
+                    <Link
+                      href={opt.href}
+                      className="block rounded px-2 py-1.5 text-indigo/70 hover:text-holo-skyText dark:text-lavender-400/70"
+                    >
+                      {opt.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </li>
+
             {ACCOUNT_SAVE_ENABLED && (
               <li>
                 <Link

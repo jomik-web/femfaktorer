@@ -14,6 +14,26 @@ Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenst�
 - **Premium-nivåets detaljerte innhold** utover det som allerede er bygget (fasettnivå, utvikling over tid) -- fortsatt ikke spesifisert, se prismodell-dokumentets del 8.
 - **Ubesluttet, uncommitet arbeid liggende i kodebasen fra en tidligere økt** (ikke min): `jspdf`-avhengighet lagt til i `package.json` og en ny fil `src/lib/pdfReport.ts` -- ser ut som et påbegynt spor for PDF-generering, men er ikke i git og ikke ferdigstilt. Rørt ikke ved dette -- si ifra om det skal fullføres, forkastes, eller om noen andre jobber med det parallelt.
 
+## Nytt: Verktøy-meny -- kontolagring flyttet ut av rapporten (v2.44, 31.07.2026)
+
+"Lagre resultatet ditt" lå midt inne i rapporten på /resultat og brukte mye plass på å forklare en funksjon som er avslått under betatestingen (`RESULT_ACCOUNT_SAVE_ENABLED = false`). Den er nå flyttet dit den hører hjemme.
+
+- **Nytt menypunkt "Verktøy"** i toppmenyen, med nedtrekksmeny etter samme mønster som Resultat. Undervalgene er alltid klikkbare -- i motsetning til rapportvalgene, som krever et fullført nivå.
+- **Ny landingsside `/verktoy`** som lister verktøyene med hver sin forklaring.
+- **Ny side `/verktoy/lagre-resultat`** med hele kontolagringen. Selve flyten ligger i den nye komponenten `AccountSavePanel`, slik at siden bare er innramming -- samme oppbygging som `/verktoy/svardata` har mot `AnswerSetCsvPanel`.
+- **`/verktoy/svardata` er uendret**, men nå synlig i menyen i stedet for å være en skjult URL.
+- **På /resultat står det igjen en kort henvisning** ("Ta vare på resultatet") som peker til Verktøy, slik at de som leter etter funksjonen finner veien. Rapporten er tilsvarende kortere.
+
+**Én reell atferdsendring, ikke bare flytting:** `persistCurrentResult` hentet tidligere inn oppdatert historikk med én gang etter lagring, slik at "Utvikling over tid"-tabellen på resultatsiden viste det nettopp lagrede punktet uten omlasting (v2.27). Nå som lagringen skjer på en annen side, finnes ikke den tabellen på skjermen i det øyeblikket -- den oppdateres i stedet ved neste besøk på /resultat. Ingen data går tapt, men det er verdt å vite når kontolagringen slås på igjen.
+
+**Panelet er selvstendig:** `AccountSavePanel` laster svarene og regner ut resultatet på nytt selv, i stedet for å få det inn som props. Det er hele poenget med flyttingen -- panelet må fungere uten at brukeren står på /resultat først. Den velger automatisk det høyeste fullførte nivået (290 foran 120), og sier fra dersom ingen detaljert rapport finnes.
+
+**Testet:** `npx tsc --noEmit` kjører uten feil, også med `--noUnusedLocals` for å fange død kode etter flyttingen (syv tilstandsvariabler, fire funksjoner og to importer ble ryddet bort fra `resultat/page.tsx`).
+
+**IKKE TESTET -- viktig:** selve lagringsflyten (e-post → engangskode → lagre) er uendret kode, men er ikke kjørt ende-til-ende etter flyttingen, fordi flagget er av og flyten krever e-postutsending. Når du slår på `RESULT_ACCOUNT_SAVE_ENABLED` igjen, test i denne rekkefølgen: (1) send kode, (2) bekreft kode, (3) at resultatet faktisk lagres, (4) at "Lagre / oppdater" virker for en allerede innlogget bruker, (5) logg ut. Samme liste står i doc-kommentaren i `AccountSavePanel.tsx`.
+
+**Merk:** `TOOLS` i `app/verktoy/page.tsx` og `VERKTOY_OPTIONS` i `components/SiteNav.tsx` må holdes i synk manuelt når du legger til et nytt verktøy.
+
 ## Nytt: tilbakemeldingsknapp for betatesting + rettet versjonsnummer (v2.41, 31.07.2026)
 
 Betatestingen starter blant familie og venner, og resultatsiden trengte en vei fra "jeg har en mening om dette" til et svar du faktisk kan lese samlet.

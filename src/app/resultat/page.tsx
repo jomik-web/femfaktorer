@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED, FREE_QUESTIONS, type Domain, type Question } from "@/data/questions";
@@ -38,7 +38,7 @@ import {
   type CombinationInsight,
   type FacetCombinationInsight,
 } from "@/data/combinationInsights";
-import { computeAccountResultExpiry, type StoredAccountResult } from "@/lib/account/types";
+import { type StoredAccountResult } from "@/lib/account/types";
 import { buildFacetDrivenOverview, buildFacetAwareNote, buildTopFacetsMention } from "@/data/domainComposition";
 import { ACCOUNT_SAVE_ENABLED, RESULT_ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
@@ -47,7 +47,6 @@ import { FactorIcon } from "@/components/FactorIcon";
 import { FactorHero } from "@/components/FactorHero";
 import SpirMascot from "@/components/SpirMascot";
 import { Button, buttonClassNames } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Disclosure } from "@/components/ui/Disclosure";
 
@@ -159,13 +158,11 @@ function ResultatContent() {
   const [isRestored, setIsRestored] = useState(false);
   const [accountChecked, setAccountChecked] = useState(false);
   const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
-  const [savedAt, setSavedAt] = useState<string | null>(null);
-  const [saveStep, setSaveStep] = useState<"closed" | "email" | "code">("closed");
-  const [saveEmail, setSaveEmail] = useState("");
-  const [saveCode, setSaveCode] = useState("");
-  const [saveLoading, setSaveLoading] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveInfo, setSaveInfo] = useState<string | null>(null);
+  // v2.44: tilstanden for selve lagringsflyten (saveStep/saveEmail/saveCode/
+  // saveLoading/saveError/saveInfo/savedAt) er flyttet til
+  // components/AccountSavePanel.tsx sammen med skjemaet. `loggedInEmail` blir
+  // igjen her fordi den fortsatt trengs til "Utvikling over tid"-seksjonen,
+  // bunnteksten og handleDelete().
   // "Utvikling over tid" (v2.27) -- kun relevant for "extended" (Premium-
   // nivå, 290 spm), se lib/account/types.ts sin doc-kommentar for hvorfor
   // "full" (Standard) aldri bygger opp en flerpunkts-historikk.
@@ -353,102 +350,13 @@ function ResultatContent() {
   // skiller genuint mellom de to nivåene, se resten av filen.
   const isDetailed = tier === "full" || tier === "extended";
 
-  async function requestSaveCode(e: FormEvent) {
-    e.preventDefault();
-    setSaveError(null);
-    setSaveInfo(null);
-    setSaveLoading(true);
-    try {
-      const res = await fetch("/api/account/request-code", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: saveEmail }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setSaveError(data.error ?? "Noe gikk galt. Prøv igjen.");
-        return;
-      }
-      setSaveInfo(`Vi har sendt en kode til ${saveEmail}.`);
-      setSaveStep("code");
-    } catch {
-      setSaveError("Fikk ikke kontakt med tjenesten. Sjekk nettforbindelsen og prøv igjen.");
-    } finally {
-      setSaveLoading(false);
-    }
-  }
-
-  async function persistCurrentResult() {
-    setSaveLoading(true);
-    setSaveError(null);
-    try {
-      const res = await fetch("/api/account/save-result", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ factors, facets, tier }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setSaveError(data.error ?? "Klarte ikke å lagre resultatet.");
-        return;
-      }
-      setSavedAt(data.savedAt);
-      setSaveInfo("Resultatet ditt er lagret.");
-      // v2.27: oppdater "Utvikling over tid"-seksjonen med den ferske
-      // historikken med én gang, i stedet for at brukeren må laste siden på
-      // nytt for å se det nettopp lagrede resultatet i oversikten.
-      if (tier === "extended") {
-        try {
-          const historyRes = await fetch("/api/account/result");
-          if (historyRes.ok) {
-            const historyData = await historyRes.json();
-            setHistory(Array.isArray(historyData.history) ? historyData.history : []);
-          }
-        } catch {
-          // Ikke kritisk -- selve lagringen lyktes uansett.
-        }
-      }
-    } catch {
-      setSaveError("Fikk ikke kontakt med tjenesten. Sjekk nettforbindelsen og prøv igjen.");
-    } finally {
-      setSaveLoading(false);
-    }
-  }
-
-  async function verifyAndSave(e: FormEvent) {
-    e.preventDefault();
-    setSaveError(null);
-    setSaveLoading(true);
-    try {
-      const res = await fetch("/api/account/verify-code", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: saveEmail, code: saveCode }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setSaveError(data.error ?? "Feil kode. Prøv igjen.");
-        return;
-      }
-      setLoggedInEmail(data.email ?? saveEmail);
-      setSaveStep("closed");
-      await persistCurrentResult();
-    } catch {
-      setSaveError("Fikk ikke kontakt med tjenesten. Sjekk nettforbindelsen og prøv igjen.");
-    } finally {
-      setSaveLoading(false);
-    }
-  }
-
-  async function handleLogout() {
-    try {
-      await fetch("/api/account/logout", { method: "POST" });
-    } catch {
-      // se over -- fjerner den lokale innloggingsvisningen uansett
-    }
-    setLoggedInEmail(null);
-    setSaveInfo(null);
-  }
+  // v2.44: requestSaveCode / persistCurrentResult / verifyAndSave /
+  // handleLogout er flyttet til components/AccountSavePanel.tsx sammen med
+  // skjemaet de hørte til. Én reell atferdsendring fulgte med: den ferske
+  // historikken som persistCurrentResult tidligere hentet inn igjen med én
+  // gang (v2.27), oppdateres nå først ved neste besøk på /resultat -- siden
+  // lagringen skjer på en annen side, finnes ikke "Utvikling over tid"-
+  // tabellen på skjermen i det øyeblikket.
 
   // Kombinasjonsfunn (både hovedfaktor- og fasettnivå) gruppert etter hvilket
   // hoveddomene de skal vises under -- se plasseringsregelen i
@@ -895,134 +803,29 @@ function ResultatContent() {
         </section>
       )}
 
+      {/* v2.44: selve kontolagringen er flyttet til /verktoy/lagre-resultat --
+          den lå tidligere som en full seksjon her, og fylte mye plass i
+          rapporten med å forklare en funksjon som er avslått under
+          betatestingen. Igjen står kun en henvisning, slik at brukere som
+          leter etter den fortsatt finner veien. */}
       {ACCOUNT_SAVE_ENABLED && isDetailed && accountChecked && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">Lagre resultatet ditt</h2>
-          {!RESULT_ACCOUNT_SAVE_ENABLED && (
-            <p className="text-sm font-semibold text-factor-stability">
-              Denne funksjonen er ikke i bruk mens vi betatester -- vi har en annen måte å lagre
-              resultatene på under betatestingen, se{" "}
-              {BETA_ANSWER_SET_TOOLS_ENABLED ? (
-                <Link href="/verktoy/svardata" className="underline underline-offset-2">
-                  CSV-verktøyet
-                </Link>
-              ) : (
-                "CSV-verktøyet"
-              )}
-              .
-            </p>
-          )}
+        <section className="flex flex-col gap-2 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
+          <h2 className="font-display font-semibold text-indigo dark:text-white">
+            Ta vare på resultatet
+          </h2>
           {isRestored && (
             <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
               Dette resultatet er hentet fra kontoen din.
             </p>
           )}
           <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Lagre resultatet knyttet til e-postadressen din, så slipper du å ta testen på nytt for
-            å se det igjen -- også fra en annen enhet. Vi lagrer kun de ferdig beregnede skårene
-            dine, aldri svarene, i inntil 12 måneder, og du kan slette det når som helst. Les mer om
-            hvordan dette fungerer i{" "}
-            <Link href="/personvern#konto" className="text-holo-skyText underline underline-offset-2">
-              personvernerklæringen
+            Du kan lagre resultatet knyttet til e-postadressen din, eller laste ned svarene dine
+            som en fil. Begge deler ligger under{" "}
+            <Link href="/verktoy" className="text-holo-skyText underline underline-offset-2">
+              Verktøy
             </Link>
             .
           </p>
-
-          {!RESULT_ACCOUNT_SAVE_ENABLED ? (
-            <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-              Kontolagring er satt på pause under betatestingen. Bruk{" "}
-              {BETA_ANSWER_SET_TOOLS_ENABLED ? (
-                <Link href="/verktoy/svardata" className="underline underline-offset-2">
-                  CSV-verktøyet
-                </Link>
-              ) : (
-                "CSV-verktøyet"
-              )}{" "}
-              for å ta vare på svarene dine mellom oppdateringer i stedet.
-            </p>
-          ) : loggedInEmail ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-                Innlogget som {loggedInEmail}
-                {savedAt ? ` -- sist lagret ${new Date(savedAt).toLocaleDateString("no-NO")}.` : "."}
-              </p>
-              {savedAt && (
-                <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-                  Slettes automatisk {computeAccountResultExpiry(savedAt).toLocaleDateString("no-NO")}{" "}
-                  med mindre du lagrer på nytt før den datoen. Vi sender deg en påminnelse på e-post
-                  omtrent en måned før.
-                </p>
-              )}
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="button" size="sm" onClick={() => void persistCurrentResult()} disabled={saveLoading}>
-                  {saveLoading ? "Lagrer …" : "Lagre / oppdater resultatet"}
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => void handleLogout()}
-                  className="self-start text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60"
-                >
-                  Logg ut
-                </button>
-              </div>
-            </div>
-          ) : saveStep === "closed" ? (
-            <Button type="button" size="sm" onClick={() => setSaveStep("email")} className="self-start">
-              Lagre resultatet mitt
-            </Button>
-          ) : saveStep === "email" ? (
-            <form onSubmit={requestSaveCode} className="flex flex-col gap-2">
-              <label htmlFor="save-email" className="text-sm font-medium text-indigo dark:text-white">
-                E-postadresse
-              </label>
-              <Input
-                id="save-email"
-                type="email"
-                required
-                value={saveEmail}
-                onChange={(e) => setSaveEmail(e.target.value)}
-                placeholder="navn@eksempel.no"
-              />
-              <div className="flex items-center gap-3">
-                <Button type="submit" size="sm" disabled={saveLoading}>
-                  {saveLoading ? "Sender kode …" : "Send meg en kode"}
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => setSaveStep("closed")}
-                  className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60"
-                >
-                  Avbryt
-                </button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={verifyAndSave} className="flex flex-col gap-2">
-              {saveInfo && <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{saveInfo}</p>}
-              <label htmlFor="save-code" className="text-sm font-medium text-indigo dark:text-white">
-                6-sifret kode
-              </label>
-              <Input
-                id="save-code"
-                type="text"
-                inputMode="numeric"
-                pattern="\d{6}"
-                maxLength={6}
-                required
-                value={saveCode}
-                onChange={(e) => setSaveCode(e.target.value.replace(/\D/g, ""))}
-                placeholder="123456"
-                className="tracking-[0.3em]"
-              />
-              <Button type="submit" size="sm" disabled={saveLoading} className="self-start">
-                {saveLoading ? "Bekrefter …" : "Bekreft og lagre"}
-              </Button>
-            </form>
-          )}
-
-          {RESULT_ACCOUNT_SAVE_ENABLED && saveError && (
-            <p className="text-sm text-factor-stability">{saveError}</p>
-          )}
         </section>
       )}
 
