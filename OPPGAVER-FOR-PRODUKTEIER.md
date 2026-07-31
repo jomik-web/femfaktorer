@@ -1,6 +1,6 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 25.07.2026
+Sist oppdatert: 31.07.2026
 
 ## Gjenstår -- oversikt (oppdateres fortløpende, se datert changelog under for detaljer)
 
@@ -13,6 +13,24 @@ Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenst�
 - **CSP, DPA/DPIA, jurist-gjennomgang, org.nr.** -- fortsatt bevisst utsatt, krever din oppfølging (uendret fra tidligere oppføringer).
 - **Premium-nivåets detaljerte innhold** utover det som allerede er bygget (fasettnivå, utvikling over tid) -- fortsatt ikke spesifisert, se prismodell-dokumentets del 8.
 - **Ubesluttet, uncommitet arbeid liggende i kodebasen fra en tidligere økt** (ikke min): `jspdf`-avhengighet lagt til i `package.json` og en ny fil `src/lib/pdfReport.ts` -- ser ut som et påbegynt spor for PDF-generering, men er ikke i git og ikke ferdigstilt. Rørt ikke ved dette -- si ifra om det skal fullføres, forkastes, eller om noen andre jobber med det parallelt.
+
+## Nytt: tilbakemeldingsknapp for betatesting + rettet versjonsnummer (v2.41, 31.07.2026)
+
+Betatestingen starter blant familie og venner, og resultatsiden trengte en vei fra "jeg har en mening om dette" til et svar du faktisk kan lese samlet.
+
+- **`FeedbackPrompt`-komponenten** er lagt inn nederst på resultatsiden, rett over "Slett mine data" -- bevisst ETTER at brukeren har lest profilen sin, ikke i bunnmenyen. Engasjementet er på topp i det øyeblikket de er ferdige med å lese, og faller bratt så snart de navigerer videre.
+- **Knappen åpner et anonymt Google Forms-skjema** (7 spørsmål, ca. 1 minutt) i ny fane. Svarene samles i et Google-regneark.
+- **Skjult teknisk felt** følger med lenken på formatet `enhet|versjon|tidsbruk` (f.eks. `mobil|2.41|412`), forhåndsutfylt via URL-parameter. Uten dette er en tilbakemelding umulig å tolke etter noen deployer -- gjaldt klagen en feil som allerede er rettet, eller står den fortsatt? Ingen av verdiene identifiserer brukeren, og ingenting sendes med mindre brukeren selv trykker på knappen.
+- **Tidsbruk måles i `sessionStorage`** (`markTestStarted`/`loadTestDurationSeconds` i `storage.ts`), ikke `localStorage`. Bevisst valg: en som starter mandag og fullfører torsdag skal ikke rapportere tre døgns tidsbruk. Prisen er at tidsbruk blir "ukjent" hvis fanen lukkes underveis -- en manglende måling er bedre enn en feilaktig.
+- **Knappen husker at den er brukt** (per versjon), og bytter til en dempet "Legg til mer"-variant. Bumpes versjonen, spør den på nytt.
+
+**Versjonsnummeret var kommet ut av synk.** `APP_VERSION` sto på 2.37 mens commitene hadde gått videre til v2.40 -- altså viste toppmenyen feil versjon for besøkende, og tilbakemeldingene ville blitt merket med feil versjon. Samme drift gjaldt denne changeloggen, som manglet oppføringer for v2.38-v2.40 (vekstbue, PDF-sideskift, meme-kort, domene-illustrasjoner -- se git-loggen for detaljer). Satt til **2.41** nå, som dekker både disse endringene og tilbakemeldingsknappen.
+
+**Merk for fremtiden:** rutinen med å bumpe `APP_VERSION` sammen med hver changelog-oppføring er lett å glemme midt i kodingen. Vurder om nummeret heller bør leses automatisk fra git, slik at det ikke kan skli fra hverandre igjen.
+
+**Testet:** `npx tsc --noEmit` kjører uten feil. Selve knappen er ikke visuelt verifisert av meg -- sandkassen kan ikke kjøre en ekte Next.js-bygg (kjent SWC-begrensning). **Ta testen på mobil og bekreft at teknisk info-kolonnen i regnearket faktisk får en verdi** -- det er det eneste som ikke kan repareres i etterkant.
+
+**Skal fjernes ved lansering:** hele `FeedbackPrompt.tsx`, `<FeedbackPrompt />` i `resultat/page.tsx`, `markTestStarted`/`resetTestStarted`-kallene i `test/page.tsx` og tidsbrukshjelperne i `storage.ts`.
 
 ## Nytt: delbart Spir-motiv-kort til slutt på rapporten (v2.37, 25.07.2026)
 

@@ -19,6 +19,8 @@ import {
   archiveCurrentAnswersBeforeRetake,
   loadIntroSeen,
   saveIntroSeen,
+  markTestStarted,
+  resetTestStarted,
 } from "@/lib/storage";
 import { AnswerScale } from "@/components/AnswerScale";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -93,6 +95,11 @@ export default function TestPage() {
 
   // Last lagrede svar ved oppstart (autolagring, Dokument 09 §10.3).
   useEffect(() => {
+    // Betaperioden (v2.37): starter klokken for tidsbruksmålingen som følger
+    // med tilbakemeldingsskjemaet. Setter bare tidspunkt dersom økten ikke
+    // allerede har ett, så en bruker som navigerer frem og tilbake mellom
+    // /test og /resultat ikke nullstiller sin egen måling.
+    markTestStarted();
     setIntroSeen(loadIntroSeen());
     const stored = loadAnswers();
     setAnswers(stored.answers);
@@ -134,6 +141,10 @@ export default function TestPage() {
   function restartTest() {
     archiveCurrentAnswersBeforeRetake();
     clearAnswers();
+    // Tidsbruken skal måles på nytt for det nye forsøket, ikke fra da
+    // brukeren første gang kom inn i økten.
+    resetTestStarted();
+    markTestStarted();
     setAnswers({});
     setTier("free");
     setIndex(0);

@@ -20,6 +20,7 @@ import {
   clearRestoredAccountResult,
 } from "@/lib/storage";
 import { RoughFactorIndicator } from "@/components/RoughFactorIndicator";
+import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import {
   INTERPRETATIONS,
   DOMAIN_DEFINITIONS,
@@ -87,7 +88,19 @@ function questionSetForTier(tier: ResultTier): readonly Question[] {
 function GrowthSection({ growth }: { growth: Interpretation["growth"] }) {
   return (
     <div className="mt-3 flex flex-col gap-2 border-t border-indigo/10 pt-3 dark:border-white/10">
-      <h3 className="text-sm font-medium text-indigo dark:text-white">Balansert og ubalansert</h3>
+      {/* v2.41 (produkteiers tilbakemelding 28.07.2026): "Balansert og
+          ubalansert" beskrev bare halve seksjonen -- de to første setningene
+          (balansert/ubalansert) ER i praksis en kortere, strukturert
+          gjentakelse av styrke/utfordring-dynamikken som allerede står i
+          synthesis-teksten over. DET som faktisk er nytt her er "Bygg
+          videre" + ukesøvelsen -- fremadskuende, konkret handling som ikke
+          finnes noe annet sted i rapporten. En overskrift som "Oppsummering"
+          ville derfor undersolgt nettopp den nye delen (og friste folk til å
+          hoppe over noe de tror de allerede har lest). Valgte i stedet en
+          spørsmålsoverskrift, samme mønster som den avsluttende "Hva betyr
+          dette for deg?" -- signaliserer tydelig at dette er handlingsrettet,
+          ikke en oppsummering. */}
+      <h3 className="text-sm font-medium text-indigo dark:text-white">Hva kan du gjøre med dette?</h3>
       <p className="text-indigo/80 dark:text-lavender-400/80">
         <span className="font-medium text-indigo dark:text-white">Balansert: </span>
         {growth.balanced}
@@ -695,7 +708,7 @@ function ResultatContent() {
                   aria-hidden={!isActive}
                 >
                   <div className="flex flex-col gap-3">
-                    <FactorHero factor={f.factor} className="rounded-2xl" />
+                    <FactorHero factor={f.factor} className="w-full rounded-2xl" />
                     <div className="flex items-center gap-3">
                       <FactorIcon factor={f.factor} size={56} />
                       <h2 className="font-display text-3xl font-bold text-indigo dark:text-white sm:text-4xl">
@@ -844,7 +857,7 @@ function ResultatContent() {
               }`}
               aria-hidden={activeFactor !== "summary"}
             >
-              <FactorHero factor="summary" className="rounded-2xl" />
+              <FactorHero factor="summary" className="w-full rounded-2xl" />
               <h2 className="font-display text-xl font-semibold text-indigo dark:text-white">Hva betyr dette for deg?</h2>
               {/* v2.36: Utvidet (290) deles i flere avsnitt enn Standard
                   (120) -- en STRUKTURELL forskjell, ikke bare avhengig av at
@@ -1161,6 +1174,9 @@ function ResultatContent() {
           </Link>
         </section>
       )}
+
+      {/* Betaperioden (v2.37) -- fjernes ved lansering, se FeedbackPrompt.tsx. */}
+      <FeedbackPrompt />
 
       <footer className="flex flex-col items-start gap-2 border-t border-lavender-400 pt-6 text-sm dark:border-white/10 print:hidden">
         <p className="text-indigo/60 dark:text-lavender-400/60">

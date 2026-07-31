@@ -248,3 +248,54 @@ export function saveIntroSeen(): void {
     // se over
   }
 }
+
+/**
+ * Tidspunktet brukeren startet testen -- brukes UTELUKKENDE til å regne ut
+ * omtrentlig tidsbruk som sendes med i betatilbakemeldingen (se
+ * FeedbackPrompt.tsx), slik at vi kan skille "testen føltes lang" fra
+ * "testen VAR lang". Ingen personopplysning, ingenting som forlater enheten
+ * uten at brukeren selv trykker på tilbakemeldingsknappen.
+ *
+ * Bevisst sessionStorage, ikke localStorage: måler tid brukt i ØKTEN, ikke
+ * kalendertid siden brukeren første gang var innom. En som starter mandag og
+ * fullfører torsdag skal ikke telles som tre døgns tidsbruk.
+ */
+const TEST_STARTED_STORAGE_KEY = "femfaktorer.teststart.v1";
+
+/** Setter starttidspunkt bare dersom økten ikke allerede har ett. */
+export function markTestStarted(): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (window.sessionStorage.getItem(TEST_STARTED_STORAGE_KEY)) return;
+    window.sessionStorage.setItem(TEST_STARTED_STORAGE_KEY, String(Date.now()));
+  } catch {
+    // Privat nettlesing e.l. -- tidsbruk blir "ukjent", ingenting annet påvirkes.
+  }
+}
+
+/** Nullstiller starttidspunkt, slik at "ta testen på nytt" måles på nytt. */
+export function resetTestStarted(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(TEST_STARTED_STORAGE_KEY);
+  } catch {
+    // se over
+  }
+}
+
+/** Sekunder siden testen ble startet, eller null om vi ikke vet. */
+export function loadTestDurationSeconds(): number | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(TEST_STARTED_STORAGE_KEY);
+    if (!raw) return null;
+    const started = Number.parseInt(raw, 10);
+    if (!Number.isFinite(started)) return null;
+    const seconds = Math.round((Date.now() - started) / 1000);
+    // Forkast åpenbart ubrukelige verdier (klokkejustering, fane glemt åpen
+    // over natten) i stedet for å rapportere dem som ekte tidsbruk.
+    return seconds > 0 && seconds < 86_400 ? seconds : null;
+  } catch {
+    return null;
+  }
+}

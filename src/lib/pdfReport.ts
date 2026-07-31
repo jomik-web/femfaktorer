@@ -498,7 +498,10 @@ async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
     // med jsPDF-primitiver siden JSX ikke kan gjenbrukes her.
     if (copy.growth) {
       ensureSpace(10);
-      heading("Balansert og ubalansert", 11.5);
+      // v2.41: samme overskrift-endring som nettsiden (se GrowthSection i
+      // resultat/page.tsx sin doc-kommentar) -- signaliserer at seksjonen er
+      // handlingsrettet, ikke en oppsummering av teksten over.
+      heading("Hva kan du gjøre med dette?", 11.5);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...INDIGO_RGB);

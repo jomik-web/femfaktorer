@@ -12,13 +12,23 @@ import type { DisplayFactor } from "@/lib/scoring";
  * har sin egen "hovedfarge" (faktorfargen) blandet med flere farger fra
  * paletten via graderte himmel-/vann-flater, for å skape bevegelse.
  *
- * Kanten er en uregelmessig, håndtegnet bølge (Catmull-Rom -> Bezier) som
- * følger silhuetten til hovedelementet i hver scene (fjelltopper, fyrtårn,
- * trekroner osv.), i stedet for et rett eller jevnt avrundet rammeverk.
- * Bølgekonturen tones gradvis ut mot gjennomsiktig via en oppmyket maske
- * (feGaussianBlur), slik at motivet glir over i sidens bakgrunnsfarge uten
- * synlig kant. Se 09_Forslag_faktorillustrasjon_v6_bolget.docx for forslaget
- * som ble godkjent.
+ * Kanten var opprinnelig en uregelmessig, håndtegnet bølge (Catmull-Rom ->
+ * Bezier, se WAVE_PATHS under) som fulgte silhuetten til hovedelementet i
+ * hver scene. Se 09_Forslag_faktorillustrasjon_v6_bolget.docx for forslaget
+ * som ble godkjent den gang.
+ *
+ * v2.41 (produkteiers ønske 28.07.2026): bølgemasken er erstattet med en
+ * enkel, IDENTISK vertikal fade (samme lineære gradient-maske for alle fem
+ * hovedkategoriene + oppsummering) -- den gamle, håndtegnede varianten var
+ * ulik nok fra kategori til kategori (og ujevn nok i seg selv, spesielt der
+ * feGaussianBlur klippet hjørnene) til å virke slurvete/tilfeldig fremfor
+ * bevisst variert. Fordeler med den nye masken: (1) dekker ALLTID hele
+ * bredden 0..VIEWBOX_WIDTH -- ingen bølgedypp kan lenger avsløre bakgrunnen
+ * i hjørnene, (2) samme, forutsigbare toning øverst/nederst på tvers av
+ * kategoriene, (3) fortsatt en myk overgang mot sidens bakgrunnsfarge, bare
+ * uten det hånd-strekede/ujevne preget. WAVE_PATHS beholdes under som
+ * historikk/dokumentasjon, men brukes ikke lenger i selve masken -- se
+ * FADE_TOP_PCT/FADE_BOTTOM_PCT og FactorHeroContent under.
  *
  * FORMAT: opprinnelig viewBox var 900x260. Motivene er nå tegnet i en
  * 900x390-kanvas (50% høyere) ved å skalere hele scene-innholdet 1,5x
@@ -374,22 +384,38 @@ export interface FactorHeroContentProps {
  * en forelder-`<svg>` med viewBox 0 0 900 {VIEWBOX_HEIGHT} (eller skaleres
  * via en omsluttende `<g transform="scale(...)">`).
  */
+/**
+ * v2.45 (produkteiers ønske 28.07.2026): all fade/blur er fjernet igjen --
+ * den avrundede rammen alene oppleves myk nok, uten behov for en egen
+ * fade-sone øverst/nederst. Masken er nå bare ett helt ugjennomsiktig,
+ * avrundet rektangel -- ren geometri (`rx`/`ry`), ingen gradient, ingen
+ * filter. Se v2.41-v2.44-historikken lenger opp i git for hvorfor de
+ * mellomliggende forsøkene (feGaussianBlur i mask, nestede masker) ikke
+ * fungerte pålitelig i Safari -- ikke relevant lenger siden ingen av dem
+ * brukes nå.
+ */
+const CORNER_RADIUS = 28; // i viewBox-enheter (900x390-rommet) -- runder av alle fire hjørner
+
 export function FactorHeroContent({ factor, uid, edgeToEdge = false }: FactorHeroContentProps) {
   const maskId = `heroMask-${uid}`;
-  const blurId = `heroBlur-${uid}`;
   const Scene = SCENES[factor];
 
   return (
     <>
       <defs>
-        <filter id={blurId} x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="7" />
-        </filter>
         <mask id={maskId} maskUnits="userSpaceOnUse" x={0} y={0} width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT}>
           {edgeToEdge ? (
             <rect x={0} y={0} width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT} fill="white" />
           ) : (
-            <path d={WAVE_PATHS[factor]} fill="white" filter={`url(#${blurId})`} />
+            <rect
+              x={0}
+              y={0}
+              width={VIEWBOX_WIDTH}
+              height={VIEWBOX_HEIGHT}
+              rx={CORNER_RADIUS}
+              ry={CORNER_RADIUS}
+              fill="white"
+            />
           )}
         </mask>
       </defs>
@@ -407,7 +433,21 @@ export function FactorHeroContent({ factor, uid, edgeToEdge = false }: FactorHer
 /**
  * Stort landskapsmotiv med håndtegnet, bølgete kant som toner gradvis ut
  * mot gjennomsiktig (viser sidens bakgrunn bak). viewBox 900x260 -- sett
- * bredde via className (f.eks. w-full) og la høyden følge aspect-ratioen.
+ * bredde via className (f.eks. w-full).
+ *
+ * v2.44-rettelse (28.07.2026): "w-full" lå tidligere HARDKODET i basis-
+ * klassen, sammen med den kallende sidens egen className. To Tailwind-
+ * bredde-klasser (f.eks. "w-full" og "w-[calc(100%+2.5rem)]" fra
+ * gratis-tierens kort-utblødning, se resultat/page.tsx) kjemper da om
+ * samme CSS-egenskap -- HVEM som vinner avgjøres av rekkefølgen de er
+ * generert i Tailwind sitt stilark, IKKE av rekkefølgen i selve
+ * klasse-strengen. I praksis vant "w-full" over den tiltenkte
+ * utblødnings-bredden, som er nøyaktig hvorfor 50-spørsmål-kortet ikke
+ * dekket hele bredden mens 290-spørsmål-visningen (som ikke trengte å
+ * overstyre bredden) så riktig ut. Løsning: `w-full` er IKKE lenger
+ * hardkodet her -- hver kalende side setter selv bredde-klassen sin
+ * (enten "w-full" eller en egen utblødnings-bredde), slik at det aldri
+ * finnes to konkurrerende bredde-klasser samtidig.
  */
 export function FactorHero({ factor, className = "" }: FactorHeroProps) {
   const uid = useId();
@@ -415,7 +455,7 @@ export function FactorHero({ factor, className = "" }: FactorHeroProps) {
   return (
     <svg
       viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-      className={["block h-auto w-full", className].join(" ")}
+      className={["block h-auto", className].join(" ")}
       role="img"
       aria-hidden="true"
     >
