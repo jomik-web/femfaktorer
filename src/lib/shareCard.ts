@@ -62,13 +62,29 @@ export const GENERIC_SHARE_TEXT = "Tok Dine Fasetter -- dette kom ut. Din tur:";
  * angitt pikselbredde/-høyde (SVG-ens egen viewBox skaleres opp til dette,
  * for et skarpt bilde egnet til deling -- ikke bare skjermoppløsning).
  * Kjører KUN i nettleseren (bruker `document`/`Image`/`canvas`).
+ *
+ * `fontFaceCss` (v2.43, Kvalitetsrevisjon 31.07.2026, kap. 3, funn #1):
+ * valgfri `@font-face`-CSS (typisk med en base64 `data:`-URL som kilde) som
+ * settes inn i et `<style>`-element rett inni SVG-en FØR den serialiseres.
+ * Nødvendig fordi en frittstående SVG som lastes via `Image()`/canvas IKKE
+ * arver sidens egne, `next/font`-lastede fonter -- kun systemfonter (Arial
+ * o.l.) resolves pålitelig i den sammenhengen. En SELVBÆRENDE `@font-face`
+ * (fonten embeddet direkte i SVG-en, ikke en ekstern URL) fungerer derimot
+ * fint, siden SVG-en da ikke er avhengig av noe utenfor seg selv.
  */
 export async function svgElementToPngBlob(
   svg: SVGSVGElement,
   widthPx: number,
-  heightPx: number
+  heightPx: number,
+  fontFaceCss?: string
 ): Promise<Blob> {
-  const serialized = new XMLSerializer().serializeToString(svg);
+  let serialized = new XMLSerializer().serializeToString(svg);
+  if (fontFaceCss) {
+    const styleTag = `<style>${fontFaceCss}</style>`;
+    // Sett stilen inn rett etter den åpnende <svg ...>-taggen (fungerer
+    // uansett om SVG-en har andre <defs>/barn fra før).
+    serialized = serialized.replace(/(<svg[^>]*>)/, `$1${styleTag}`);
+  }
   const svgBlob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(svgBlob);
 
@@ -131,7 +147,13 @@ export async function shareImageFile(
   filename: string,
   shareText: string
 ): Promise<boolean> {
-  const file = new File([blob], filename, { type: "image/png" });
+  // v2.44 (Kvalitetsrevisjon 31.07.2026, kap. 4): brukte tidligere en
+  // hardkodet "image/png" -- feil for de ferdigproduserte meme-kortene, som
+  // nå er WebP (se memeCards.ts). `blob.type` er allerede korrekt satt --
+  // av nettleseren for en `fetch()`-hentet fil (Content-Type-headeren), og
+  // av `canvas.toBlob("image/png", ...)` for det SVG-genererte
+  // fallback-kortet -- så vi stoler på den i stedet for å anta ett format.
+  const file = new File([blob], filename, { type: blob.type || "image/png" });
   if (!canShareFiles(file)) return false;
   try {
     await navigator.share({ files: [file], text: shareText });

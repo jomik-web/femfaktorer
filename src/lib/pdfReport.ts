@@ -203,8 +203,31 @@ const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 
+/**
+ * Registrerer Bricolage Grotesque i jsPDF (v2.43, Kvalitetsrevisjon
+ * 31.07.2026, kap. 3, funn #1) -- PDF-en brukte tidligere kun jsPDF sin
+ * innebygde Helvetica overalt, ikke merkevarefontene. Produkteier har sendt
+ * Bricolage Grotesque (ikke Inter ennå) -- brukt til overskrifter, tall og
+ * annen uthevet ("bold") tekst, altså akkurat den bruken Designsystem v2.0
+ * selv definerer for denne fonten (se layout.tsx). Brødtekst
+ * (`paragraph()`-hjelperen) står fortsatt i Helvetica inntil en Inter-fil
+ * eventuelt ettersendes -- Bricolage er en bevisst "håndsatt"/grotesk
+ * display-font, ikke tiltenkt lange leseflater.
+ *
+ * Dynamisk import av base64-dataene (~240 KB) -- lastes kun når brukeren
+ * faktisk trykker "Last ned som PDF", ikke i den vanlige sidebunten.
+ */
+async function registerBricolageFont(doc: jsPDF): Promise<void> {
+  const { BRICOLAGE_BOLD_BASE64, BRICOLAGE_REGULAR_BASE64 } = await import("@/lib/fonts/bricolageGrotesque");
+  doc.addFileToVFS("BricolageGrotesque-Bold.ttf", BRICOLAGE_BOLD_BASE64);
+  doc.addFont("BricolageGrotesque-Bold.ttf", "BricolageGrotesque", "bold");
+  doc.addFileToVFS("BricolageGrotesque-Regular.ttf", BRICOLAGE_REGULAR_BASE64);
+  doc.addFont("BricolageGrotesque-Regular.ttf", "BricolageGrotesque", "normal");
+}
+
 async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  await registerBricolageFont(doc);
   let y = MARGIN;
 
   function ensureSpace(needed: number) {
@@ -217,7 +240,7 @@ async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
   function heading(text: string, size: number) {
     ensureSpace(size * 0.5 + 4);
     doc.setTextColor(...INDIGO_RGB);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("BricolageGrotesque", "bold");
     doc.setFontSize(size);
     doc.text(text, MARGIN, y);
     y += size * 0.5 + 2;
@@ -350,7 +373,7 @@ async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
 
       const [lx, ly] = vertex(maxRadius + 10, i);
       const align: "left" | "center" | "right" = lx < cx - 2 ? "right" : lx > cx + 2 ? "left" : "center";
-      doc.setFont("helvetica", "bold");
+      doc.setFont("BricolageGrotesque", "bold");
       doc.setFontSize(8);
       doc.setTextColor(...INDIGO_RGB);
       doc.text(f.label, lx, ly, { align });
@@ -383,12 +406,12 @@ async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
   });
 
   doc.setTextColor(...GRAY_RGB);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("BricolageGrotesque", "normal");
   doc.setFontSize(11);
   doc.text("Dine Fasetter", MARGIN, 45);
 
   doc.setTextColor(...INDIGO_RGB);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("BricolageGrotesque", "bold");
   doc.setFontSize(30);
   doc.text("Din profil", MARGIN, 60);
 
@@ -477,7 +500,7 @@ async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
     heading(f.label, 14);
     paragraph(DOMAIN_DEFINITIONS[f.factor], 8.5, GRAY_RGB);
     doc.setTextColor(...INDIGO_RGB);
-    doc.setFont("helvetica", "bold");
+    doc.setFont("BricolageGrotesque", "bold");
     doc.setFontSize(10);
     doc.text(`${Math.round(f.score)} / 100`, MARGIN, y);
     y += 5;
@@ -502,28 +525,28 @@ async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
       // resultat/page.tsx sin doc-kommentar) -- signaliserer at seksjonen er
       // handlingsrettet, ikke en oppsummering av teksten over.
       heading("Hva kan du gjøre med dette?", 11.5);
-      doc.setFont("helvetica", "bold");
+      doc.setFont("BricolageGrotesque", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...INDIGO_RGB);
       ensureSpace(6);
       doc.text("Balansert", MARGIN, y);
       y += 5;
       paragraph(copy.growth.balanced, 9.5);
-      doc.setFont("helvetica", "bold");
+      doc.setFont("BricolageGrotesque", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...INDIGO_RGB);
       ensureSpace(6);
       doc.text("Ubalansert", MARGIN, y);
       y += 5;
       paragraph(copy.growth.unbalanced, 9.5);
-      doc.setFont("helvetica", "bold");
+      doc.setFont("BricolageGrotesque", "bold");
       doc.setFontSize(10);
       doc.setTextColor(...INDIGO_RGB);
       ensureSpace(6);
       doc.text("Bygg videre", MARGIN, y);
       y += 5;
       paragraph(copy.growth.rebalancing, 9.5);
-      doc.setFont("helvetica", "bold");
+      doc.setFont("BricolageGrotesque", "bold");
       doc.setFontSize(9.5);
       doc.setTextColor(...INDIGO_RGB);
       ensureSpace(6);
@@ -549,7 +572,7 @@ async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
           const label = meta?.label ?? fa.facet;
           const zoneLabel = zoneLabelFor(label, zoneIndexFor(fa.score));
           doc.setTextColor(...INDIGO_RGB);
-          doc.setFont("helvetica", "bold");
+          doc.setFont("BricolageGrotesque", "bold");
           doc.setFontSize(10);
           doc.text(label, MARGIN, y);
           doc.setFont("helvetica", "normal");

@@ -34,6 +34,44 @@ Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenst�
 
 **Merk:** `TOOLS` i `app/verktoy/page.tsx` og `VERKTOY_OPTIONS` i `components/SiteNav.tsx` må holdes i synk manuelt når du legger til et nytt verktøy.
 
+## Nytt: rettet kvalitetsrevisjonens kapittel 4, Mobilopplevelse (v2.44)
+
+Kapittel 4 hadde to funn -- det ene var stort nok til å gjøre i dag, det andre trenger ingen handling:
+
+- **Høy alvorlighet: opptil ~8 MB bildenedlasting på mobil, umiddelbart.** Delekortet kunne vise 3 kandidatbilder samtidig, og alle 34 bildene i `public/meme-kort/` lå som PNG (63,9 MB totalt, enkeltfiler opptil 2,9 MB) -- lastet i full 1080px-oppløsning selv i den vesle kandidat-velgeren. Revisjonen pekte selv videre til kategori 6 (Ytelse) sitt kritiske funn #1 for løsningen, så jeg rettet begge i samme slag:
+  - Alle 34 bilder er konvertert til WebP (kvalitet ~82, samme oppløsning som før) -- **63,9 MB -> 4,5 MB**, uten synlig kvalitetstap (kontrollert visuelt på flere kort).
+  - I tillegg er det generert egne, enda mindre "thumbs" (480px bredde, ~1,2 MB totalt) KUN til bruk i kandidat-velgeren -- selve del-/nedlastingsbildet bruker fortsatt full oppløsning når du faktisk deler eller laster ned.
+  - Kandidatbildene har nå `loading="lazy"`, `decoding="async"` og eksplisitt `width`/`height` (kategori 6 sitt funn #2 -- unngår layout-hopp/CLS).
+  - Delingen bruker nå bildets EGEN MIME-type i stedet for en hardkodet "image/png" -- nødvendig siden meme-kortene nå faktisk er WebP.
+  - **Kan IKKE fullføres av meg: de 34 gamle PNG-filene ligger fortsatt fysisk i `public/meme-kort/`** -- sandkassen kunne ikke slette dem (samme iCloud-synk-begrensning som git-lock-filene er dokumentert med andre steder). **Slett `public/meme-kort/*.png` selv** når du har sett at WebP-versjonene fungerer i nettleseren -- de er ikke lenger referert noe sted i koden.
+- **Lav alvorlighet: mobilmenyens rapportvalg-underliste vises alltid utfoldet.** Revisjonen sin egen vurdering var "akseptabelt nå, vurder sammenslåing hvis menyen får flere punkter" -- ingen kodeendring gjort, som anbefalt.
+
+**Testet:** `npx tsc --noEmit` kjører uten feil. Selve bildekvaliteten er sjekket visuelt (rendret WebP-filer og sammenlignet med originalene), men **test gjerne selv på en ekte mobil** at delekortet fortsatt ser skarpt nok ut og at "Del bildet"/"Last ned bildet" fungerer med de nye filnavnene (.webp). Husk `git push` -- og å slette de gamle PNG-ene selv, se over.
+
+## Nytt: rettet elleve funn fra kvalitetsrevisjonen 31.07.2026, kapittel 1-3 (v2.42-2.43)
+
+Etter dagens kvalitetsrevisjon (`Kvalitetsrevisjon_DineFasetter_2026-07-31.docx`) ba du meg gå gjennom kapittel 1 (Universell utforming), 2 (UX og informasjonsarkitektur) og 3 (Visuelt design) ett kapittel om gangen. Følgende er rettet:
+
+**Kapittel 1 -- Universell utforming:**
+- **Roving tastaturnavigasjon i ShareCard sine tre `role="radio"`-grupper** (format- og kortvelgerne) -- piltaster/Home/End flytter nå både fokus og valg, i tråd med WAI-ARIA-mønsteret. Ny delt hook (`useRovingRadioGroup`) i `ShareCard.tsx`.
+- **Spørsmål og svarskala er nå koblet med `aria-labelledby`** i stedet for en generisk `aria-label` (`AnswerScale.tsx`, `test/page.tsx`) -- skjermlesere leser nå selve spørsmålsteksten før svaralternativene, ikke bare "Svaralternativer". Dette var et ført-registrert, uendret funn fra forrige revisjon.
+- **Mobilmenyen flytter nå fokus** til første lenke når den åpnes, og tilbake til hamburgerknappen ved lukking/Escape (`SiteNav.tsx`).
+- (Meme-kortenes tekst-i-bilde ble vurdert i revisjonen selv som akseptabelt for delingsgrafikk -- ingen handling.)
+
+**Kapittel 2 -- UX og informasjonsarkitektur:**
+- **Resultatsiden er kortet ned.** Den synlige, dupliserte CSV-seksjonen ("Betatest: ta vare på svarene dine") er fjernet fra `/resultat` -- den dekket akkurat det samme som den allerede eksisterende, skjulte verktøysiden `/verktoy/svardata`, som nå er oppdatert til å tjene begge formål (din egen testing OG betatesteres ønske om å ta vare på svar). Referansene på resultatsiden peker nå dit i stedet.
+- **Format-standarden er samkjørt**: `DomainShareCard` brukte "square" som standardvalg mens `MemeShareCard` brukte "story" -- begge er nå "story".
+- (PDF-nedlastingens manglende fremdriftsindikator ble i revisjonen selv hengt på en betinget "vurder ved brukertesting" -- ingen handling ennå.)
+
+**Kapittel 3 -- Visuelt design:**
+- **Meme-kortenes bildehøyder er normalisert.** `A3-high-square.png` var 1080x1190 (110px ekstra pga. en tidligere footer-kollisjonsfiks) mens de andre 32 bildene allerede var nøyaktig 1080x1080/1080x1920 -- rettet med en marginal (~9%), ikke-uniform skalering i høyden. Alt innhold (inkludert footer-baren) er bevart, ingenting beskåret.
+- **Versjonsnummer-drift (funn #3)**: allerede rettet av deg selv i en tidligere commit (`APP_VERSION` sto korrekt da jeg sjekket) -- ingen handling nødvendig fra min side.
+- **Fontene i delekortet (SVG-fallback) og PDF-en er rettet -- Bricolage Grotesque, ikke lenger Arial/Helvetica.** Du sendte `Bricolage_Grotesque.zip` (kun denne fonten, ikke Inter ennå) -- base64-kodet Bold + Regular ligger nå i en egen, kun-dynamisk-importert fil (`src/lib/fonts/bricolageGrotesque.ts`, ~240 KB til sammen, lastes KUN når noen faktisk trykker "Last ned som PDF"/"Del bildet"/"Last ned bildet", ikke i sidebunten). **PDF-en**: alle overskrifter, tall og annen uthevet ("bold") tekst bruker nå Bricolage Grotesque via jsPDF sin `addFont()` -- selve brødteksten (`paragraph()`-hjelperen) står fortsatt i Helvetica, siden Bricolage er en bevisst display-/overskriftsfont, ikke ment for lange leseflater (samme fordeling som nettsiden selv bruker, se layout.tsx). Visuelt kontrollert ved å rendre en test-PDF til bilde i sandkassen -- fonten vises tydelig, ikke en fallback. **Delekortet (SVG-fallback)**: fonten er embeddet direkte i selve SVG-en som en selvbærende `@font-face` (base64 `data:`-URL) rett før den rasteriseres til PNG -- nødvendig fordi en frittstående SVG lastet via `Image()`/canvas ikke arver sidens egne fonter. **Denne delen kunne jeg IKKE visuelt kontrollere i sandkassen** (mangler en nettleser/SVG-rendrer med fontstøtte her) -- testteknikken er standard og godt dokumentert, men **sjekk selv i nettleseren at teksten faktisk ser riktig ut** før du stoler fullt på den. Legg gjerne inn en Inter-fil senere for brødteksten også, hvis du vil fullføre resten av funnet.
+
+**Om versjonsnummeret:** `APP_VERSION`-konstanten viser nå 2.44 (din egen, parallelle `/verktoy`-omlegging) -- jeg har bevisst IKKE rørt selve tallet, siden du åpenbart var midt i eget arbeid på den samtidig. Denne loggoppføringen bruker derfor 2.42-2.43 som et intervall for mine rettelser i dag, ikke ett eksakt tall -- rydd gjerne opp i selve rekkefølgen når du uansett oppdaterer changeloggen for din egen v2.44/v2.45.
+
+**Testet:** `npx tsc --noEmit` kjører uten feil etter alle endringene over. Husk `git push`.
+
 ## Nytt: tilbakemeldingsknapp for betatesting + rettet versjonsnummer (v2.41, 31.07.2026)
 
 Betatestingen starter blant familie og venner, og resultatsiden trengte en vei fra "jeg har en mening om dette" til et svar du faktisk kan lese samlet.

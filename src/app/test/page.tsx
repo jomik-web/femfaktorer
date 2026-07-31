@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -21,7 +21,13 @@ import {
   saveIntroSeen,
   markTestStarted,
   resetTestStarted,
+  loadResearchConsent,
+  saveResearchConsent,
+  loadResponseTimes,
+  recordResponseTime,
+  clearResponseTimes,
 } from "@/lib/storage";
+import { deviceCategory } from "@/lib/device";
 import { AnswerScale } from "@/components/AnswerScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/Button";
@@ -70,6 +76,40 @@ function submitAnonymousNormStats(
   });
 }
 
+/**
+ * Sender det FULLSTENDIGE, anonyme svarsettet til /api/research/submit-answers
+ * (v2.45, 31.07.2026) -- grunnlaget for senere leddstatistikk: svarfordeling
+ * per spørsmål, ledd-total-korrelasjon og intern konsistens per fasett.
+ *
+ * Dette er noe helt annet enn normtellingen over, som bare sender ferdig
+ * beregnede skårer. Her sendes svarene på hvert enkelt spørsmål -- og derfor
+ * skjer det KUN når brukeren har latt avkrysningen på "Før du starter" stå
+ * på. Se src/lib/research/types.ts for personverngrensen som gjelder for
+ * disse dataene, og hvorfor de aldri kan knyttes til en konto.
+ *
+ * Merk at hverken uke, appversjon eller spørsmålssettversjon sendes herfra --
+ * de settes på serveren, som vet bedre enn en klient hvilken utgave som
+ * faktisk kjørte.
+ *
+ * "Fire-and-forget", som normtellingen: venter ikke, blokkerer ikke
+ * navigasjonen, feiler helt stille.
+ */
+function submitAnonymousAnswerSet(answers: AnswerMap, tier: "full" | "extended"): void {
+  if (!loadResearchConsent()) return;
+  void fetch("/api/research/submit-answers", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      tier,
+      answers,
+      responseMs: loadResponseTimes(),
+      device: deviceCategory(),
+    }),
+  }).catch(() => {
+    // Stille -- se doc-kommentar over.
+  });
+}
+
 export default function TestPage() {
   const router = useRouter();
   const [answers, setAnswers] = useState<AnswerMap>({});
@@ -90,6 +130,12 @@ export default function TestPage() {
   // veiledning om hvordan man svarer, ingen bekreftelse kreves lenger (den
   // tidligere aldersbekreftelsen er fjernet på produkteiers ønske).
   const [introSeen, setIntroSeen] = useState(false);
+
+  // Avkrysningen for anonym forskningsdata på "Før du starter"-skjermen
+  // (v2.45). Huket av på forhånd etter produkteiers valg 31.07.2026 -- selve
+  // verdien skrives til lagringen først når brukeren trykker "start testen",
+  // se knappen lenger nede.
+  const [researchConsent, setResearchConsent] = useState(true);
 
   const activeQuestions = questionsForTier(tier);
 
@@ -133,6 +179,21 @@ export default function TestPage() {
   );
 
   /**
+   * Svartidsmåling (v2.45): klokken nullstilles hver gang et NYTT spørsmål
+   * vises på skjermen, og leses av når spørsmålet besvares.
+   *
+   * Bevisst en ref og ikke state -- verdien skal ikke utløse ny opptegning,
+   * og en state-oppdatering per spørsmål ville gitt 290 unødvendige
+   * gjennomtegninger gjennom en full test.
+   */
+  const questionShownAtRef = useRef<number | null>(null);
+  const currentQuestionId = activeQuestions[index]?.id;
+
+  useEffect(() => {
+    questionShownAtRef.current = currentQuestionId ? Date.now() : null;
+  }, [currentQuestionId]);
+
+  /**
    * v2.25: brukt fra "Du har allerede et resultat"-skjermen og som en
    * sekundær utvei fra de to sjekkpunktskjermene ("i tilfelle man har trykket
    * ved en feiltakelse"). Arkiverer det gamle svarsettet FØR det nullstilles
@@ -145,6 +206,9 @@ export default function TestPage() {
     // brukeren første gang kom inn i økten.
     resetTestStarted();
     markTestStarted();
+    // Svartidene hørte til det forrige forsøket -- de ville gitt et
+    // misvisende bilde om de ble blandet inn i det nye.
+    clearResponseTimes();
     setAnswers({});
     setTier("free");
     setIndex(0);
@@ -167,10 +231,38 @@ export default function TestPage() {
             vanligvis er på tvers av ulike sammenhenger (jobb, hjemme, sammen med venner), ikke bare
             hvordan du er akkurat i dag eller i én bestemt situasjon.
           </p>
+          {/* Anonym forskningsdata (v2.45, 31.07.2026). Plassert her fordi
+              dette er det eneste stedet i flyten der brukeren ikke er midt i
+              noe -- spør vi underveis eller etterpå, blir det enten et
+              avbrudd eller et spørsmål om noe som allerede har skjedd.
+              Avkrysningen står på som standard, med teksten synlig ved siden
+              av, ikke gjemt bak en lenke. */}
+          <label className="mx-auto flex max-w-md cursor-pointer items-start gap-3 rounded-xl bg-white/50 p-4 text-left dark:bg-white/5">
+            <input
+              type="checkbox"
+              checked={researchConsent}
+              onChange={(e) => setResearchConsent(e.target.checked)}
+              className="mt-1 h-4 w-4 shrink-0 accent-holo-sky"
+            />
+            <span className="text-xs text-indigo/70 dark:text-lavender-400/70">
+              <span className="font-medium text-indigo dark:text-white">
+                Bidra til å gjøre testen bedre
+              </span>
+              <br />
+              Svarene dine lagres anonymt, uten navn, e-post eller noe annet som kan spores tilbake
+              til deg, og brukes til å finne spørsmål som er dårlig formulert. Du kan ta testen som
+              normalt selv om du fjerner haken.{" "}
+              <Link href="/personvern" className="underline underline-offset-2">
+                Les mer i personvernerklæringen
+              </Link>
+              .
+            </span>
+          </label>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Button
               type="button"
               onClick={() => {
+                saveResearchConsent(researchConsent);
                 saveIntroSeen();
                 setIntroSeen(true);
               }}
@@ -286,6 +378,16 @@ export default function TestPage() {
                 const result = computeTestResult(answers, ALL_QUESTIONS, "full");
                 if (result.complete && result.factors) {
                   submitAnonymousNormStats(result.factors, computeFacetResults(answers, ALL_QUESTIONS), "full");
+                  // Bare de 120 spørsmålene i `ALL_QUESTIONS` sendes inn her.
+                  // `answers` kan inneholde flere id-er dersom brukeren har
+                  // vært innom Utvidet versjon og gått tilbake -- serveren
+                  // forkaster ukjente id-er, men vi sender ryddig fra start.
+                  const answersForTier: AnswerMap = {};
+                  for (const q of ALL_QUESTIONS) {
+                    const value = answers[q.id];
+                    if (value !== undefined) answersForTier[q.id] = value;
+                  }
+                  submitAnonymousAnswerSet(answersForTier, "full");
                 }
                 router.push("/resultat");
               }}
@@ -308,6 +410,14 @@ export default function TestPage() {
   if (!question) return null;
 
   function handleAnswer(value: AnswerValue) {
+    // Les av svartidsklokken FØR noe annet skjer -- se questionShownAtRef.
+    // Endrer brukeren et tidligere svar, overskrives målingen, slik at det
+    // er den siste, faktiske betenkningstiden som lagres.
+    const shownAt = questionShownAtRef.current;
+    if (shownAt !== null) {
+      recordResponseTime(question!.id, Date.now() - shownAt);
+    }
+
     const next: AnswerMap = { ...answers, [question!.id]: value };
     setAnswers(next);
     saveAnswers(next, tier);
@@ -325,6 +435,7 @@ export default function TestPage() {
           computeFacetResults(next, ALL_QUESTIONS_EXTENDED),
           "extended"
         );
+        submitAnonymousAnswerSet(next, "extended");
         router.push("/resultat");
       }
       return;

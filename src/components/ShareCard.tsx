@@ -4,7 +4,7 @@ import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { FactorHeroContent, COLORS, VIEWBOX_WIDTH, VIEWBOX_HEIGHT } from "@/components/FactorHero";
 import type { FactorResult, FacetResult } from "@/lib/scoring";
 import { bandFor, INTERPRETATIONS, pickDominantFactor } from "@/data/interpretations";
-import { pickMemeCards, pickDomainMemeCard, type MemeCardAsset } from "@/data/memeCards";
+import { pickMemeCards, pickDomainMemeCard, memeCardThumbSrc, type MemeCardAsset } from "@/data/memeCards";
 import {
   SHARE_FORMATS,
   GENERIC_SHARE_TEXT,
@@ -123,6 +123,11 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
   const selected = items.find((c) => c.key === selectedKey) ?? items[0]!;
   const spec = SHARE_FORMATS[format];
   const imgSrc = format === "square" ? selected.asset.square : selected.asset.story;
+  // v2.44 (Kvalitetsrevisjon 31.07.2026, kap. 4): meme-kortene er nå WebP,
+  // ikke PNG (se memeCards.ts) -- `spec.filename` er delt med det
+  // SVG-genererte fallback-kortet (som fortsatt er ekte PNG), så vi retter
+  // filendelsen her i stedet for å gjøre spec-en selv formatbevisst.
+  const downloadFilename = spec.filename.replace(/\.png$/, ".webp");
 
   const formatGroup = useRovingRadioGroup(FORMAT_ORDER, format, setFormat);
   const itemKeys = useMemo(() => items.map((c) => c.key), [items]);
@@ -147,9 +152,9 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
       setBusy(null);
       return;
     }
-    const shared = await shareImageFile(blob, spec.filename, GENERIC_SHARE_TEXT);
+    const shared = await shareImageFile(blob, downloadFilename, GENERIC_SHARE_TEXT);
     if (!shared) {
-      downloadBlob(blob, spec.filename);
+      downloadBlob(blob, downloadFilename);
       setFeedback("Bildet ble lastet ned i stedet -- del det manuelt fra nedlastingene dine.");
     }
     setBusy(null);
@@ -160,7 +165,7 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
     setFeedback(null);
     const blob = await fetchCurrentAsBlob();
     if (blob) {
-      downloadBlob(blob, spec.filename);
+      downloadBlob(blob, downloadFilename);
       setFeedback("Bildet er lastet ned.");
     }
     setBusy(null);
@@ -221,6 +226,19 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
         {items.map((c) => {
           const active = c.key === selectedKey;
           const src = format === "square" ? c.asset.square : c.asset.story;
+          // v2.44 (Kvalitetsrevisjon 31.07.2026, kap. 4 funn 1 / kap. 6 funn
+          // 1-2): kandidatvelgeren viste tidligere full 1080px-oppløsning
+          // (opptil ~3 MB per bilde, tre samtidig) selv om den her vises i en
+          // liten kolonne -- et vesentlig, unødvendig mobildata-forbruk.
+          // Bruker nå en egen, mye mindre "thumb"-variant (480px bredde, se
+          // memeCardThumbSrc/filhode i memeCards.ts). Selve del-/nedlastings-
+          // bildet (fetchCurrentAsBlob over) bruker fortsatt full oppløsning
+          // -- kun DENNE forhåndsvisningen er nedskalert. `width`/`height`
+          // er satt eksplisitt (thumbens faktiske intrinsic-mål) for å unngå
+          // layout-hopp (CLS) idet bildet lastes inn.
+          const thumbSrc = memeCardThumbSrc(src);
+          const thumbWidth = 480;
+          const thumbHeight = format === "square" ? 480 : 853;
           return (
             <button
               key={c.key}
@@ -242,9 +260,13 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
               <span className="overflow-hidden rounded-xl">
                 {/* eslint-disable-next-line @next/next/no-img-element -- statisk, ferdig-komponert bilde, ikke egnet for next/image-optimalisering */}
                 <img
-                  src={src}
+                  src={thumbSrc}
                   alt={`Delbart kort: ${c.asset.quote}`}
                   className="block h-auto w-full"
+                  width={thumbWidth}
+                  height={thumbHeight}
+                  loading="lazy"
+                  decoding="async"
                   // Bildet finnes ikke ennå (typisk domenenivå-kort før
                   // ChatGPT-batchen er produsert, se DOMAIN_MEME_CARDS i
                   // data/memeCards.ts) -- fall tilbake til det gamle
@@ -314,7 +336,8 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
     const svg = refs[format].current;
     if (!svg) return null;
     try {
-      return await svgElementToPngBlob(svg, spec.width, spec.height);
+      const fontFaceCss = await loadBricolageFontFaceCss();
+      return await svgElementToPngBlob(svg, spec.width, spec.height, fontFaceCss);
     } catch {
       setFeedback("Klarte ikke å lage bildet akkurat nå -- prøv igjen.");
       return null;
@@ -469,6 +492,38 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
   );
 }
 
+// ---------- v2.43 (Kvalitetsrevisjon 31.07.2026, kap. 3, funn #1): merkevarefont ----------
+
+/**
+ * Bygger en selvbærende `@font-face`-CSS-blokk for Bricolage Grotesque
+ * (base64-embeddet, se lib/fonts/bricolageGrotesque.ts), til bruk i
+ * `svgElementToPngBlob` sitt `fontFaceCss`-parameter. Dynamisk import --
+ * de to base64-strengene (~240 KB til sammen) skal kun lastes idet
+ * brukeren faktisk trykker "Del bildet"/"Last ned bildet", ikke for alle
+ * besøkende som ser resultatsiden (samme prinsipp som jsPDF sin egen
+ * dynamiske import).
+ */
+let cachedBricolageFontFaceCss: string | null = null;
+async function loadBricolageFontFaceCss(): Promise<string> {
+  if (cachedBricolageFontFaceCss) return cachedBricolageFontFaceCss;
+  const { BRICOLAGE_BOLD_BASE64, BRICOLAGE_REGULAR_BASE64 } = await import("@/lib/fonts/bricolageGrotesque");
+  cachedBricolageFontFaceCss = `
+    @font-face {
+      font-family: 'Bricolage Grotesque';
+      font-weight: 700;
+      src: url(data:font/ttf;base64,${BRICOLAGE_BOLD_BASE64}) format('truetype');
+    }
+    @font-face {
+      font-family: 'Bricolage Grotesque';
+      font-weight: 400;
+      src: url(data:font/ttf;base64,${BRICOLAGE_REGULAR_BASE64}) format('truetype');
+    }
+  `;
+  return cachedBricolageFontFaceCss;
+}
+
+const SHARE_CARD_FONT_STACK = "'Bricolage Grotesque', Arial, sans-serif";
+
 // ---------- Kort-komposisjon per format ----------
 
 interface CardMarkupProps {
@@ -497,7 +552,7 @@ function CardFooter({ width, totalHeight, color }: { width: number; totalHeight:
         x={width / 2}
         y={totalHeight - 48}
         textAnchor="middle"
-        fontFamily="Arial, sans-serif"
+        fontFamily={SHARE_CARD_FONT_STACK}
         fontSize={26}
         fill={color}
         opacity={0.6}
@@ -508,7 +563,7 @@ function CardFooter({ width, totalHeight, color }: { width: number; totalHeight:
         x={width / 2}
         y={totalHeight - 18}
         textAnchor="middle"
-        fontFamily="Arial, sans-serif"
+        fontFamily={SHARE_CARD_FONT_STACK}
         fontSize={18}
         fill={color}
         opacity={0.45}
@@ -547,10 +602,10 @@ function CardMarkup({ format, factor, label, tagline, uid, visible }: CardMarkup
           </filter>
         </defs>
         <circle cx={540} cy={motifHeight + 330} r={260} fill={factorColor} opacity={0.18} filter={`url(#${glowId})`} />
-        <text x={540} y={motifHeight + 280} textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight={700} fontSize={68} fill="white">
+        <text x={540} y={motifHeight + 280} textAnchor="middle" fontFamily={SHARE_CARD_FONT_STACK} fontWeight={700} fontSize={68} fill="white">
           {label}
         </text>
-        <text x={540} y={motifHeight + 356} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={42} fill={COLORS.lavender100}>
+        <text x={540} y={motifHeight + 356} textAnchor="middle" fontFamily={SHARE_CARD_FONT_STACK} fontSize={42} fill={COLORS.lavender100}>
           {tagline}
         </text>
         <CardFooter width={1080} totalHeight={1920} color={COLORS.lavender100} />
@@ -568,10 +623,10 @@ function CardMarkup({ format, factor, label, tagline, uid, visible }: CardMarkup
       <g transform={`scale(${scale})`}>
         <FactorHeroContent factor={factor} uid={uid} />
       </g>
-      <text x={540} y={motifHeight + 275} textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight={700} fontSize={60} fill="white">
+      <text x={540} y={motifHeight + 275} textAnchor="middle" fontFamily={SHARE_CARD_FONT_STACK} fontWeight={700} fontSize={60} fill="white">
         {label}
       </text>
-      <text x={540} y={motifHeight + 339} textAnchor="middle" fontFamily="Arial, sans-serif" fontSize={36} fill={COLORS.lavender100}>
+      <text x={540} y={motifHeight + 339} textAnchor="middle" fontFamily={SHARE_CARD_FONT_STACK} fontSize={36} fill={COLORS.lavender100}>
         {tagline}
       </text>
       <CardFooter width={1080} totalHeight={1080} color={COLORS.lavender100} />

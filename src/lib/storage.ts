@@ -228,8 +228,15 @@ export function clearRestoredAccountResult(): void {
  * §8), som er fjernet på produkteiers ønske. Selve veiledningsskjermen
  * beholdes, men uten noe bekreftelsessteg -- lagres lokalt slik at brukeren
  * bare ser den én gang, ikke ved hvert testforsøk.
+ *
+ * NØKKELEN ER BUMPET TIL v2 (v2.45, 31.07.2026). Grunn: skjermen har fått en
+ * avkrysning for anonym forskningsdata. Uten en bump ville alle som allerede
+ * har sett den gamle skjermen aldri fått se spørsmålet -- og da ville vi i
+ * praksis samlet inn data fra folk som aldri ble spurt. Prisen er at
+ * eksisterende betatestere ser veiledningsskjermen én gang til. Det er en
+ * billig pris for at samtykket faktisk skal være reelt.
  */
-const INTRO_SEEN_STORAGE_KEY = "femfaktorer.intro-sett.v1";
+const INTRO_SEEN_STORAGE_KEY = "femfaktorer.intro-sett.v2";
 
 export function loadIntroSeen(): boolean {
   if (typeof window === "undefined") return false;
@@ -244,6 +251,100 @@ export function saveIntroSeen(): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(INTRO_SEEN_STORAGE_KEY, "true");
+  } catch {
+    // se over
+  }
+}
+
+/**
+ * Samtykke til anonym forskningsdata (v2.45, 31.07.2026).
+ *
+ * Styrer om det fullstendige, anonyme svarsettet sendes inn ved fullført
+ * test (se src/lib/research/ og api/research/submit-answers). Avkrysningen
+ * står på "Før du starter"-skjermen og er huket av på forhånd, etter
+ * produkteiers valg 31.07.2026.
+ *
+ * MERK HVORDAN "IKKE SATT" TOLKES: som `false`, ikke som `true`. Det kan
+ * virke inkonsekvent når standardvalget er på, men det er med vilje --
+ * verdien skrives til lagringen i samme øyeblikk brukeren trykker "start
+ * testen", så "ikke satt" betyr i praksis "har aldri sett skjermen med
+ * avkrysningen". Og da skal vi ikke samle inn. Alternativet ville gjort det
+ * mulig å samle data fra noen som aldri ble spurt, f.eks. dersom
+ * intro-nøkkelen bumpes igjen senere.
+ */
+const RESEARCH_CONSENT_STORAGE_KEY = "femfaktorer.forskningssamtykke.v1";
+
+export function loadResearchConsent(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(RESEARCH_CONSENT_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function saveResearchConsent(consented: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(RESEARCH_CONSENT_STORAGE_KEY, consented ? "true" : "false");
+  } catch {
+    // Privat nettlesing e.l. -- da blir det heller ingen innsamling, som er
+    // den trygge feilretningen.
+  }
+}
+
+/**
+ * Svartid per spørsmål (v2.45, 31.07.2026) -- millisekunder fra spørsmålet
+ * ble vist til det ble besvart. Sendes med det anonyme svarsettet.
+ *
+ * Hvorfor dette er verdt å måle: svartid per ledd er den mest effektive
+ * enkeltmarkøren for skjødesløs svargiving. Forskning på spørreskjemadata
+ * finner at en betydelig andel respondenter svarer uten reell innsats under
+ * normale forhold, og slik svargiving blåser opp itemvarians og trekker
+ * gjennomsnitt mot midten av skalaen -- altså direkte skadelig for
+ * normgrunnlaget. Uten svartid har vi ingen god måte å oppdage det på.
+ *
+ * Bevisst sessionStorage, ikke localStorage -- samme begrunnelse som
+ * teststart-tidspunktet under: dette gjelder én økt, ikke kalendertid. En
+ * bruker som lukker fanen og kommer tilbake i morgen mister målingene sine,
+ * og det er riktig -- de ville uansett vært ubrukelige.
+ */
+const RESPONSE_TIMES_STORAGE_KEY = "femfaktorer.svartider.v1";
+
+export function loadResponseTimes(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.sessionStorage.getItem(RESPONSE_TIMES_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+    const cleaned: Record<string, number> = {};
+    for (const [id, value] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof value === "number" && Number.isFinite(value) && value > 0) cleaned[id] = value;
+    }
+    return cleaned;
+  } catch {
+    return {};
+  }
+}
+
+/** Lagrer/overskriver svartiden for ett spørsmål. Endrer man svar, gjelder siste måling. */
+export function recordResponseTime(questionId: string, milliseconds: number): void {
+  if (typeof window === "undefined") return;
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0) return;
+  try {
+    const current = loadResponseTimes();
+    current[questionId] = Math.round(milliseconds);
+    window.sessionStorage.setItem(RESPONSE_TIMES_STORAGE_KEY, JSON.stringify(current));
+  } catch {
+    // Best effort -- manglende svartider håndteres av analysen, se research/types.ts.
+  }
+}
+
+export function clearResponseTimes(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(RESPONSE_TIMES_STORAGE_KEY);
   } catch {
     // se over
   }
