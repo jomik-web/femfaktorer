@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { saveRestoredAccountResult } from "@/lib/storage";
-import { ACCOUNT_SAVE_ENABLED } from "@/lib/featureFlags";
+import { useFlags } from "@/components/FlagsProvider";
 import { Button, buttonClassNames } from "@/components/ui/Button";
 
 type Step = "checking" | "loggedIn" | "email" | "code";
@@ -26,7 +26,9 @@ type Step = "checking" | "loggedIn" | "email" | "code";
  */
 export default function LoggInnPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>(ACCOUNT_SAVE_ENABLED ? "checking" : "email");
+  // v2.45: styres fra adminpanelet. Standardverdien gjelder til svaret er hentet.
+  const { accountSaveEnabled } = useFlags();
+  const [step, setStep] = useState<Step>(accountSaveEnabled ? "checking" : "email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,7 @@ export default function LoggInnPage() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (!ACCOUNT_SAVE_ENABLED) return;
+    if (!accountSaveEnabled) return;
     fetch("/api/account/me")
       .then((res) => res.json())
       .then(async (data) => {
@@ -58,7 +60,7 @@ export default function LoggInnPage() {
   // Kontolagring er midlertidig satt på pause under betatesting (v2.16, se
   // lib/featureFlags.ts) -- vis en forklarende melding i stedet for
   // skjemaet, i tilfelle noen har denne siden bokmerket fra før.
-  if (!ACCOUNT_SAVE_ENABLED) {
+  if (!accountSaveEnabled) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <header className="flex flex-col gap-2">

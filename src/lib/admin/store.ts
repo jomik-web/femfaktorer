@@ -18,6 +18,11 @@
  */
 
 import { getStore } from "@netlify/blobs";
+import {
+  ACCOUNT_SAVE_ENABLED,
+  RESULT_ACCOUNT_SAVE_ENABLED,
+  BETA_ANSWER_SET_TOOLS_ENABLED,
+} from "@/lib/featureFlags";
 
 function manualConfig(): { siteID: string; token: string } | Record<string, never> {
   const siteID = process.env.NETLIFY_BLOBS_SITE_ID;
@@ -38,6 +43,24 @@ export interface AdminSettings {
   aiModel: string;
   aiMaxQuestionsPerSession: number;
   aiGlobalQuestionCap: number;
+
+  /**
+   * v2.45 (31.07.2026): de tre funksjonsbryterne som fram til nå bare fantes
+   * som konstanter i src/lib/featureFlags.ts.
+   *
+   * BAKGRUNN: produkteier kan ikke kode, og hver eneste av/på krevde derfor
+   * at noen endret en linje i kildekoden og rullet ut på nytt. Det er den
+   * enkeltendringen som koster mest tid i det daglige. Nå styres de herfra og
+   * virker umiddelbart.
+   *
+   * Verdiene i featureFlags.ts er fortsatt der, og fungerer som
+   * STANDARDVERDIER -- det er dem som gjelder inntil noe er lagret her, og
+   * det er dem klienten faller tilbake på hvis lagringen skulle være nede.
+   * Ikke slett dem.
+   */
+  accountSaveEnabled: boolean;
+  resultAccountSaveEnabled: boolean;
+  betaAnswerSetToolsEnabled: boolean;
 }
 
 export interface AdminStoreData {
@@ -51,6 +74,9 @@ const DEFAULT_SETTINGS: AdminSettings = {
   aiModel: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5",
   aiMaxQuestionsPerSession: Number(process.env.AI_MAX_QUESTIONS_PER_SESSION ?? 100),
   aiGlobalQuestionCap: Number(process.env.AI_GLOBAL_QUESTION_CAP ?? 10000),
+  accountSaveEnabled: ACCOUNT_SAVE_ENABLED,
+  resultAccountSaveEnabled: RESULT_ACCOUNT_SAVE_ENABLED,
+  betaAnswerSetToolsEnabled: BETA_ANSWER_SET_TOOLS_ENABLED,
 };
 
 export async function readStore(): Promise<AdminStoreData> {

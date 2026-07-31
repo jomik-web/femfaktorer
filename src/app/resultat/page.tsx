@@ -40,7 +40,8 @@ import {
 } from "@/data/combinationInsights";
 import { type StoredAccountResult } from "@/lib/account/types";
 import { buildFacetDrivenOverview, buildFacetAwareNote, buildTopFacetsMention } from "@/data/domainComposition";
-import { ACCOUNT_SAVE_ENABLED, RESULT_ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
+import { useFlags } from "@/components/FlagsProvider";
+import { trackEventOncePerSession } from "@/lib/metrics/client";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
 import { ShareCard } from "@/components/ShareCard";
 import { FactorIcon } from "@/components/FactorIcon";
@@ -137,6 +138,9 @@ export default function ResultatPage() {
 
 function ResultatContent() {
   const searchParams = useSearchParams();
+  // v2.45: de tre funksjonsbryterne styres nå fra adminpanelet i stedet for
+  // å være konstanter låst ved bygg. Se components/FlagsProvider.tsx.
+  const { accountSaveEnabled, resultAccountSaveEnabled, betaAnswerSetToolsEnabled } = useFlags();
   const [factors, setFactors] = useState<FactorResult[] | null>(null);
   const [facets, setFacets] = useState<FacetResult[]>([]);
   const [tier, setTier] = useState<ResultTier | null>(null);
@@ -260,10 +264,21 @@ function ResultatContent() {
     if (factors && !activeFactor) setActiveFactor(factors[0]?.factor ?? null);
   }, [factors, activeFactor]);
 
+  /**
+   * Trakt-telling (v2.45): "resultatet ble faktisk lest". Bevisst atskilt
+   * fra fullføringstellingen i /test -- avstanden mellom de to tallene viser
+   * hvor mange som kommer seg gjennom testen, men aldri ser hva de fikk ut
+   * av den. Det er et helt annet problem enn frafall underveis, og krever
+   * en helt annen løsning.
+   */
+  useEffect(() => {
+    if (factors && factors.length > 0) trackEventOncePerSession("result_viewed");
+  }, [factors]);
+
   // Sjekk innloggingsstatus -- kun relevant (og kun spurt om) for full/extended-
   // testen, se produkteiers krav om at korttesten ikke skal tilby lagring.
   useEffect(() => {
-    if (!ACCOUNT_SAVE_ENABLED || tier === "free" || tier === null) return;
+    if (!accountSaveEnabled || tier === "free" || tier === null) return;
     let cancelled = false;
     fetch("/api/account/me")
       .then((res) => res.json())
@@ -283,7 +298,7 @@ function ResultatContent() {
   // Hent lagret historikk for "Utvikling over tid" -- kun meningsfullt for
   // extended-tier (Premium), og kun når vi vet brukeren faktisk er logget inn.
   useEffect(() => {
-    if (!RESULT_ACCOUNT_SAVE_ENABLED || tier !== "extended" || !loggedInEmail) return;
+    if (!resultAccountSaveEnabled || tier !== "extended" || !loggedInEmail) return;
     let cancelled = false;
     fetch("/api/account/result")
       .then((res) => (res.ok ? res.json() : null))
@@ -314,7 +329,7 @@ function ResultatContent() {
           <Link href="/test" className={PRIMARY_MD_LINK_CLASSES}>
             Gå til testen
           </Link>
-          {BETA_ANSWER_SET_TOOLS_ENABLED && (
+          {betaAnswerSetToolsEnabled && (
             <div className="mt-4 flex w-full flex-col items-center gap-3 border-t border-lavender-400 pt-6 dark:border-white/10">
               <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
                 Har du tatt testen før og lastet ned svarene dine? Last dem opp for å se resultatet
@@ -808,7 +823,7 @@ function ResultatContent() {
           rapporten med å forklare en funksjon som er avslått under
           betatestingen. Igjen står kun en henvisning, slik at brukere som
           leter etter den fortsatt finner veien. */}
-      {ACCOUNT_SAVE_ENABLED && isDetailed && accountChecked && (
+      {accountSaveEnabled && isDetailed && accountChecked && (
         <section className="flex flex-col gap-2 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
           <h2 className="font-display font-semibold text-indigo dark:text-white">
             Ta vare på resultatet
@@ -829,7 +844,7 @@ function ResultatContent() {
         </section>
       )}
 
-      {RESULT_ACCOUNT_SAVE_ENABLED && tier === "extended" && loggedInEmail && history.length > 1 && (() => {
+      {resultAccountSaveEnabled && tier === "extended" && loggedInEmail && history.length > 1 && (() => {
         // Regn ut endring fra forrige lagring for hver hovedfaktor (nøytralt
         // -- ALDRI farget eller omtalt som "bedre"/"verre", se den avgjorte
         // holdningen til utviklingsråd, v2.23/17.07.2026: dette er et bilde

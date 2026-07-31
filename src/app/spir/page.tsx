@@ -12,6 +12,7 @@ import {
   type FacetResult,
 } from "@/lib/scoring";
 import { loadAnswers } from "@/lib/storage";
+import { trackEventOncePerSession } from "@/lib/metrics/client";
 import { FACET_ORDER_BY_DOMAIN, FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
 import { DOMAIN_DISPLAY_ORDER } from "@/data/combinationInsights";
 import { SpirHero } from "@/components/SpirHero";
@@ -90,6 +91,10 @@ export default function FemPage() {
   const [guidedDone, setGuidedDone] = useState(false);
 
   useEffect(() => {
+    // Trakt-telling (v2.45): hvor mange av dem som faktisk har låst opp Spir,
+    // som også tar den i bruk. Telles her, ikke ved første melding -- det er
+    // forskjell på "åpnet aldri" og "åpnet, men fant ikke ut av det".
+    trackEventOncePerSession("spir_opened");
     const stored = loadAnswers();
     // Spir krever minst alle 120 spørsmål besvart (Grunnlagsdokumentet,
     // beslutning om 120-utvidelsen) -- et foreløpig 50-resultat er ikke nok.

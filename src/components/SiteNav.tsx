@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoMark from "./LogoMark";
-import { ACCOUNT_SAVE_ENABLED } from "@/lib/featureFlags";
+import { useFlags } from "@/components/FlagsProvider";
 import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED, FREE_QUESTIONS } from "@/data/questions";
 import { computeTestResult, type ResultTier } from "@/lib/scoring";
 import { loadAnswers } from "@/lib/storage";
@@ -58,6 +58,8 @@ const REPORT_OPTIONS: readonly { tier: ResultTier; label: string; unlockKey: Res
  */
 export function SiteNav() {
   const pathname = usePathname();
+  // v2.45: styres nå fra adminpanelet, ikke av en konstant som er låst ved bygg.
+  const { accountSaveEnabled } = useFlags();
   const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [reportMenuOpen, setReportMenuOpen] = useState(false);
@@ -115,13 +117,16 @@ export function SiteNav() {
   }
 
   useEffect(() => {
-    if (!ACCOUNT_SAVE_ENABLED) return;
+    if (!accountSaveEnabled) return;
     fetch("/api/account/me")
       .then((res) => res.json())
       .then((data) => setLoggedInEmail(data.loggedIn ? (data.email ?? null) : null))
       .catch(() => {})
       .finally(() => setChecked(true));
-  }, []);
+    // accountSaveEnabled er med i avhengighetene fordi bryteren hentes
+    // asynkront (se FlagsProvider) -- uten den ville effekten kjørt én gang
+    // med standardverdien og aldri sett en endring fra adminpanelet.
+  }, [accountSaveEnabled]);
 
   // Regner ut hvilke av de tre rapportnivåene brukeren faktisk har fullført
   // lokalt -- svarene er kumulative (120-settet inneholder de samme 50
@@ -441,7 +446,7 @@ export function SiteNav() {
             )}
           </li>
 
-          {ACCOUNT_SAVE_ENABLED && (
+          {accountSaveEnabled && (
             <li>
               <Link
                 href="/logg-inn"
@@ -573,7 +578,7 @@ export function SiteNav() {
               </ul>
             </li>
 
-            {ACCOUNT_SAVE_ENABLED && (
+            {accountSaveEnabled && (
               <li>
                 <Link
                   href="/logg-inn"

@@ -39,6 +39,13 @@ export async function POST(request: Request) {
   if (typeof body.aiGlobalQuestionCap === "number" && body.aiGlobalQuestionCap >= 0) {
     next.aiGlobalQuestionCap = body.aiGlobalQuestionCap;
   }
+  if (typeof body.accountSaveEnabled === "boolean") next.accountSaveEnabled = body.accountSaveEnabled;
+  if (typeof body.resultAccountSaveEnabled === "boolean") {
+    next.resultAccountSaveEnabled = body.resultAccountSaveEnabled;
+  }
+  if (typeof body.betaAnswerSetToolsEnabled === "boolean") {
+    next.betaAnswerSetToolsEnabled = body.betaAnswerSetToolsEnabled;
+  }
 
   await writeStore({ ...store, settings: next });
   return NextResponse.json(next);

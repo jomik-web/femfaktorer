@@ -28,6 +28,8 @@ import {
   clearResponseTimes,
 } from "@/lib/storage";
 import { deviceCategory } from "@/lib/device";
+import { trackEvent, trackEventOncePerSession, resetSessionEventGuards } from "@/lib/metrics/client";
+import { loadTestDurationSeconds } from "@/lib/storage";
 import { AnswerScale } from "@/components/AnswerScale";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/Button";
@@ -94,6 +96,12 @@ function submitAnonymousNormStats(
  * "Fire-and-forget", som normtellingen: venter ikke, blokkerer ikke
  * navigasjonen, feiler helt stille.
  */
+/** Tidsbruk i hele minutter, eller undefined om vi ikke vet. Se lib/metrics/types.ts. */
+function durationMinutes(): number | undefined {
+  const seconds = loadTestDurationSeconds();
+  return seconds === null ? undefined : Math.round(seconds / 60);
+}
+
 function submitAnonymousAnswerSet(answers: AnswerMap, tier: "full" | "extended"): void {
   if (!loadResearchConsent()) return;
   void fetch("/api/research/submit-answers", {
@@ -194,6 +202,25 @@ export default function TestPage() {
   }, [currentQuestionId]);
 
   /**
+   * Trakt-telling (v2.45): "startet testen" registreres først når et
+   * spørsmål faktisk er på skjermen -- ikke når /test lastes. Forskjellen
+   * betyr noe: den som lander på retake-skjermen eller på veiledningen og
+   * ombestemmer seg, har ikke startet testen, og skal ikke telle som om de
+   * gjorde det.
+   */
+  useEffect(() => {
+    if (!hydrated || !introSeen || awaitingRetakeChoice) return;
+    if (checkpoint !== "none" || !currentQuestionId) return;
+    trackEventOncePerSession("test_started");
+  }, [hydrated, introSeen, awaitingRetakeChoice, checkpoint, currentQuestionId]);
+
+  /** Sjekkpunktene 50 og 120 -- de to stedene folk faktisk faller av. */
+  useEffect(() => {
+    if (checkpoint === "afterFree") trackEventOncePerSession("reached_checkpoint_50");
+    if (checkpoint === "afterFull") trackEventOncePerSession("reached_checkpoint_120");
+  }, [checkpoint]);
+
+  /**
    * v2.25: brukt fra "Du har allerede et resultat"-skjermen og som en
    * sekundær utvei fra de to sjekkpunktskjermene ("i tilfelle man har trykket
    * ved en feiltakelse"). Arkiverer det gamle svarsettet FØR det nullstilles
@@ -209,6 +236,8 @@ export default function TestPage() {
     // Svartidene hørte til det forrige forsøket -- de ville gitt et
     // misvisende bilde om de ble blandet inn i det nye.
     clearResponseTimes();
+    // Nytt forsøk skal telle som et nytt forsøk i trakten.
+    resetSessionEventGuards();
     setAnswers({});
     setTier("free");
     setIndex(0);
@@ -263,6 +292,10 @@ export default function TestPage() {
               type="button"
               onClick={() => {
                 saveResearchConsent(researchConsent);
+                // Teller hvor mange som lar haken stå -- uten dette tallet
+                // vet vi ikke om et tynt datasett skyldes lite trafikk eller
+                // at folk aktivt reserverer seg.
+                trackEvent(researchConsent ? "research_consented" : "research_declined");
                 saveIntroSeen();
                 setIntroSeen(true);
               }}
@@ -326,7 +359,14 @@ export default function TestPage() {
             >
               Fortsett til alle 120
             </Button>
-            <Button type="button" variant="ghost" onClick={() => router.push("/resultat")}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                trackEvent("completed_free");
+                router.push("/resultat");
+              }}
+            >
               Behold det foreløpige resultatet
             </Button>
           </div>
@@ -388,6 +428,7 @@ export default function TestPage() {
                     if (value !== undefined) answersForTier[q.id] = value;
                   }
                   submitAnonymousAnswerSet(answersForTier, "full");
+                  trackEvent("completed_full", { durationMinutes: durationMinutes() });
                 }
                 router.push("/resultat");
               }}
@@ -436,6 +477,7 @@ export default function TestPage() {
           "extended"
         );
         submitAnonymousAnswerSet(next, "extended");
+        trackEvent("completed_extended", { durationMinutes: durationMinutes() });
         router.push("/resultat");
       }
       return;

@@ -17,7 +17,7 @@ import {
 } from "@/lib/scoring";
 import { loadAnswers } from "@/lib/storage";
 import { computeAccountResultExpiry } from "@/lib/account/types";
-import { RESULT_ACCOUNT_SAVE_ENABLED, BETA_ANSWER_SET_TOOLS_ENABLED } from "@/lib/featureFlags";
+import { useFlags } from "@/components/FlagsProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
@@ -63,6 +63,8 @@ function resolveSavableResult(): { tier: ResultTier; factors: FactorResult[]; fa
 }
 
 export function AccountSavePanel() {
+  // v2.45: begge bryterne styres nå fra adminpanelet, se FlagsProvider.
+  const { resultAccountSaveEnabled, betaAnswerSetToolsEnabled } = useFlags();
   const [hydrated, setHydrated] = useState(false);
   const [savable, setSavable] = useState<ReturnType<typeof resolveSavableResult>>(null);
   const [accountChecked, setAccountChecked] = useState(false);
@@ -181,7 +183,7 @@ export function AccountSavePanel() {
     setSaveInfo(null);
   }
 
-  const csvLink = BETA_ANSWER_SET_TOOLS_ENABLED ? (
+  const csvLink = betaAnswerSetToolsEnabled ? (
     <Link href="/verktoy/svardata" className="text-holo-skyText underline underline-offset-2">
       CSV-verktøyet
     </Link>
@@ -191,7 +193,7 @@ export function AccountSavePanel() {
 
   // Pauset under betatestingen: da er hele lagringsflyten irrelevant, og vi
   // sier det rett ut i stedet for å vise et skjema som ikke gjør noe.
-  if (!RESULT_ACCOUNT_SAVE_ENABLED) {
+  if (!resultAccountSaveEnabled) {
     return (
       <section className="flex flex-col gap-3 rounded-lg border border-lavender-400 p-5 dark:border-white/20">
         <p className="text-sm font-semibold text-factor-stability">

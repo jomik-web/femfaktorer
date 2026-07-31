@@ -3,6 +3,7 @@ import { Inter, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { FlagsProvider } from "@/components/FlagsProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,9 +34,14 @@ export default function RootLayout({
   return (
     <html lang="no" className={`${inter.variable} ${bricolage.variable}`}>
       <body className="min-h-screen font-sans antialiased">
-        <SiteNav />
-        {children}
-        <SiteFooter />
+        {/* v2.45: gjør funksjonsbryterne fra adminpanelet tilgjengelige for
+            hele nettstedet. Se FlagsProvider for hvorfor de hentes fra
+            klienten og ikke leses her på serveren. */}
+        <FlagsProvider>
+          <SiteNav />
+          {children}
+          <SiteFooter />
+        </FlagsProvider>
       </body>
     </html>
   );
