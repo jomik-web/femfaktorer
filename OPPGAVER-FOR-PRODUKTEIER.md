@@ -12,7 +12,83 @@ Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenst�
 - **SEO er bevisst utsatt** (metadata per side, sitemap.xml, robots.txt, Open Graph-tagger) til domene er valgt -- se kvalitetsrevisjonen 24.07.2026, kategori 7.
 - **CSP, DPA/DPIA, jurist-gjennomgang, org.nr.** -- fortsatt bevisst utsatt, krever din oppfølging (uendret fra tidligere oppføringer).
 - **Premium-nivåets detaljerte innhold** utover det som allerede er bygget (fasettnivå, utvikling over tid) -- fortsatt ikke spesifisert, se prismodell-dokumentets del 8.
-- **Ubesluttet, uncommitet arbeid liggende i kodebasen fra en tidligere økt** (ikke min): `jspdf`-avhengighet lagt til i `package.json` og en ny fil `src/lib/pdfReport.ts` -- ser ut som et påbegynt spor for PDF-generering, men er ikke i git og ikke ferdigstilt. Rørt ikke ved dette -- si ifra om det skal fullføres, forkastes, eller om noen andre jobber med det parallelt.
+- **Vurdert, ikke gjort: bytte meme-kort-forhåndsvisningen til `next/image`** (kvalitetsrevisjon 31.07.2026, kap. 6, funn 5, lav alvorlighet) -- se begrunnelse i changelog-oppføringen for v2.46. Din avgjørelse om dette skal gjøres nå eller stå som er.
+
+## Nytt: rettet kvalitetsrevisjonens kapittel 6, Ytelse (v2.46)
+
+Fem funn -- to var allerede løst som en direkte SIDEEFFEKT av gårsdagens kapittel 4-arbeid, to er nye kodefiks, og ett er bevisst latt urørt til du har tatt stilling:
+
+- **Kritisk (allerede løst): 64 MB bilder i `public/meme-kort/`.** Dette ER nøyaktig samme funn som kapittel 4 sin "høy"-vurdering (8 MB på mobil) -- løst samtidig: alle 34 bilder er WebP (63,9 MB -> 4,5 MB), pluss egne 480px-thumbs (1,2 MB) til kandidat-velgeren. Ingen ny handling her, kun stadfestet at revisjonens kritiske funn faktisk er dekket.
+- **Høy (allerede løst): kandidatbildene manglet `loading="lazy"`, `width`/`height`.** Lagt til i samme kapittel 4-runde (`ShareCard.tsx`) -- også bekreftet her, ingen ny handling.
+- **Middels: PDF-generering rasteriserte de 5 domenemotivene sekvensielt.** `pdfReport.ts` gjorde ett `await loadFactorHeroDataUrl(...)` per faktor INNI selve tegneløkken. Alle fem hentes nå PARALLELT med `Promise.all` før løkken starter -- selve tegningen (sideskift, tekst, grafer) skjer fortsatt i riktig rekkefølge etterpå, kun nettverks-/rasteriseringsarbeidet er parallellisert.
+- **Middels: `/api/spir` gjorde to Netlify Blobs-lesinger (admininnstillinger + global teller, begge `consistency: "strong"`) før HVERT Anthropic-kall.** Begge er nå cachet i minne med 30 sekunders levetid -- adminendringer (nødstopp, tak, modellvalg) tåler fint den forsinkelsen, det er ikke tidskritisk logikk. Teller-cachen oppdateres i tillegg proaktivt rett etter hvert Anthropic-kall, så den ligger sjelden mer enn ett kall bak den ekte verdien.
+- **Lav (bevisst IKKE gjort -- din avgjørelse): bytte fra `<img>` til `next/image` for meme-kortene.** Revisjonen selv rammer dette som noe å "revurdere når bildene uansett skal reprosesseres" -- det er de nå. MEN: `<img>`-en her ble bevisst valgt bort fra `next/image` tidligere (se `eslint-disable`-kommentaren i `ShareCard.tsx`), og selve bytte krever ekte nettleser-verifisering (Next sin Image-komponent har egne antagelser om layout/lasting som jeg ikke kan visuelt bekrefte i sandkassen) på en komponent som er sentral i delefunksjonen. Siden funnet selv kun sier "vurder" og er lav alvorlighet, har jeg latt den stå som `<img>` -- si ifra om du vil at jeg skal gjøre bytte likevel.
+
+**Testet:** `npx tsc --noEmit` kjører uten feil etter begge kodefiksene (PDF-parallellisering + Spir-caching). Selve ytelsesgevinsten (raskere PDF-generering, raskere Spir-svar) er IKKE tidsmålt av meg -- **kjenn selv etter om PDF-nedlastingen og Spir-samtalen føles raskere** enn før, siden dette er nettopp den typen endring som er vanskelig å bekrefte uten en ekte, varm produksjonsinstans.
+
+## Nytt: adminpanel, bruksstatistikk og anonym forskningsdata (v2.46, 31.07.2026)
+
+Den største enkeltrunden så langt. Bakgrunnen er dokumentet `Adminpanel_Forslag_2026-07-31.md` i prosjektmappa -- les det først hvis noe her er uklart, det forklarer hvorfor hvert punkt finnes.
+
+### Det du merker først
+
+- **Adminpanelet er bygget om fra én side med seks brytere til fem faner:** Oversikt, Tilbakemeldinger, Innstillinger, Tilganger og Drift. Du kommer inn på samme måte som før -- vanlig innlogging med e-post og engangskode, så `/admin`.
+- **Du kan nå skru funksjoner av og på uten ny utrulling.** De tre bryterne som fram til nå bare fantes som linjer i koden (innlogging/konto, "lagre resultatet på konto", CSV-verktøyet) ligger under Innstillinger og virker med én gang. Dette var den enkeltendringen som kostet deg mest tid i det daglige.
+- **Du kan gi og fjerne admin-tilgang selv**, under Tilganger. Din egen adresse står låst og kan ikke fjernes -- verken av deg eller noen andre.
+- **Drift-fanen svarer på "er det meg eller er det en tjeneste som er nede?"** Grønt eller rødt per avhengighet (Netlify Blobs, Anthropic, Resend, Plausible), med hva som mangler når noe er rødt.
+
+### Bruksstatistikk
+
+- **Trakt gjennom testen:** startet → spørsmål 50 → spørsmål 120 → fullført → leste resultatet → åpnet Spir → ga tilbakemelding. Frafallspunktene er det klareste produktsignalet som finnes.
+- **Median tidsbruk** per nivå, og **fullføringsandel**.
+- **Plausible er koblet på** for besøkstall og trafikkilder -- cookiefritt, ingen samtykkebanner, EU-hosting. **Krever at du setter `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` i Netlify** (se "Hva du må gjøre selv" under). Uten den samles ingenting.
+- Alle tellere er anonyme. Vi kan se at 100 startet og 60 fullførte, men ikke hvem av de 100 som var blant de 60 -- ekte kohortanalyse er bevisst ikke mulig.
+
+### Tilbakemeldinger -- flyttet fra Google Forms
+
+Skjemaet ligger nå på nettstedet selv, nederst på resultatsiden, og testeren blir værende på siden i stedet for å sendes til en ny fane. Versjon, enhet og tidsbruk følger automatisk med. Tilbakemeldingene leses under fanen Tilbakemeldinger, filtrerbart på kategori. Fortsatt anonymt -- **du kan altså ikke svare den som melder fra.**
+
+### Anonym forskningsdata (grunnlaget for leddanalyse senere)
+
+Dette er det punktet som krever mest av deg å forstå, så det er verdt å lese nøye.
+
+- På skjermen før testen starter er det lagt til en avkrysning, **huket av på forhånd**, om å bidra med anonyme svar.
+- Lar testeren haken stå, sendes hele svarsettet inn ved fullført 120 eller 290 -- svaret på hvert enkelt spørsmål, pluss hvor lang tid hvert spørsmål tok.
+- **Ingen e-post, ingen IP, ingen økt-id. Tidspunkt lagres bare som ukenummer.** Lagres i en helt egen lagringsplass uten felles nøkkel med kontoene, slik at koblingen mellom svarsett og person ikke bare er forbudt, men fysisk fraværende.
+- **Hvorfor:** uten svar på enkeltspørsmål er det umulig å oppdage at et spørsmål er dårlig oversatt eller ikke måler det samme som de andre i sin gruppe. Dette er data du bare kan samle fremover i tid, aldri bakover -- derfor startet vi nå.
+- **Selve analysen er ikke bygget.** Det var et bevisst valg: den bør vente til det er nok data til at tallene betyr noe (rundt 200 fullførte per nivå).
+
+**Én ting som berører eksisterende betatestere:** veiledningsskjermen "Før du starter" vises én gang til for alle, også for dem som har sett den før. Det er med vilje -- ellers ville vi samlet inn data fra folk som aldri fikk se spørsmålet.
+
+### Sikkerhetsopprydding
+
+De gamle passkey-endepunktene (`/api/admin/login/*`, `/api/admin/register/*`, `/api/admin/logout`) og `lib/admin/session.ts` er **slettet**, ikke bare deaktivert. De to `@simplewebauthn`-pakkene er fjernet fra `package.json`. Dette lukker restene etter "først til mølla"-hullet fra før v2.28 for godt.
+
+### Personvernerklæringen
+
+To nye seksjoner ("Anonyme svarsett til kvalitetsarbeid" og "Hvis du gir tilbakemelding"), og avsnittet om analyseverktøy er endret fra "ingen er aktivert, hvis vi en gang..." til å beskrive Plausible som noe vi faktisk bruker. **Fortsatt ikke juristgjennomgått** -- uendret fra før, men listen over hva som må gjennomgås er nå lengre.
+
+### Hva du må gjøre selv
+
+1. **Opprett Plausible-konto** (ca. 9 USD/mnd) og legg til nettstedet ditt der.
+2. **I Netlify:** Site configuration → Environment variables → legg til `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` med domenet du registrerte i Plausible. Uten dette samles ingen besøksstatistikk -- Drift-fanen viser rødt til det er gjort.
+3. **Google Forms-skjemaet kan pensjoneres.** Ikke slett de svarene du allerede har fått -- de flyttes ikke over automatisk.
+4. **Test flyten selv** før du sender ut til testerne: start testen (se at avkrysningen dukker opp), fullfør et nivå, gå til `/admin` og sjekk at tallene beveger seg.
+
+### Ikke testet ende-til-ende
+
+`npx tsc --noEmit` kjører rent. Selve innsamlingen, tellerne og adminsidene er **ikke** kjørt mot en ekte Netlify Blobs-instans herfra -- det krever et deployet miljø. Følg punkt 4 over før du stoler på tallene.
+
+## Nytt: rettet kvalitetsrevisjonens kapittel 5, Teknisk kvalitet (v2.45)
+
+Tre funn, alle uten atferdsendring for besøkende -- ren opprydding:
+
+- **Middels: `resultat/page.tsx` var 989 linjer og voksende.** Trukket ut i seks nye filer under `src/components/resultat/`: `FreeTierResult.tsx` (gratisnivåets visning), `DetailedResult.tsx` (full/extended-visningen -- den klart største biten), `ClosingSummarySection.tsx` ("Hva betyr dette for deg?"-fanen), `GrowthSection.tsx`, `HistoryTable.tsx` ("Utvikling over tid") og `TierUpgradeCta.tsx` (de fire "fortsett til neste nivå"-oppfordringene). `page.tsx` selv er nå 492 linjer -- kun state, datainnhenting/-klargjøring og selve side-oppsettet igjen. Ingen JSX er endret, kun flyttet -- samme prinsipp som revisjonen selv ba om.
+- **Middels: dokumentasjonsdrift i denne fila.** Det siste punktet i "Gjenstår"-listen sa fortsatt at `pdfReport.ts`/jsPDF "ikke er i git og ikke ferdigstilt" -- direkte selvmotsigende med punktet rett over, som riktig sier PDF-en er ferdig og live. Fjernet den utdaterte linjen. **Rutinen fremover:** jeg oppdaterer "Gjenstår"-lista i samme økt som jeg gjør endringer, ikke som et eget etterskudd -- nettopp denne typen drift er nå påpekt i to påfølgende revisjoner.
+- **Lav: `SPIR_MASCOT_SVG` var duplisert som en hardkodet streng i `pdfReport.ts`.** Ville drifte fra selve maskoten (`SpirMascot.tsx`) neste gang uttrykket endres. Løst ved å trekke ut en ny, hook-fri `SpirMascotContent`-komponent i `SpirMascot.tsx` (samme mønster som `FactorHeroContent` i `FactorHero.tsx` allerede bruker for domenemotivene) -- `pdfReport.ts` gjenbruker den nå via `renderToStaticMarkup` i stedet for en egen kopi.
+- **Lav (ingen handling, som revisjonen selv anbefaler): testpakken kunne ikke kjøres i revisjonsmiljøet** pga. plattform-mismatch i `node_modules` (samme kjente sandkasse-begrensning som er dokumentert flere steder i denne loggen) -- ikke en kodefeil. `npx tsc --noEmit` kjører rent.
+
+**Testet:** `npx tsc --noEmit` kjører uten feil etter alle fire punktene. Selve omstruktureringen av resultatsiden er IKKE visuelt verifisert i en ekte nettleser (kun typesjekket) -- **test gjerne alle tre nivåene (gratis/Standard/Utvidet) selv på localhost** før du stoler fullt på at ingenting flyttet seg visuelt.
 
 ## Nytt: Verktøy-meny -- kontolagring flyttet ut av rapporten (v2.44, 31.07.2026)
 

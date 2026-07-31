@@ -1,5 +1,5 @@
 /**
- * Versjonsstempel for SPØRSMÅLSSETTET (v2.45, 31.07.2026).
+ * Versjonsstempel for SPØRSMÅLSSETTET (v2.46, 31.07.2026).
  *
  * Bakgrunn: den anonyme forskningsinnsamlingen (se src/lib/research/) samler
  * svar på enkeltspørsmål for at leddstatistikk (svarfordeling per ledd,

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Felles ramme for alle adminsider (v2.45, 31.07.2026).
+ * Felles ramme for alle adminsider (v2.46, 31.07.2026).
  *
  * Samler tilgangssjekken ett sted i stedet for at hver side gjentar den.
  * Tilgang gis fortsatt av den vanlige e-post/kode-innloggingen pluss

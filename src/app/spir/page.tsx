@@ -91,7 +91,7 @@ export default function FemPage() {
   const [guidedDone, setGuidedDone] = useState(false);
 
   useEffect(() => {
-    // Trakt-telling (v2.45): hvor mange av dem som faktisk har låst opp Spir,
+    // Trakt-telling (v2.46): hvor mange av dem som faktisk har låst opp Spir,
     // som også tar den i bruk. Telles her, ikke ved første melding -- det er
     // forskjell på "åpnet aldri" og "åpnet, men fant ikke ut av det".
     trackEventOncePerSession("spir_opened");

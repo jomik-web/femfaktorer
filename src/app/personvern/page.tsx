@@ -21,6 +21,8 @@ const SECTIONS = [
   { id: "behandlingsansvarlig", label: "Hvem er behandlingsansvarlig" },
   { id: "testsvar", label: "Testsvarene dine" },
   { id: "normtall", label: "Anonym normtall-statistikk" },
+  { id: "forskningsdata", label: "Anonyme svarsett til kvalitetsarbeid" },
+  { id: "tilbakemelding", label: "Hvis du gir tilbakemelding" },
   { id: "konto", label: "Hvis du lagrer resultatet ditt" },
   { id: "cookies", label: "Informasjonskapsler (cookies)" },
   { id: "spir", label: "Hvis du snakker med Spir" },
@@ -149,6 +151,83 @@ export default function PersonvernPage() {
         </ul>
       </section>
 
+      <section id="forskningsdata" className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold text-indigo dark:text-white">
+          Anonyme svarsett til kvalitetsarbeid
+        </h2>
+        <p className="text-indigo/80 dark:text-lavender-400/80">
+          På skjermen rett før testen starter finner du en avkrysning merket "Bidra til å gjøre
+          testen bedre". Den er huket av på forhånd, og du kan fjerne den -- testen fungerer helt
+          likt uansett hva du velger.
+        </p>
+        <p className="text-indigo/80 dark:text-lavender-400/80">
+          Lar du haken stå, sendes hele svarsettet ditt inn når du fullfører 120 eller 290 spørsmål.
+          Det er mer enn normtallene over: der sendes bare de ferdig utregnede skårene, her sendes
+          svaret på hvert enkelt spørsmål. Grunnen er at det er den eneste måten å oppdage at et
+          spørsmål er dårlig oversatt, tvetydig eller ikke måler det samme som de andre spørsmålene
+          i sin gruppe. Uten slike data kan vi ikke kvalitetssikre testen empirisk, bare gjette.
+        </p>
+        <ul className="flex flex-col gap-2 text-indigo/80 dark:text-lavender-400/80">
+          <li>
+            -- <strong>Hva som sendes:</strong> svarene dine (1-5 per spørsmål), hvor lang tid du
+            brukte på hvert spørsmål, hvilken versjon av testen du tok, og om du var på mobil,
+            nettbrett eller datamaskin.
+          </li>
+          <li>
+            -- <strong>Hva som IKKE sendes:</strong> e-postadresse, navn, IP-adresse, øktinformasjon
+            eller noe annet som peker tilbake på deg. Serveren som tar imot svarsettet leser bevisst
+            ikke informasjonskapsler i det hele tatt -- den har ingen måte å vite hvem du er på.
+          </li>
+          <li>
+            -- <strong>Tidspunkt lagres bare som ukenummer</strong>, ikke som klokkeslett. Det er et
+            bevisst valg: et nøyaktig tidspunkt ville vært en nesten unik nøkkel, og gjort det
+            teoretisk mulig å koble svarsettet mot andre kilder. Ukenummer er grovt nok til at det
+            ikke lar seg gjøre.
+          </li>
+          <li>
+            -- <strong>Lagres helt for seg selv.</strong> Svarsettene ligger i en annen lagringsplass
+            enn kontoene, uten noen felles nøkkel. Selv vi kan derfor ikke knytte et svarsett til en
+            konto -- ikke fordi vi lover å la være, men fordi koblingen ikke finnes.
+          </li>
+          <li>
+            -- <strong>Svartiden</strong> brukes til å oppdage besvarelser der noen har klikket seg
+            gjennom uten å lese. Slike besvarelser trekker statistikken skjevt, og må kunne holdes
+            utenfor.
+          </li>
+        </ul>
+        <p className="text-indigo/80 dark:text-lavender-400/80">
+          Fordi dataene er reelt anonyme, er de ikke personopplysninger, og faller dermed utenfor
+          personvernregelverket. Vi spør likevel først -- dette er svarene dine på personlige
+          spørsmål, og da mener vi du skal få vite hva som skjer med dem og kunne si nei.
+        </p>
+        <p className="text-indigo/80 dark:text-lavender-400/80">
+          Den samme grunnen gjør at et innsendt svarsett ikke kan trekkes tilbake i etterkant: uten
+          en kobling til deg finnes det ingen måte å finne igjen akkurat ditt. Velger du bort
+          avkrysningen før du starter, sendes ingenting.
+        </p>
+      </section>
+
+      <section id="tilbakemelding" className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold text-indigo dark:text-white">
+          Hvis du gir tilbakemelding
+        </h2>
+        <p className="text-indigo/80 dark:text-lavender-400/80">
+          Nederst på resultatsiden ligger et tilbakemeldingsskjema for betaperioden. Det er anonymt:
+          vi lagrer det du skriver, hvilken kategori du valgte, en eventuell vurdering fra 1 til 5,
+          hvilken versjon av nettstedet du så, om du var på mobil eller datamaskin, og hvor lang tid
+          testen tok. Ingen e-postadresse, intet navn, ingen IP-adresse.
+        </p>
+        <p className="text-indigo/80 dark:text-lavender-400/80">
+          Fordi skjemaet er anonymt, kan vi ikke svare deg. Melder du fra om noe du vil ha svar på,
+          bruk kontaktadressen nederst på denne siden i stedet.
+        </p>
+        <p className="text-indigo/80 dark:text-lavender-400/80">
+          Merk at fritekstfeltet er ditt eget -- skriver du navnet ditt eller andre personlige
+          opplysninger der, blir de lagret slik du skrev dem. Tilbakemeldinger slettes senest etter
+          ett år.
+        </p>
+      </section>
+
       <section id="konto" className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-indigo dark:text-white">
           Hvis du lagrer resultatet ditt (konto)
@@ -218,9 +297,11 @@ export default function PersonvernPage() {
             Dette berører ikke deg som vanlig besøkende.
           </li>
           <li>
-            -- Ingen analyseverktøy er aktivert per i dag. Hvis vi på sikt tar i bruk
-            besøksstatistikk, blir det et informasjonskapselfritt verktøy (Plausible) som ikke
-            samler personopplysninger og derfor ikke krever samtykkebanner.
+            -- Vi bruker <strong>Plausible</strong> til besøksstatistikk. Det er et
+            informasjonskapselfritt verktøy: det lagrer ingenting på enheten din, samler ingen
+            personopplysninger, og krever derfor ingen samtykkebanner. Vi ser hvor mange som har
+            besøkt hvilke sider og omtrent hvor de kom fra -- aldri hvem den enkelte besøkende er.
+            Dataene lagres innenfor EU.
           </li>
         </ul>
       </section>

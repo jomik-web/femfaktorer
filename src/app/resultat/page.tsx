@@ -19,19 +19,13 @@ import {
   loadRestoredAccountResult,
   clearRestoredAccountResult,
 } from "@/lib/storage";
-import { RoughFactorIndicator } from "@/components/RoughFactorIndicator";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
 import {
-  INTERPRETATIONS,
-  DOMAIN_DEFINITIONS,
   NON_DIAGNOSTIC_NOTICE,
   CRISIS_NOTICE,
   bandFor,
   buildClosingSynthesis,
-  splitIntoParagraphs,
-  type Interpretation,
 } from "@/data/interpretations";
-import { FACET_INTERPRETATIONS, FACET_ORDER_BY_DOMAIN, facetInterpretationFor } from "@/data/facetInterpretations";
 import {
   matchCombinationInsightsByDomain,
   matchFacetCombinationInsights,
@@ -39,32 +33,21 @@ import {
   type FacetCombinationInsight,
 } from "@/data/combinationInsights";
 import { type StoredAccountResult } from "@/lib/account/types";
-import { buildFacetDrivenOverview, buildFacetAwareNote, buildTopFacetsMention } from "@/data/domainComposition";
 import { useFlags } from "@/components/FlagsProvider";
 import { trackEventOncePerSession } from "@/lib/metrics/client";
 import { AnswerSetCsvPanel } from "@/components/AnswerSetCsvPanel";
-import { ShareCard } from "@/components/ShareCard";
-import { FactorIcon } from "@/components/FactorIcon";
-import { FactorHero } from "@/components/FactorHero";
 import SpirMascot from "@/components/SpirMascot";
 import { Button, buttonClassNames } from "@/components/ui/Button";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Disclosure } from "@/components/ui/Disclosure";
+import { FreeTierResult } from "@/components/resultat/FreeTierResult";
+import { DetailedResult } from "@/components/resultat/DetailedResult";
+import { HistoryTable } from "@/components/resultat/HistoryTable";
+import { TierUpgradeCta } from "@/components/resultat/TierUpgradeCta";
 
 const DISPLAY_TO_DOMAIN: Record<DisplayFactor, Domain> = Object.fromEntries(
   (Object.entries(DOMAIN_TO_DISPLAY) as [Domain, DisplayFactor][]).map(([domain, display]) => [display, domain])
 ) as Record<DisplayFactor, Domain>;
-
-// Aktiv fane-pille (alternativ C, godkjent): fylt i faktorens EGEN farge i
-// stedet for den generiske holo-gradienten -- statiske klassenavn kreves for
-// at Tailwinds JIT-skanner skal finne dem (samme mønster som FactorIcon.tsx).
-const FACTOR_BG: Record<DisplayFactor, string> = {
-  openness: "bg-factor-openness",
-  conscientiousness: "bg-factor-conscientiousness",
-  extraversion: "bg-factor-extraversion",
-  agreeableness: "bg-factor-agreeableness",
-  stability: "bg-factor-stability",
-};
 
 // Bruker den delte buttonClassNames()-byggeren fra Button (variant="primary"
 // size="md") -- Link kan ikke bruke <Button> direkte (den er en <button>),
@@ -75,50 +58,6 @@ const PRIMARY_MD_LINK_CLASSES = buttonClassNames("primary", "md");
 
 function questionSetForTier(tier: ResultTier): readonly Question[] {
   return tier === "extended" ? ALL_QUESTIONS_EXTENDED : tier === "full" ? ALL_QUESTIONS : FREE_QUESTIONS;
-}
-
-/**
- * v2.38 (produkteiers ønske 26.07.2026, kvalitetssammenligning mot en
- * konkurrent-PDF): kort "hva gjør jeg med dette"-seksjon per hovedkategori --
- * Balansert/Ubalansert/Bygg videre + én konkret øvelse (se `growth`-feltet i
- * interpretations.ts). Vises i ALLE tre resultatnivåer og i PDF-eksporten
- * (lib/pdfReport.ts har en tilsvarende, men egen tegnet versjon siden jsPDF
- * ikke kan gjenbruke JSX).
- */
-function GrowthSection({ growth }: { growth: Interpretation["growth"] }) {
-  return (
-    <div className="mt-3 flex flex-col gap-2 border-t border-indigo/10 pt-3 dark:border-white/10">
-      {/* v2.41 (produkteiers tilbakemelding 28.07.2026): "Balansert og
-          ubalansert" beskrev bare halve seksjonen -- de to første setningene
-          (balansert/ubalansert) ER i praksis en kortere, strukturert
-          gjentakelse av styrke/utfordring-dynamikken som allerede står i
-          synthesis-teksten over. DET som faktisk er nytt her er "Bygg
-          videre" + ukesøvelsen -- fremadskuende, konkret handling som ikke
-          finnes noe annet sted i rapporten. En overskrift som "Oppsummering"
-          ville derfor undersolgt nettopp den nye delen (og friste folk til å
-          hoppe over noe de tror de allerede har lest). Valgte i stedet en
-          spørsmålsoverskrift, samme mønster som den avsluttende "Hva betyr
-          dette for deg?" -- signaliserer tydelig at dette er handlingsrettet,
-          ikke en oppsummering. */}
-      <h3 className="text-sm font-medium text-indigo dark:text-white">Hva kan du gjøre med dette?</h3>
-      <p className="text-indigo/80 dark:text-lavender-400/80">
-        <span className="font-medium text-indigo dark:text-white">Balansert: </span>
-        {growth.balanced}
-      </p>
-      <p className="text-indigo/80 dark:text-lavender-400/80">
-        <span className="font-medium text-indigo dark:text-white">Ubalansert: </span>
-        {growth.unbalanced}
-      </p>
-      <p className="text-indigo/80 dark:text-lavender-400/80">
-        <span className="font-medium text-indigo dark:text-white">Bygg videre: </span>
-        {growth.rebalancing}
-      </p>
-      <p className="mt-1 text-sm text-indigo/70 dark:text-lavender-400/70">
-        <span className="font-medium text-indigo dark:text-white">Prøv denne uken: </span>
-        {growth.exercise}
-      </p>
-    </div>
-  );
 }
 
 /**
@@ -138,7 +77,7 @@ export default function ResultatPage() {
 
 function ResultatContent() {
   const searchParams = useSearchParams();
-  // v2.45: de tre funksjonsbryterne styres nå fra adminpanelet i stedet for
+  // v2.46: de tre funksjonsbryterne styres nå fra adminpanelet i stedet for
   // å være konstanter låst ved bygg. Se components/FlagsProvider.tsx.
   const { accountSaveEnabled, resultAccountSaveEnabled, betaAnswerSetToolsEnabled } = useFlags();
   const [factors, setFactors] = useState<FactorResult[] | null>(null);
@@ -265,7 +204,7 @@ function ResultatContent() {
   }, [factors, activeFactor]);
 
   /**
-   * Trakt-telling (v2.45): "resultatet ble faktisk lest". Bevisst atskilt
+   * Trakt-telling (v2.46): "resultatet ble faktisk lest". Bevisst atskilt
    * fra fullføringstellingen i /test -- avstanden mellom de to tallene viser
    * hvor mange som kommer seg gjennom testen, men aldri ser hva de fikk ut
    * av den. Det er et helt annet problem enn frafall underveis, og krever
@@ -468,338 +407,19 @@ function ResultatContent() {
         )}
       </header>
 
-      {tier === "free" && (
-        <>
-          <section className="flex flex-col gap-6">
-            {factors.map((f) => (
-              <RoughFactorIndicator key={f.factor} factor={f.factor} label={f.label} score={f.score} />
-            ))}
-          </section>
-
-          <section className="flex flex-col gap-8">
-            {factors.map((f) => {
-              const copy = INTERPRETATIONS[f.factor][bandFor(f.score)];
-              return (
-                <article
-                  key={f.factor}
-                  className="flex flex-col gap-3 overflow-hidden rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
-                >
-                  <FactorHero factor={f.factor} className="-mx-5 -mt-5 w-[calc(100%+2.5rem)] max-w-none" />
-                  <div className="flex items-center gap-3">
-                    <FactorIcon factor={f.factor} size={40} />
-                    <h2 className="font-display font-semibold text-indigo dark:text-white">{f.label}</h2>
-                  </div>
-                  <p className="text-sm text-indigo/60 dark:text-lavender-400/60">{DOMAIN_DEFINITIONS[f.factor]}</p>
-                  <p className="text-indigo/80 dark:text-lavender-400/80">{copy.overview}</p>
-                  <p className="text-indigo/80 dark:text-lavender-400/80">{copy.nuance}</p>
-                  <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
-                  <div className="mt-3 flex flex-col gap-3 border-t border-indigo/10 pt-3 dark:border-white/10">
-                    <div>
-                      <h3 className="text-sm font-medium text-indigo dark:text-white">Skole og jobb</h3>
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{copy.careerNote}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-indigo dark:text-white">Kjærlighet</h3>
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{copy.relationshipNote}</p>
-                      <p className="mt-1 text-indigo/80 dark:text-lavender-400/80">{copy.partnerNote}</p>
-                    </div>
-                  </div>
-                  {copy.growth && <GrowthSection growth={copy.growth} />}
-                  {copy.funFact && (
-                    <aside
-                      className="mt-1 flex items-start gap-3 rounded-xl border border-dashed border-holo-sky/40 bg-white/50 p-3 print:hidden dark:bg-white/5"
-                      aria-label="Humoristisk kommentar, ikke en del av selve tolkningen"
-                    >
-                      <span className="text-xl leading-none" aria-hidden="true">
-                        😄
-                      </span>
-                      <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-                        <span className="font-medium text-indigo dark:text-white">Kjenner du deg igjen?</span>{" "}
-                        {copy.funFact}
-                      </p>
-                    </aside>
-                  )}
-                </article>
-              );
-            })}
-          </section>
-
-          {closingFree && (
-            <section className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-              <h2 className="font-display font-semibold text-indigo dark:text-white">Samlet sett</h2>
-              {splitIntoParagraphs(closingFree.text).map((p, i) => (
-                <p key={i} className="text-indigo/80 dark:text-lavender-400/80">
-                  {p}
-                </p>
-              ))}
-            </section>
-          )}
-
-          {/* v2.37/v2.38: delbart Spir-kort -- til slutt på rapporten, gjelder
-              alle tre nivåer (produkteiers eksplisitte ønske 25.07.2026).
-              `facets` er alltid tom for "free" her (se useEffect over), så
-              ShareCard faller automatisk tilbake til domenekortet. */}
-          <ShareCard factors={factors} facets={facets} />
-        </>
-      )}
+      {tier === "free" && <FreeTierResult factors={factors} closingFree={closingFree} facets={facets} />}
 
       {isDetailed && (
-        <>
-          {/* v2.36 (produkteiers ønske 24.07.2026): samme samlede oversikt
-              over alle fem hovedfaktorene som gratis-tieren viser øverst
-              (se seksjonen over for tier === "free") -- ga tidligere bare
-              ÉN faktor om gangen inni fane-visningen under, uten et
-              helhetsbilde før man begynner å bla i fanene. */}
-          <section className="flex flex-col gap-6">
-            {factors.map((f) => (
-              <RoughFactorIndicator key={f.factor} factor={f.factor} label={f.label} score={f.score} />
-            ))}
-          </section>
-
-          <nav
-            className="flex flex-wrap gap-2 print:hidden"
-            aria-label="Velg hvilken hovedkategori som vises"
-          >
-            {factors.map((f) => (
-              <button
-                key={f.factor}
-                type="button"
-                onClick={() => setActiveFactor(f.factor)}
-                aria-current={activeFactor === f.factor ? "page" : undefined}
-                className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  activeFactor === f.factor
-                    ? `${FACTOR_BG[f.factor]} text-white shadow-sm`
-                    : "bg-lavender-100 text-indigo hover:bg-lavender-400/40 dark:bg-white/10 dark:text-lavender-400 dark:hover:bg-white/20"
-                }`}
-              >
-                <FactorIcon factor={f.factor} size={18} />
-                {f.label}
-              </button>
-            ))}
-            {closing && (
-              <button
-                type="button"
-                onClick={() => setActiveFactor("summary")}
-                aria-current={activeFactor === "summary" ? "page" : undefined}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  activeFactor === "summary"
-                    ? "bg-indigo text-white shadow-sm dark:bg-white dark:text-indigo"
-                    : "bg-lavender-100 text-indigo hover:bg-lavender-400/40 dark:bg-white/10 dark:text-lavender-400 dark:hover:bg-white/20"
-                }`}
-              >
-                Oppsummering
-              </button>
-            )}
-          </nav>
-
-          {factors.map((f) => {
-              const isActive = f.factor === activeFactor;
-              const domain = DISPLAY_TO_DOMAIN[f.factor];
-              const band = bandFor(f.score);
-              const copy = INTERPRETATIONS[f.factor][band];
-              const order = FACET_ORDER_BY_DOMAIN[domain];
-              const facetsForDomain = order
-                .map((code) => facets.find((fa) => fa.facet === code))
-                .filter((fa): fa is FacetResult => fa !== undefined);
-              // Fallback for hovedkategorier som ennå ikke har fått ny
-              // `synthesis`-tekst (v2.17-utrulling, se interpretations.ts).
-              const facetDrivenOverview = buildFacetDrivenOverview(f.factor, domain, f.score, facetsForDomain);
-              // v2.18: gjenreist fasettbevissthet -- nevner hvilke(n)
-              // underkategori(er) som driver hovedkategoriskåren, som en
-              // egen linje i tillegg til (ikke i stedet for) synthesis-teksten.
-              // v2.36: Standard (120) får en enklere, tre-fasetters variant
-              // uten "premium"-signatureksemplene -- se domainComposition.ts.
-              const facetAwareNote =
-                tier === "extended"
-                  ? buildFacetAwareNote(f.factor, f.score, facetsForDomain)
-                  : tier === "full"
-                    ? buildTopFacetsMention(facetsForDomain)
-                    : "";
-              const domainCombos: CombinationInsight[] = domainCombosByDomain.get(domain) ?? [];
-              const facetCombos: FacetCombinationInsight[] = facetCombosByDomain.get(domain) ?? [];
-              // Ny struktur (domenedefinisjon -> fasetter -> én sammenhengende
-              // analyse) vises KUN når hovedkategorien har fått sin nye
-              // `synthesis`-tekst -- inntil da vises den gamle strukturen
-              // uendret, slik at ingen kategori ser ufullstendig ut midt i
-              // utrullingen. Se interpretations.ts filhode.
-              const useNewLayout = Boolean(copy.synthesis);
-
-              return (
-                <section
-                  key={f.factor}
-                  className={`flex flex-col gap-8 ${isActive ? "" : "hidden print:flex"}`}
-                  aria-hidden={!isActive}
-                >
-                  <div className="flex flex-col gap-3">
-                    <FactorHero factor={f.factor} className="w-full rounded-2xl" />
-                    <div className="flex items-center gap-3">
-                      <FactorIcon factor={f.factor} size={56} />
-                      <h2 className="font-display text-3xl font-bold text-indigo dark:text-white sm:text-4xl">
-                        {f.label}
-                      </h2>
-                    </div>
-                    <RoughFactorIndicator factor={f.factor} label={f.label} score={f.score} />
-                    <p className="text-sm text-indigo/60 dark:text-lavender-400/60">{DOMAIN_DEFINITIONS[f.factor]}</p>
-                  </div>
-
-                  {/* v2.36: selve fasettlisten/-grafene er en Premium/Utvidet-
-                      eksklusiv (se /priser) -- Standard (120) beregner nå
-                      facetsForDomain internt (se useEffect over), men skal
-                      ikke vise denne seksjonen, kun den kortere
-                      facetAwareNote-setningen lenger ned. */}
-                  {tier === "extended" && facetsForDomain.length > 0 && (
-                    <div className="flex flex-col gap-4">
-                      <h3 className="font-display font-semibold text-indigo dark:text-white">Underkategorier</h3>
-                      <div className="flex flex-col gap-5">
-                        {facetsForDomain.map((fa) => {
-                          const meta = FACET_INTERPRETATIONS[fa.facet];
-                          const facetBand = bandFor(fa.score);
-                          return (
-                            <div key={fa.facet} className="flex flex-col gap-1.5">
-                              <RoughFactorIndicator factor={f.factor} label={meta?.label ?? fa.facet} score={fa.score} />
-                              {meta?.description && (
-                                <p className="text-xs italic text-indigo/50 dark:text-lavender-400/50">
-                                  {meta.description}
-                                </p>
-                              )}
-                              <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-                                {facetInterpretationFor(fa.facet, facetBand)}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {facetCombos.length > 0 && (
-                        <div className="flex flex-col gap-3">
-                          {facetCombos.map((c) => (
-                            <article
-                              key={c.id}
-                              className="flex flex-col gap-1.5 rounded-xl border border-lavender-400/20 bg-lavender-100/50 p-4 shadow-sm dark:border-white/10 dark:bg-white/5"
-                            >
-                              <h4 className="text-sm font-semibold text-indigo dark:text-white">{c.title}</h4>
-                              <p className="text-sm text-indigo/80 dark:text-lavender-400/80">{c.text}</p>
-                            </article>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {useNewLayout ? (
-                    <article className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-                      {splitIntoParagraphs(copy.synthesis!).map((p, i) => (
-                        <p key={i} className="text-indigo/80 dark:text-lavender-400/80">
-                          {p}
-                        </p>
-                      ))}
-                      {facetAwareNote && (
-                        <p className="text-indigo/80 dark:text-lavender-400/80">{facetAwareNote}</p>
-                      )}
-                      <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
-                      {/* v2.33: Standard-nivået (120) har ingen underkategorier å
-                          vise til, så jobb/kjærlighet-notatene (som gratis-tieren
-                          allerede har) tas med her også -- det er nettopp "de
-                          flere momentene" som skiller Standard fra gratisnivået. */}
-                      {tier === "full" && (
-                        <div className="mt-3 flex flex-col gap-3 border-t border-indigo/10 pt-3 dark:border-white/10">
-                          <div>
-                            <h3 className="text-sm font-medium text-indigo dark:text-white">Skole og jobb</h3>
-                            <p className="text-indigo/80 dark:text-lavender-400/80">{copy.careerNote}</p>
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-indigo dark:text-white">Kjærlighet</h3>
-                            <p className="text-indigo/80 dark:text-lavender-400/80">{copy.relationshipNote}</p>
-                            <p className="mt-1 text-indigo/80 dark:text-lavender-400/80">{copy.partnerNote}</p>
-                          </div>
-                        </div>
-                      )}
-                      {copy.growth && <GrowthSection growth={copy.growth} />}
-                    </article>
-                  ) : (
-                    <article className="flex flex-col gap-3 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{facetDrivenOverview}</p>
-                      <p className="text-indigo/80 dark:text-lavender-400/80">{copy.nuance}</p>
-                      <p className="mt-2 text-indigo/80 dark:text-lavender-400/80">{copy.reflection}</p>
-                      <div className="mt-3 flex flex-col gap-3 border-t border-indigo/10 pt-3 dark:border-white/10">
-                        <div>
-                          <h3 className="text-sm font-medium text-indigo dark:text-white">I skole og jobb</h3>
-                          <p className="text-indigo/80 dark:text-lavender-400/80">{copy.careerNote}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-indigo dark:text-white">I relasjoner</h3>
-                          <p className="text-indigo/80 dark:text-lavender-400/80">{copy.relationshipNote}</p>
-                        </div>
-                      </div>
-                      {copy.growth && <GrowthSection growth={copy.growth} />}
-                    </article>
-                  )}
-
-                  {copy.funFact && (
-                    <aside
-                      className="flex items-start gap-3 rounded-2xl border border-dashed border-holo-sky/40 bg-white/50 p-4 print:hidden dark:bg-white/5"
-                      aria-label="Humoristisk kommentar, ikke en del av selve tolkningen"
-                    >
-                      <span className="text-xl leading-none" aria-hidden="true">
-                        😄
-                      </span>
-                      <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-                        <span className="font-medium text-indigo dark:text-white">Kjenner du deg igjen?</span>{" "}
-                        {copy.funFact}
-                      </p>
-                    </aside>
-                  )}
-
-                  {domainCombos.length > 0 && (
-                    <div className="flex flex-col gap-4">
-                      <div>
-                        <h3 className="font-display font-semibold text-indigo dark:text-white">Spennende samspill</h3>
-                        <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-                          Noen kombinasjoner av hovedfaktorer gir kjente, godt dokumenterte mønstre. Her er
-                          de som passer med resultatet ditt.
-                        </p>
-                      </div>
-                      {domainCombos.map((c) => (
-                        <article
-                          key={c.id}
-                          className="flex flex-col gap-2 rounded-2xl border border-lavender-400/20 bg-lavender-100/50 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
-                        >
-                          <h4 className="font-display font-semibold text-indigo dark:text-white">{c.title}</h4>
-                          <p className="text-indigo/80 dark:text-lavender-400/80">{c.text}</p>
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              );
-            })}
-
-          {closing && (
-            <section
-              className={`flex flex-col gap-4 border-t border-lavender-400 pt-8 dark:border-white/10 ${
-                activeFactor === "summary" ? "" : "hidden print:flex"
-              }`}
-              aria-hidden={activeFactor !== "summary"}
-            >
-              <FactorHero factor="summary" className="w-full rounded-2xl" />
-              <h2 className="font-display text-xl font-semibold text-indigo dark:text-white">Hva betyr dette for deg?</h2>
-              {/* v2.36: Utvidet (290) deles i flere avsnitt enn Standard
-                  (120) -- en STRUKTURELL forskjell, ikke bare avhengig av at
-                  richCombos-teksten tilfeldigvis blir lang nok av seg selv. */}
-              {splitIntoParagraphs(closing.text, tier === "extended" ? 3 : 2).map((p, i) => (
-                <p key={i} className="text-indigo/80 dark:text-lavender-400/80">
-                  {p}
-                </p>
-              ))}
-            </section>
-          )}
-
-          {/* v2.37/v2.38: delbart Spir-kort -- til slutt på rapporten, uansett
-              hvilken fane/hovedkategori som er aktiv (produkteiers eksplisitte
-              ønske 25.07.2026), gjelder alle tre nivåer. Her er `facets`
-              populert for "full"/"extended" (se useEffect over), så disse
-              brukerne får meme-kort-velgeren når kort finnes for profilen. */}
-          <ShareCard factors={factors} facets={facets} />
-        </>
+        <DetailedResult
+          factors={factors}
+          facets={facets}
+          tier={tier}
+          activeFactor={activeFactor}
+          setActiveFactor={setActiveFactor}
+          closing={closing}
+          domainCombosByDomain={domainCombosByDomain}
+          facetCombosByDomain={facetCombosByDomain}
+        />
       )}
 
       {isDetailed && (
@@ -844,131 +464,14 @@ function ResultatContent() {
         </section>
       )}
 
-      {resultAccountSaveEnabled && tier === "extended" && loggedInEmail && history.length > 1 && (() => {
-        // Regn ut endring fra forrige lagring for hver hovedfaktor (nøytralt
-        // -- ALDRI farget eller omtalt som "bedre"/"verre", se den avgjorte
-        // holdningen til utviklingsråd, v2.23/17.07.2026: dette er et bilde
-        // av variasjon over tid, ikke en vurdering).
-        const withDeltas = history.map((entry, i) => {
-          const prev = i > 0 ? history[i - 1] : null;
-          const deltas = prev
-            ? entry.factors.map((f) => {
-                const prevScore = prev.factors.find((pf) => pf.factor === f.factor)?.score;
-                return prevScore === undefined ? null : Math.round(f.score) - Math.round(prevScore);
-              })
-            : null;
-          return { entry, deltas };
-        });
-        const columns = history[history.length - 1]?.factors ?? [];
-
-        return (
-          <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-            <h2 className="font-display font-semibold text-indigo dark:text-white">Utvikling over tid</h2>
-            <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-              Du har lagret {history.length} resultater av Utvidet versjon knyttet til denne
-              kontoen. Her ser du hvordan de fem hovedfaktorene har målt seg fra gang til gang --
-              ikke som en vurdering av om noe er "bedre" eller "verre", bare som et bilde av
-              hvordan svarene dine har variert over tid. Endringstall (i parentes) viser
-              differansen fra forrige lagrede resultat.
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[480px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-indigo/10 dark:border-white/10">
-                    <th className="py-2 pr-4 font-medium text-indigo dark:text-white">Dato</th>
-                    {columns.map((f) => (
-                      <th key={f.factor} className="py-2 pr-4 font-medium text-indigo dark:text-white">
-                        {f.label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...withDeltas].reverse().map(({ entry, deltas }) => (
-                    <tr key={entry.savedAt} className="border-b border-indigo/5 dark:border-white/5">
-                      <td className="py-2 pr-4 text-indigo/70 dark:text-lavender-400/70">
-                        {new Date(entry.savedAt).toLocaleDateString("no-NO")}
-                      </td>
-                      {entry.factors.map((f, i) => {
-                        const delta = deltas?.[i] ?? null;
-                        return (
-                          <td key={f.factor} className="py-2 pr-4 text-indigo/80 dark:text-lavender-400/80">
-                            {Math.round(f.score)}
-                            {delta !== null && (
-                              <span className="text-indigo/50 dark:text-lavender-400/50">
-                                {" "}
-                                ({delta > 0 ? `+${delta}` : delta === 0 ? "±0" : `−${Math.abs(delta)}`})
-                              </span>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        );
-      })()}
+      {resultAccountSaveEnabled && tier === "extended" && loggedInEmail && <HistoryTable history={history} />}
 
       {/* v2.33: disse to oppfordringene skjules når brukeren allerede har
           fullført neste nivå (bare ser på et kortere resultat via
           rapportvalg-menyen) -- da tilbys en lenke til det andre, allerede
           ferdige resultatet i stedet for en "fortsett testen"-oppfordring
           som ikke gir mening lenger. */}
-      {tier === "free" && !unlockedTiers.full && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">
-            Vil du se et mer presist resultat?
-          </h2>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Ved å fortsette til alle 120 spørsmål får du en mer presis beregning, og du låser opp
-            muligheten til å snakke videre med Spir om resultatet ditt. Resultatet ditt over er
-            ikke ufullstendig som beskrivelse av deg fordi du velger å stoppe her -- de resterende
-            spørsmålene gir bare en mer detaljert måling.
-          </p>
-          <Link href="/test" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
-            Fortsett til alle 120
-          </Link>
-        </section>
-      )}
-      {tier === "free" && unlockedTiers.full && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Du har allerede fullført {unlockedTiers.extended ? "både 120 og 290" : "120"} spørsmål.
-          </p>
-          <Link href="/resultat?tier=full" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
-            Se resultatet fra {unlockedTiers.extended ? "120 spørsmål" : "den versjonen"}
-          </Link>
-        </section>
-      )}
-
-      {tier === "full" && !unlockedTiers.extended && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <h2 className="font-display font-semibold text-indigo dark:text-white">Vil du gå enda dypere?</h2>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Utvidet versjon stiller 10 spørsmål per underkategori i stedet for 4-5 (290 spørsmål
-            totalt), viser underkategoriene hver for seg med egen graf, og gir det mest presise
-            resultatet Dine Fasetter kan tilby. Resultatet ditt over er ikke ufullstendig fordi du
-            velger å stoppe her -- de resterende spørsmålene gir bare en enda sikrere måling.
-          </p>
-          <Link href="/test" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
-            Fortsett til Utvidet versjon
-          </Link>
-        </section>
-      )}
-      {tier === "full" && unlockedTiers.extended && (
-        <section className="flex flex-col gap-3 rounded-2xl border border-holo-sky/30 bg-white/60 p-5 shadow-sm dark:bg-white/5 print:hidden">
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
-            Du har allerede fullført Utvidet versjon (290 spørsmål), med underkategorier og
-            samspill-analyser.
-          </p>
-          <Link href="/resultat?tier=extended" className={`self-start ${PRIMARY_MD_LINK_CLASSES}`}>
-            Se den utvidede rapporten
-          </Link>
-        </section>
-      )}
+      {tier && <TierUpgradeCta tier={tier} unlockedTiers={unlockedTiers} />}
 
       {/* Betaperioden (v2.37) -- fjernes ved lansering, se FeedbackPrompt.tsx. */}
       <FeedbackPrompt />

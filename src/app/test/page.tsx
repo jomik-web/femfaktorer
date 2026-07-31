@@ -80,7 +80,7 @@ function submitAnonymousNormStats(
 
 /**
  * Sender det FULLSTENDIGE, anonyme svarsettet til /api/research/submit-answers
- * (v2.45, 31.07.2026) -- grunnlaget for senere leddstatistikk: svarfordeling
+ * (v2.46, 31.07.2026) -- grunnlaget for senere leddstatistikk: svarfordeling
  * per spørsmål, ledd-total-korrelasjon og intern konsistens per fasett.
  *
  * Dette er noe helt annet enn normtellingen over, som bare sender ferdig
@@ -140,7 +140,7 @@ export default function TestPage() {
   const [introSeen, setIntroSeen] = useState(false);
 
   // Avkrysningen for anonym forskningsdata på "Før du starter"-skjermen
-  // (v2.45). Huket av på forhånd etter produkteiers valg 31.07.2026 -- selve
+  // (v2.46). Huket av på forhånd etter produkteiers valg 31.07.2026 -- selve
   // verdien skrives til lagringen først når brukeren trykker "start testen",
   // se knappen lenger nede.
   const [researchConsent, setResearchConsent] = useState(true);
@@ -187,7 +187,7 @@ export default function TestPage() {
   );
 
   /**
-   * Svartidsmåling (v2.45): klokken nullstilles hver gang et NYTT spørsmål
+   * Svartidsmåling (v2.46): klokken nullstilles hver gang et NYTT spørsmål
    * vises på skjermen, og leses av når spørsmålet besvares.
    *
    * Bevisst en ref og ikke state -- verdien skal ikke utløse ny opptegning,
@@ -202,7 +202,7 @@ export default function TestPage() {
   }, [currentQuestionId]);
 
   /**
-   * Trakt-telling (v2.45): "startet testen" registreres først når et
+   * Trakt-telling (v2.46): "startet testen" registreres først når et
    * spørsmål faktisk er på skjermen -- ikke når /test lastes. Forskjellen
    * betyr noe: den som lander på retake-skjermen eller på veiledningen og
    * ombestemmer seg, har ikke startet testen, og skal ikke telle som om de
@@ -260,7 +260,7 @@ export default function TestPage() {
             vanligvis er på tvers av ulike sammenhenger (jobb, hjemme, sammen med venner), ikke bare
             hvordan du er akkurat i dag eller i én bestemt situasjon.
           </p>
-          {/* Anonym forskningsdata (v2.45, 31.07.2026). Plassert her fordi
+          {/* Anonym forskningsdata (v2.46, 31.07.2026). Plassert her fordi
               dette er det eneste stedet i flyten der brukeren ikke er midt i
               noe -- spør vi underveis eller etterpå, blir det enten et
               avbrudd eller et spørsmål om noe som allerede har skjedd.

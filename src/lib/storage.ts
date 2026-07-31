@@ -229,7 +229,7 @@ export function clearRestoredAccountResult(): void {
  * beholdes, men uten noe bekreftelsessteg -- lagres lokalt slik at brukeren
  * bare ser den én gang, ikke ved hvert testforsøk.
  *
- * NØKKELEN ER BUMPET TIL v2 (v2.45, 31.07.2026). Grunn: skjermen har fått en
+ * NØKKELEN ER BUMPET TIL v2 (v2.46, 31.07.2026). Grunn: skjermen har fått en
  * avkrysning for anonym forskningsdata. Uten en bump ville alle som allerede
  * har sett den gamle skjermen aldri fått se spørsmålet -- og da ville vi i
  * praksis samlet inn data fra folk som aldri ble spurt. Prisen er at
@@ -257,7 +257,7 @@ export function saveIntroSeen(): void {
 }
 
 /**
- * Samtykke til anonym forskningsdata (v2.45, 31.07.2026).
+ * Samtykke til anonym forskningsdata (v2.46, 31.07.2026).
  *
  * Styrer om det fullstendige, anonyme svarsettet sendes inn ved fullført
  * test (se src/lib/research/ og api/research/submit-answers). Avkrysningen
@@ -294,7 +294,7 @@ export function saveResearchConsent(consented: boolean): void {
 }
 
 /**
- * Svartid per spørsmål (v2.45, 31.07.2026) -- millisekunder fra spørsmålet
+ * Svartid per spørsmål (v2.46, 31.07.2026) -- millisekunder fra spørsmålet
  * ble vist til det ble besvart. Sendes med det anonyme svarsettet.
  *
  * Hvorfor dette er verdt å måle: svartid per ledd er den mest effektive

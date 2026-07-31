@@ -1,5 +1,5 @@
 /**
- * Klientsiden av den anonyme brukstellingen (v2.45, 31.07.2026).
+ * Klientsiden av den anonyme brukstellingen (v2.46, 31.07.2026).
  *
  * "Fire-and-forget", som normtellingen: venter aldri på svar, blokkerer
  * aldri navigasjon, feiler helt stille. Telling er usynlig infrastruktur --

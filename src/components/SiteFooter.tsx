@@ -21,7 +21,7 @@ const BASE_LINKS = [
  */
 export function SiteFooter() {
   const pathname = usePathname();
-  // v2.45: bryteren leses nå i komponenten, ikke på modulnivå -- den kan
+  // v2.46: bryteren leses nå i komponenten, ikke på modulnivå -- den kan
   // endres fra adminpanelet mens siden kjører, og en modulkonstant ville
   // vært låst til verdien den hadde da bygget ble laget.
   const { accountSaveEnabled } = useFlags();

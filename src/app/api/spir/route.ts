@@ -3,9 +3,53 @@ import type { FactorResult, FacetResult } from "@/lib/scoring";
 import { DOMAIN_TO_DISPLAY, DISPLAY_FACTOR_LABELS_NO } from "@/lib/scoring";
 import { buildSpirSystemPrompt, buildGuidedFacetSystemPrompt } from "@/lib/spir/systemPrompt";
 import { validateSpirResponse, SPIR_FALLBACK_MESSAGE } from "@/lib/spir/responseValidator";
-import { readStore } from "@/lib/admin/store";
+import { readStore, type AdminSettings } from "@/lib/admin/store";
 import { getGlobalAiUsage, incrementGlobalAiUsage } from "@/lib/admin/aiUsage";
 import { FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
+
+/**
+ * v2.46 (Kvalitetsrevisjon 31.07.2026, kap. 6, funn 4, middels alvorlighet):
+ * denne ruten gjorde tidligere TO Netlify Blobs-lesinger (admininnstillinger
+ * + global teller, begge `consistency: "strong"`, altså et ekte
+ * nettverkskall hver gang) FØR hvert eneste Anthropic-kall -- ekstra latens
+ * på hver Spir-melding, uten at innstillingene endrer seg ofte.
+ *
+ * Cachet i minne (modulnivå -- overlever mellom kall i samme varme
+ * serverless-instans, samme mønster jsPDF-/font-lastingen bruker for å
+ * unngå unødig gjentatt arbeid) med 30 sekunders levetid. Revisjonens egen
+ * vurdering: adminendringer (nødstopp, tak, modellvalg) tåler fint 30
+ * sekunders forsinkelse før de slår inn -- det er ikke tidskritisk
+ * sikkerhetslogikk. Global-teller-cachen oppdateres i tillegg proaktivt rett
+ * etter et vellykket Anthropic-kall (se `incrementGlobalAiUsage`-kallet
+ * lenger ned), så den ligger sjelden mer enn ett enkelt kall bak den ekte
+ * verdien -- samme "beste innsats, ikke vanntett sperre"-prinsipp som
+ * telleren selv allerede er dokumentert med i aiUsage.ts.
+ */
+const SETTINGS_CACHE_TTL_MS = 30_000;
+let settingsCache: { value: AdminSettings | null; at: number } | null = null;
+
+async function getCachedSettings(): Promise<AdminSettings | null> {
+  const now = Date.now();
+  if (settingsCache && now - settingsCache.at < SETTINGS_CACHE_TTL_MS) return settingsCache.value;
+  let value: AdminSettings | null;
+  try {
+    value = (await readStore()).settings;
+  } catch {
+    value = null; // fillagringen/Blobs kan mangle f.eks. rett etter kald start -- fall tilbake til env
+  }
+  settingsCache = { value, at: now };
+  return value;
+}
+
+let globalUsageCache: { value: number; at: number } | null = null;
+
+async function getCachedGlobalUsage(): Promise<number> {
+  const now = Date.now();
+  if (globalUsageCache && now - globalUsageCache.at < SETTINGS_CACHE_TTL_MS) return globalUsageCache.value;
+  const value = await getGlobalAiUsage();
+  globalUsageCache = { value, at: now };
+  return value;
+}
 
 export const runtime = "nodejs";
 
@@ -161,14 +205,10 @@ export async function POST(request: Request) {
   }
 
   // Admin-panelets nødstopp og justerbare tak (Dokument 09 §21.1) -- leses
-  // ved hver forespørsel, ikke bare ved oppstart, slik at en endring i
-  // panelet virker uten ny utrulling.
-  let settings;
-  try {
-    settings = (await readStore()).settings;
-  } catch {
-    settings = null; // fillagringen kan mangle f.eks. rett etter kald start -- fall tilbake til env
-  }
+  // ved hver forespørsel (nå via en kort minne-cache, se filhodet), ikke
+  // bare ved oppstart, slik at en endring i panelet virker uten ny
+  // utrulling -- med maks 30 sekunders forsinkelse.
+  const settings = await getCachedSettings();
 
   if (settings && !settings.aiEnabled) {
     return NextResponse.json(
@@ -193,7 +233,7 @@ export async function POST(request: Request) {
   // se lib/admin/aiUsage.ts sitt filhode. Dette er den faktiske, serverlagrede
   // sperren adminpanelets "Globalt AI-spørsmålstak"-felt nå styrer.
   const globalCap = settings?.aiGlobalQuestionCap ?? Number(process.env.AI_GLOBAL_QUESTION_CAP ?? 10000);
-  const globalUsage = await getGlobalAiUsage();
+  const globalUsage = await getCachedGlobalUsage();
   if (globalUsage >= globalCap) {
     return NextResponse.json(
       {
@@ -290,7 +330,11 @@ export async function POST(request: Request) {
   // gjort (og betalt for) uansett hva Anthropic faktisk svarte, så telleren
   // økes her, ikke bare ved vellykkede/godkjente svar. Fire-and-forget: skal
   // aldri forsinke eller blokkere selve Spir-svaret til brukeren.
-  void incrementGlobalAiUsage();
+  // v2.46: oppdaterer også minne-cachen proaktivt med den ferske verdien --
+  // holder den langt friskere enn 30-sekunders-TTL-en alene ville gitt.
+  void incrementGlobalAiUsage().then((next) => {
+    if (next >= 0) globalUsageCache = { value: next, at: Date.now() };
+  });
 
   const data = await anthropicRes.json();
   const text: string = data?.content?.[0]?.text ?? "";

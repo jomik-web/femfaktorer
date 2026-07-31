@@ -8,7 +8,7 @@ import {
 } from "@/lib/featureFlags";
 
 /**
- * Leverer funksjonsbryterne til klientkomponentene (v2.45, 31.07.2026).
+ * Leverer funksjonsbryterne til klientkomponentene (v2.46, 31.07.2026).
  *
  * HVORFOR KLIENTSIDIG HENTING OG IKKE SERVERSIDIG?
  * Alternativet var å lese innstillingene i layout.tsx og sende dem ned som

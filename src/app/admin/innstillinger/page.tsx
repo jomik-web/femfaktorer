@@ -5,7 +5,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import type { AdminSettings } from "@/lib/admin/store";
 
 /**
- * Alle brytere ett sted (v2.45, 31.07.2026).
+ * Alle brytere ett sted (v2.46, 31.07.2026).
  *
  * De tre nederste bryterne ("Hva som er synlig på nettstedet") fantes fram
  * til nå bare som konstanter i src/lib/featureFlags.ts, og krevde altså en

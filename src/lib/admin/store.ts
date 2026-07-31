@@ -45,7 +45,7 @@ export interface AdminSettings {
   aiGlobalQuestionCap: number;
 
   /**
-   * v2.45 (31.07.2026): de tre funksjonsbryterne som fram til nå bare fantes
+   * v2.46 (31.07.2026): de tre funksjonsbryterne som fram til nå bare fantes
    * som konstanter i src/lib/featureFlags.ts.
    *
    * BAKGRUNN: produkteier kan ikke kode, og hver eneste av/på krevde derfor

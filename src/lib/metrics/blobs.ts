@@ -1,5 +1,5 @@
 /**
- * Lagring for de anonyme brukstellerne (v2.45, 31.07.2026).
+ * Lagring for de anonyme brukstellerne (v2.46, 31.07.2026).
  * Se lib/metrics/types.ts for hva som telles og hvorfor.
  *
  * Én blob per DAG, ikke per hendelse: det holder lagringen liten og gjør at

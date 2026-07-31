@@ -13,8 +13,6 @@
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@simplewebauthn/browser": "^11.0.0",
-    "@simplewebauthn/server": "^11.0.0",
     "@netlify/blobs": "^10.7.9",
     "jspdf": "^2.5.2"
   },

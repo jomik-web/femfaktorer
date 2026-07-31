@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 
 /**
- * Adminpanelets forside (v2.45, 31.07.2026).
+ * Adminpanelets forside (v2.46, 31.07.2026).
  *
  * UTFORMINGEN FØLGER TO REGLER FRA DASHBOARD-FORSKNINGEN:
  *

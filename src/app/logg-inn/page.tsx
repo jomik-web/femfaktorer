@@ -26,7 +26,7 @@ type Step = "checking" | "loggedIn" | "email" | "code";
  */
 export default function LoggInnPage() {
   const router = useRouter();
-  // v2.45: styres fra adminpanelet. Standardverdien gjelder til svaret er hentet.
+  // v2.46: styres fra adminpanelet. Standardverdien gjelder til svaret er hentet.
   const { accountSaveEnabled } = useFlags();
   const [step, setStep] = useState<Step>(accountSaveEnabled ? "checking" : "email");
   const [email, setEmail] = useState("");

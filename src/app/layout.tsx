@@ -28,13 +28,37 @@ export const metadata: Metadata = {
     "Bli litt klokere på hvem du egentlig er. En norsk personlighetstest basert på offentlig tilgjengelig forskning på femfaktormodellen (Big Five).",
 };
 
+/**
+ * Besøksstatistikk (v2.46, 31.07.2026): Plausible.
+ *
+ * VALGT NETTOPP FORDI DEN IKKE KREVER SAMTYKKEBANNER. Plausible setter ingen
+ * informasjonskapsler og lagrer ingenting på besøkendes enhet, og utdataene
+ * er rene aggregater. Det er den kombinasjonen som gjør at målingen faller
+ * utenfor samtykkekravet i ePrivacy/GDPR -- en uavhengig juridisk vurdering
+ * av dette er publisert av leverandøren. Data hostes i EU.
+ *
+ * Personvernerklæringen har varslet nettopp dette verktøyet ved navn siden
+ * v2.x, så ingen løftebrudd -- men teksten der må oppdateres fra "hvis vi en
+ * gang..." til "vi gjør dette nå".
+ *
+ * Skriptet lastes KUN når NEXT_PUBLIC_PLAUSIBLE_DOMAIN er satt i Netlify.
+ * Uten den variabelen skjer det ingen måling i det hele tatt -- lokal
+ * utvikling forurenser dermed ikke statistikken.
+ */
+const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="no" className={`${inter.variable} ${bricolage.variable}`}>
+      {plausibleDomain && (
+        <head>
+          <script defer data-domain={plausibleDomain} src="https://plausible.io/js/script.js" />
+        </head>
+      )}
       <body className="min-h-screen font-sans antialiased">
-        {/* v2.45: gjør funksjonsbryterne fra adminpanelet tilgjengelige for
+        {/* v2.46: gjør funksjonsbryterne fra adminpanelet tilgjengelige for
             hele nettstedet. Se FlagsProvider for hvorfor de hentes fra
             klienten og ikke leses her på serveren. */}
         <FlagsProvider>

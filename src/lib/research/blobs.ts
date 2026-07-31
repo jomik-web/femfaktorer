@@ -1,5 +1,5 @@
 /**
- * Blob-butikk for anonyme svarsett (v2.45, 31.07.2026).
+ * Blob-butikk for anonyme svarsett (v2.46, 31.07.2026).
  *
  * EGEN BUTIKK, IKKE DELT MED NOE ANNET. Dette er ikke en tilfeldighet:
  * så lenge svarsettene ligger for seg selv, uten noen felles nøkkel med

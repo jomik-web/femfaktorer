@@ -1,5 +1,5 @@
 /**
- * Anonyme svarsett til psykometrisk kvalitetskontroll (v2.45, 31.07.2026).
+ * Anonyme svarsett til psykometrisk kvalitetskontroll (v2.46, 31.07.2026).
  *
  * FORMÅL, OG HVORFOR DETTE FINNES I DET HELE TATT
  * Fram til nå har systemet bevisst kastet svarene på enkeltspørsmål: kontoen

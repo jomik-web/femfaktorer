@@ -8,6 +8,7 @@ import { INTERPRETATIONS, DOMAIN_DEFINITIONS, NON_DIAGNOSTIC_NOTICE, CRISIS_NOTI
 import { FACET_INTERPRETATIONS, FACET_ORDER_BY_DOMAIN, facetInterpretationFor } from "@/data/facetInterpretations";
 import { zoneIndexFor, zoneLabelFor } from "@/components/RoughFactorIndicator";
 import { FactorHeroContent, VIEWBOX_WIDTH as HERO_VIEWBOX_WIDTH, VIEWBOX_HEIGHT as HERO_VIEWBOX_HEIGHT } from "@/components/FactorHero";
+import { SpirMascotContent, VIEWBOX_WIDTH as SPIR_VIEWBOX_WIDTH, VIEWBOX_HEIGHT as SPIR_VIEWBOX_HEIGHT } from "@/components/SpirMascot";
 
 /**
  * v2.37 (produkteiers ønske 26.07.2026, kvalitetssammenligning mot en
@@ -56,51 +57,6 @@ const GRAY_RGB: [number, number, number] = [110, 108, 120];
 const TRACK_RGB: [number, number, number] = [233, 229, 245];
 
 /**
- * v2.39 (produkteiers ønske 28.07.2026): Spir-illustrasjon på avslutningssiden
- * -- statisk SVG-markup som gjenskaper "oppmuntrende"-uttrykket til
- * SpirMascot.tsx (samme koordinater, farger og gradient-stopp, se der for
- * "master reference"-kommentarene). Duplisert som en ren streng her, IKKE
- * gjenbrukt via React/renderToStaticMarkup, fordi jsPDF trenger et
- * rasterbilde (PNG/JPEG) -- SVG-en konverteres til en data-URL via
- * canvas i `loadSpirMascotDataUrl` under, som kun kan kjøre i nettleseren
- * (samme forutsetning som resten av denne modulen).
- */
-const SPIR_MASCOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <defs>
-    <linearGradient id="spirBodyPdf" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#5FF0C0" />
-      <stop offset="50%" stop-color="#5FC0F0" />
-      <stop offset="100%" stop-color="#C05FF0" />
-    </linearGradient>
-    <linearGradient id="spirGoldPdf" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFE07A" />
-      <stop offset="100%" stop-color="#E0A93A" />
-    </linearGradient>
-    <linearGradient id="spirLensPdf" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1A1A2E" />
-      <stop offset="100%" stop-color="#3A3A5E" />
-    </linearGradient>
-  </defs>
-  <ellipse cx="100" cy="184" rx="42" ry="7" fill="#E9E5F5" opacity="0.7" />
-  <path d="M56,132 Q30,138 34,160" stroke="#5FC0F0" stroke-width="12" fill="none" stroke-linecap="round" />
-  <circle cx="34" cy="160" r="9" fill="#5FC0F0" />
-  <path d="M96,58 C126,54 150,74 150,104 C150,134 148,166 108,178 C84,184 58,172 50,146 C42,118 50,84 74,64 C81,59 88,58 96,58 Z" fill="url(#spirBodyPdf)" />
-  <ellipse cx="78" cy="90" rx="16" ry="19" fill="#AEE8F5" />
-  <path d="M74,140 Q96,156 118,140" stroke="url(#spirGoldPdf)" stroke-width="2" fill="none" stroke-linecap="round" />
-  <circle cx="96" cy="157" r="3.2" fill="url(#spirGoldPdf)" />
-  <ellipse cx="77" cy="100" rx="16" ry="11" fill="url(#spirLensPdf)" />
-  <ellipse cx="116" cy="97" rx="16" ry="11" fill="url(#spirLensPdf)" />
-  <rect x="92" y="96" width="8" height="3.5" fill="#1A1A2E" />
-  <ellipse cx="109" cy="93" rx="3.5" ry="2" fill="white" opacity="0.6" />
-  <path d="M66,82 Q77,77 88,82" stroke="#14142B" stroke-width="3" fill="none" stroke-linecap="round" />
-  <path d="M104,82 Q116,77 128,82" stroke="#14142B" stroke-width="3" fill="none" stroke-linecap="round" />
-  <path d="M85,122 Q97,131 111,120" stroke="#14142B" stroke-width="3.2" fill="none" stroke-linecap="round" />
-  <path d="M97,124 L98.5,128.5 L101,123.5 Z" fill="white" />
-  <circle cx="63" cy="113" r="6" fill="#FFE07A" opacity="0.6" />
-  <circle cx="129" cy="113" r="6" fill="#FFE07A" opacity="0.6" />
-</svg>`;
-
-/**
  * Rasteriserer `SPIR_MASCOT_SVG` til en PNG-data-URL via en usynlig
  * canvas -- eneste måten jsPDF (som kun tegner rektangler/linjer/tekst
  * eller ferdige rasterbilder, ikke SVG-baner) kan vise illustrasjonen på.
@@ -140,8 +96,24 @@ async function rasterizeSvgToPngDataUrl(svgMarkup: string, widthPx: number, heig
   }
 }
 
+/**
+ * v2.45 (Kvalitetsrevisjon 31.07.2026, kap. 5, funn 3): gjenbruker nå
+ * `SpirMascotContent` (den hook-frie scenen i SpirMascot.tsx) via
+ * `renderToStaticMarkup`, i stedet for en hardkodet SVG-streng duplisert
+ * her -- nøyaktig samme teknikk som `loadFactorHeroDataUrl` under bruker
+ * for domenemotivene. Fjerner risikoen for at illustrasjonen her drifter
+ * fra den ekte maskoten neste gang uttrykket endres.
+ */
 async function loadSpirMascotDataUrl(): Promise<string | null> {
-  return rasterizeSvgToPngDataUrl(SPIR_MASCOT_SVG, 800, 800);
+  if (typeof window === "undefined") return null;
+  const markup = renderToStaticMarkup(
+    createElement(
+      "svg",
+      { xmlns: "http://www.w3.org/2000/svg", viewBox: `0 0 ${SPIR_VIEWBOX_WIDTH} ${SPIR_VIEWBOX_HEIGHT}` },
+      createElement(SpirMascotContent, { expression: "oppmuntrende", uid: "pdf-spir" })
+    )
+  );
+  return rasterizeSvgToPngDataUrl(markup, 800, 800);
 }
 
 /**
@@ -482,13 +454,24 @@ async function buildDoc(input: ResultPdfInput): Promise<jsPDF> {
   // rapporten tidligere lot domenene flyte etter hverandre på samme side når
   // det var plass. Gir en renere, mer "kapittel per trekk"-følelse ved
   // utskrift/lesing, på bekostning av noe mer papir/sider.
-  for (const f of input.factors) {
+  //
+  // v2.46 (Kvalitetsrevisjon 31.07.2026, kap. 6, funn 3, middels
+  // alvorlighet): de fem domenemotivene ble tidligere rasterisert
+  // SEKVENSIELT (én `await` per faktor, inni selve tegneløkken) -- unødig
+  // ventetid, særlig merkbart på mobil. Rasteriseringen er uavhengig per
+  // faktor, så alle fem hentes nå PARALLELT med `Promise.all` FØR løkken
+  // starter. Selve tegningen (sideskift, `y`-posisjon osv.) må fortsatt skje
+  // sekvensielt i riktig rekkefølge -- kun nettverks-/canvas-arbeidet er
+  // parallellisert, ikke selve PDF-oppbyggingen.
+  const heroDataUrls = await Promise.all(input.factors.map((f) => loadFactorHeroDataUrl(f.factor)));
+
+  for (const [i, f] of input.factors.entries()) {
     doc.addPage();
     y = MARGIN;
 
     // v2.40: samme motiv som står øverst på denne hovedkategorien på
     // nettsiden -- se `loadFactorHeroDataUrl` sin doc-kommentar.
-    const heroDataUrl = await loadFactorHeroDataUrl(f.factor);
+    const heroDataUrl = heroDataUrls[i];
     if (heroDataUrl) {
       const heroWidth = CONTENT_WIDTH;
       const heroHeight = (heroWidth * HERO_VIEWBOX_HEIGHT) / HERO_VIEWBOX_WIDTH;

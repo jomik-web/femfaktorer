@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 
 /**
- * Driftsstatus (v2.45, 31.07.2026). Se api/admin/health/route.ts for hva
+ * Driftsstatus (v2.46, 31.07.2026). Se api/admin/health/route.ts for hva
  * som faktisk sjekkes -- og hva som bevisst ikke sjekkes.
  */
 

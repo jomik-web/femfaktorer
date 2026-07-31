@@ -263,28 +263,29 @@ export function SpirFace({ expression }: { expression: SpirExpression }) {
   }
 }
 
-export default function SpirMascot({
-  expression = "noytral",
-  size = 160,
-  className,
-  title,
-}: SpirMascotProps) {
-  const uid = useId().replace(/:/g, "");
+/** SVG-ens egen koordinatsystem -- samme mønster som FactorHero.tsx sine VIEWBOX_WIDTH/HEIGHT. */
+export const VIEWBOX_WIDTH = 200;
+export const VIEWBOX_HEIGHT = 200;
+
+/**
+ * Selve scenen (gradienter + kropp/ansikt), UTEN den ytre `<svg>` --
+ * hook-fri (tar `uid` som prop i stedet for å kalle `useId()` selv), slik
+ * at den kan gjenbrukes utenfor en vanlig React-render, f.eks. via
+ * `renderToStaticMarkup` i sammenhenger som ikke kan bruke hooks.
+ *
+ * v2.45 (Kvalitetsrevisjon 31.07.2026, kap. 5, funn 3): trukket ut av
+ * `SpirMascot` nettopp for at `pdfReport.ts` skal slippe å duplisere hele
+ * SVG-en som en hardkodet streng (`SPIR_MASCOT_SVG`, som ville drifte fra
+ * denne filen ved neste utseendeendring) -- samme mønster som
+ * `FactorHeroContent` i FactorHero.tsx allerede bruker for domenemotivene.
+ */
+export function SpirMascotContent({ expression, uid }: { expression: SpirExpression; uid: string }) {
   const bodyGradientId = `spirBody-${uid}`;
   const goldGradientId = `spirGold-${uid}`;
   const lensGradientId = `spirLens-${uid}`;
 
-  const label =
-    title ??
-    {
-      noytral: "Spir, nøytral",
-      tenkende: "Spir tenker",
-      oppmuntrende: "Spir oppmuntrer",
-      feirende: "Spir feirer",
-    }[expression];
-
   return (
-    <svg viewBox="0 0 200 200" width={size} height={size} role="img" aria-label={label} className={className}>
+    <>
       <defs>
         <linearGradient id={bodyGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor={COLORS.holoMint} />
@@ -306,6 +307,30 @@ export default function SpirMascot({
       <SpirChain gradientId={goldGradientId} />
       <SpirGlasses gradientId={lensGradientId} />
       <SpirFace expression={expression} />
+    </>
+  );
+}
+
+export default function SpirMascot({
+  expression = "noytral",
+  size = 160,
+  className,
+  title,
+}: SpirMascotProps) {
+  const uid = useId().replace(/:/g, "");
+
+  const label =
+    title ??
+    {
+      noytral: "Spir, nøytral",
+      tenkende: "Spir tenker",
+      oppmuntrende: "Spir oppmuntrer",
+      feirende: "Spir feirer",
+    }[expression];
+
+  return (
+    <svg viewBox="0 0 200 200" width={size} height={size} role="img" aria-label={label} className={className}>
+      <SpirMascotContent expression={expression} uid={uid} />
     </svg>
   );
 }

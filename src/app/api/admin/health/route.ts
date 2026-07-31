@@ -6,7 +6,7 @@ import { QUESTION_SET_FINGERPRINT, QUESTION_SET_REVISION } from "@/data/question
 export const runtime = "nodejs";
 
 /**
- * Driftsstatus (v2.45, 31.07.2026).
+ * Driftsstatus (v2.46, 31.07.2026).
  *
  * Formålet er å svare på ett spørsmål produkteier ellers ikke kan svare på
  * selv: "er det meg eller er det en tjeneste som er nede?". Uten dette blir

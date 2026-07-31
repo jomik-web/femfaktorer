@@ -1,5 +1,5 @@
 /**
- * Anonyme bruksteller (v2.45, 31.07.2026) -- grunnlaget for trakten og
+ * Anonyme bruksteller (v2.46, 31.07.2026) -- grunnlaget for trakten og
  * nøkkeltallene i adminpanelet.
  *
  * HVA DETTE ER, OG HVA DET IKKE ER

@@ -63,7 +63,7 @@ function resolveSavableResult(): { tier: ResultTier; factors: FactorResult[]; fa
 }
 
 export function AccountSavePanel() {
-  // v2.45: begge bryterne styres nå fra adminpanelet, se FlagsProvider.
+  // v2.46: begge bryterne styres nå fra adminpanelet, se FlagsProvider.
   const { resultAccountSaveEnabled, betaAnswerSetToolsEnabled } = useFlags();
   const [hydrated, setHydrated] = useState(false);
   const [savable, setSavable] = useState<ReturnType<typeof resolveSavableResult>>(null);

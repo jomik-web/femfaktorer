@@ -58,7 +58,7 @@ const REPORT_OPTIONS: readonly { tier: ResultTier; label: string; unlockKey: Res
  */
 export function SiteNav() {
   const pathname = usePathname();
-  // v2.45: styres nå fra adminpanelet, ikke av en konstant som er låst ved bygg.
+  // v2.46: styres nå fra adminpanelet, ikke av en konstant som er låst ved bygg.
   const { accountSaveEnabled } = useFlags();
   const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);

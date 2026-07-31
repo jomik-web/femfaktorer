@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 
 /**
- * Administrasjon av hvem som har admin-rolle (v2.45, 31.07.2026).
+ * Administrasjon av hvem som har admin-rolle (v2.46, 31.07.2026).
  *
  * Lukker et punkt som har stått åpent i OPPGAVER-FOR-PRODUKTEIER.md siden
  * v2.28: rollefunksjonene og API-et har eksistert hele tiden, men det fantes

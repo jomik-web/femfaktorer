@@ -1,5 +1,5 @@
 /**
- * Grov enhetskategori ut fra skjermbredde (v2.45, 31.07.2026).
+ * Grov enhetskategori ut fra skjermbredde (v2.46, 31.07.2026).
  *
  * Flyttet hit fra FeedbackPrompt.tsx fordi den nå brukes tre steder:
  * betatilbakemeldingen, det anonyme svarsettet og trakt-tellingen.

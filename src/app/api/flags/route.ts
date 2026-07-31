@@ -4,7 +4,7 @@ import { readStore } from "@/lib/admin/store";
 export const runtime = "nodejs";
 
 /**
- * Offentlig endepunkt for de tre funksjonsbryterne (v2.45, 31.07.2026).
+ * Offentlig endepunkt for de tre funksjonsbryterne (v2.46, 31.07.2026).
  *
  * ÅPENT MED VILJE: bryterne avgjør bare hva som VISES, ikke hva som er
  * tillatt. At "logg inn" er skjult er ingen sikkerhetsmekanisme -- de ekte
