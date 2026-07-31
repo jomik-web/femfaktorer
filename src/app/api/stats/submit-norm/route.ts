@@ -2,8 +2,24 @@ import { NextResponse } from "next/server";
 import { normStatsStore, type NormStatsTier } from "@/lib/stats/blobs";
 import { emptyNormStats, bucketIndexFor, type NormStats } from "@/lib/stats/types";
 import { isValidFactorResult, isValidFacetResult } from "@/lib/account/validate";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
+
+/**
+ * Rate-limit (v2.46, kvalitetsrevisjon 31.07.2026, kap. 8, funn #1 --
+ * høy): endepunktet tar imot ferdige resultater uten noen form for
+ * engangs-verifisering at avsenderen faktisk har fullført en test --
+ * en enkelt IP kunne tidligere sende et ubegrenset antall falske
+ * innsendinger og forurense normstatistikken. Vurderte revisjonens forslag
+ * om en engangs-fullførelsestoken også, men det krever ny arkitektur
+ * (tokenutstedelse, signeringshemmelighet, engangs-sporing, klientendring i
+ * testflyten) -- flagget som en egen, større oppfølging i
+ * OPPGAVER-FOR-PRODUKTEIER.md fremfor å bygges inn her. Denne
+ * per-IP-bremsen stopper i det minste grovt automatisert misbruk.
+ */
+const SUBMIT_NORM_WINDOW_MS = 1000 * 60 * 60; // 1 time
+const SUBMIT_NORM_LIMIT = 20; // per IP per time -- rundt regnet god margin over normalt bruksmønster (én person tar sjelden 20+ tester/time)
 
 interface SubmitNormBody {
   factors: unknown;
@@ -28,6 +44,17 @@ function isValidNormStatsTier(value: unknown): value is NormStatsTier {
  * brukeropplevelsen, se test/page.tsx).
  */
 export async function POST(request: Request) {
+  const rateLimit = await checkRateLimit(request, "submit-norm", {
+    windowMs: SUBMIT_NORM_WINDOW_MS,
+    limit: SUBMIT_NORM_LIMIT,
+  });
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      { error: "For mange innsendinger. Prøv igjen senere." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rateLimit.retryAfterMs / 1000)) } }
+    );
+  }
+
   let body: SubmitNormBody;
   try {
     body = await request.json();

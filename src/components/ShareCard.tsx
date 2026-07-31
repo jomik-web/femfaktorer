@@ -152,7 +152,12 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
       setBusy(null);
       return;
     }
-    const shared = await shareImageFile(blob, downloadFilename, GENERIC_SHARE_TEXT);
+    const shared = await shareImageFile(
+      blob,
+      downloadFilename,
+      GENERIC_SHARE_TEXT,
+      typeof window !== "undefined" ? window.location.origin : undefined
+    );
     if (!shared) {
       downloadBlob(blob, downloadFilename);
       setFeedback("Bildet ble lastet ned i stedet -- del det manuelt fra nedlastingene dine.");
@@ -352,7 +357,12 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
       setBusy(null);
       return;
     }
-    const shared = await shareImageFile(blob, spec.filename, GENERIC_SHARE_TEXT);
+    const shared = await shareImageFile(
+      blob,
+      spec.filename,
+      GENERIC_SHARE_TEXT,
+      typeof window !== "undefined" ? window.location.origin : undefined
+    );
     if (!shared) {
       // Nettleseren støtter ikke fildeling -- fall tilbake til nedlasting,
       // slik at knappen uansett gjør NOE nyttig i stedet for å feile stille.
@@ -544,7 +554,21 @@ const PANEL_BG = COLORS.indigo;
  * (som inneholder begge oppå hverandre) -- eksport-SVG-ene bruker alltid
  * `visible=true` siden de har én variant hver for seg selv.
  */
-/** Felles bunntekst (ordmerke + disclaimer) -- identisk plassering (i px fra bunnen) på begge formater. */
+/**
+ * Felles bunntekst (ordmerke + domene + disclaimer) -- identisk plassering
+ * (i px fra bunnen) på begge formater.
+ *
+ * v2.46 (Kvalitetsrevisjon 31.07.2026, kap. 11, funn #1 -- middels): dette
+ * SVG-genererte fallback-kortet manglet domenet -- de ferdigproduserte
+ * meme-kortene (memeCards.ts) har allerede en "dinefasetter.no"-footer
+ * påmalt i selve bildet fra produksjonen, så dette bringer fallback-kortet
+ * på linje med dem. "dinefasetter.no" er bevisst skrevet ut som REN TEKST
+ * (ikke en klikkbar lenke -- SVG/PNG-bilder har ingen lenker uansett), på
+ * samme måte som teksten allerede brukes i lib/pdfReport.ts sin
+ * avslutningstekst -- domenet er ikke registrert/live ennå, men det er
+ * likevel produkteiers etablerte praksis å nevne det som fremtidig
+ * merkevarenavn i delt/eksportert innhold, jf. de nevnte stedene.
+ */
 function CardFooter({ width, totalHeight, color }: { width: number; totalHeight: number; color: string }) {
   return (
     <>
@@ -557,7 +581,7 @@ function CardFooter({ width, totalHeight, color }: { width: number; totalHeight:
         fill={color}
         opacity={0.6}
       >
-        Dine Fasetter -- en norsk personlighetstest
+        Dine Fasetter -- en norsk personlighetstest · dinefasetter.no
       </text>
       <text
         x={width / 2}
