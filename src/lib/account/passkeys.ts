@@ -217,17 +217,30 @@ export async function consumeChallenge(id: string | undefined): Promise<StoredCh
  * verifiseringen med en melding som er vanskelig å tolke -- derfor utledes
  * begge ett sted her.
  */
-export function relyingParty(): { rpID: string; origin: string; rpName: string } {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+export function relyingParty(): {
+  rpID: string;
+  origin: string;
+  rpName: string;
+  /** Usant når NEXT_PUBLIC_SITE_URL mangler eller er ugyldig -- da er verdiene bare en gjetning. */
+  configured: boolean;
+} {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!raw) {
+    // v2.48: reservefallet beholdes så resten av appen ikke krasjer, men
+    // `configured: false` gjør at kallstedene kan si klart fra i stedet for
+    // å la nettleseren avvise med en uforståelig SecurityError.
+    return { rpID: "localhost", origin: "http://localhost:3000", rpName: "Dine Fasetter", configured: false };
+  }
   let url: URL;
   try {
     url = new URL(raw);
   } catch {
-    url = new URL("http://localhost:3000");
+    return { rpID: "localhost", origin: "http://localhost:3000", rpName: "Dine Fasetter", configured: false };
   }
   return {
     rpID: url.hostname,
     origin: url.origin,
     rpName: "Dine Fasetter",
+    configured: true,
   };
 }

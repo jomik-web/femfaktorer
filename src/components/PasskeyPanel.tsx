@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { startRegistration } from "@simplewebauthn/browser";
 import { buttonClassNames } from "@/components/ui/Button";
+import { passkeyErrorMessage } from "@/lib/account/passkeyErrors";
 
 /**
  * Registrerte passkeys for den innloggede kontoen (v2.47, 31.07.2026).
@@ -107,15 +108,7 @@ export function PasskeyPanel() {
       setInfo("Enheten er registrert. Neste gang kan du logge inn uten kode på e-post.");
       await refresh();
     } catch (err) {
-      // NotAllowedError = brukeren avbrøt eller lot dialogen stå for lenge.
-      // InvalidStateError = denne enheten er allerede registrert (vi sender
-      // med excludeCredentials nettopp for å få den beskjeden tidlig).
-      const name = err instanceof Error ? err.name : "";
-      if (name === "InvalidStateError") {
-        setError("Denne enheten er allerede registrert.");
-      } else if (name !== "NotAllowedError" && name !== "AbortError") {
-        setError("Registreringen ble avbrutt.");
-      }
+      setError(passkeyErrorMessage(err));
     } finally {
       setBusy(false);
     }

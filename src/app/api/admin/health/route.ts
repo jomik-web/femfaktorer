@@ -73,10 +73,10 @@ export async function GET() {
     {
       key: "passkey",
       label: "Passkey-innlogging",
-      ok: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
-      detail: process.env.NEXT_PUBLIC_SITE_URL
-        ? `Bundet til ${passkeyRp.rpID}. Passkeys registrert her virker IKKE på et annet domene -- ved domenebytte må alle registrere enhetene sine på nytt.`
-        : "NEXT_PUBLIC_SITE_URL mangler -- passkey-innlogging vil feile. Uten den antas localhost, som ikke stemmer i produksjon.",
+      ok: passkeyRp.configured,
+      detail: passkeyRp.configured
+        ? `Bundet til ${passkeyRp.rpID}. Står du på en ANNEN adresse enn denne når du prøver å registrere, avviser nettleseren det. Passkeys registrert her virker heller ikke på et annet domene -- ved domenebytte må alle registrere enhetene sine på nytt.`
+        : "NEXT_PUBLIC_SITE_URL mangler eller er ugyldig -- passkey vil feile. Legg den inn i Netlify under Site configuration → Environment variables, med nøyaktig den adressen nettstedet kjører på.",
     },
     {
       key: "plausible",

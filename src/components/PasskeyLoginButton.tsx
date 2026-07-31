@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { buttonClassNames } from "@/components/ui/Button";
+import { passkeyErrorMessage } from "@/lib/account/passkeyErrors";
 
 /**
  * "Logg inn med passkey" (v2.47, 31.07.2026).
@@ -53,12 +54,8 @@ export function PasskeyLoginButton({ onSuccess }: { onSuccess: (email: string) =
       }
       onSuccess(data.email);
     } catch (err) {
-      const name = err instanceof Error ? err.name : "";
-      // Brukeren avbrøt, eller hadde ingen passkey å velge. Begge deler er
-      // normale valg, ikke feil -- vi maser ikke om dem.
-      if (name !== "NotAllowedError" && name !== "AbortError") {
-        setError("Klarte ikke logge inn med passkey. Bruk e-postkode i stedet.");
-      }
+      // Avbrudd og "ingen passkey å velge" gir null -- normale valg, ikke feil.
+      setError(passkeyErrorMessage(err));
     } finally {
       setBusy(false);
     }

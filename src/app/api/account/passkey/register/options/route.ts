@@ -30,7 +30,23 @@ export async function POST() {
     );
   }
 
-  const { rpID, rpName } = relyingParty();
+  const { rpID, rpName, configured } = relyingParty();
+
+  // v2.48: si tydelig fra når NEXT_PUBLIC_SITE_URL ikke er satt, i stedet for
+  // stille å falle tilbake på localhost. Nettleseren ville uansett avvist
+  // registreringen med en kryptisk SecurityError -- da er det bedre at
+  // årsaken kommer herfra, der vi kan formulere den.
+  if (!configured) {
+    return NextResponse.json(
+      {
+        error:
+          "NEXT_PUBLIC_SITE_URL er ikke satt på serveren. Passkey kan ikke virke før den peker " +
+          "på adressen nettstedet faktisk kjører på. Se Drift-fanen i adminpanelet.",
+      },
+      { status: 503 }
+    );
+  }
+
   const existing = await listPasskeys(session.email);
 
   const options = await generateRegistrationOptions({
