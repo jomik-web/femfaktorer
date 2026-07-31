@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { FactorHeroContent, COLORS, VIEWBOX_WIDTH, VIEWBOX_HEIGHT } from "@/components/FactorHero";
 import type { FactorResult, FacetResult } from "@/lib/scoring";
 import { bandFor, INTERPRETATIONS, pickDominantFactor } from "@/data/interpretations";
@@ -75,6 +75,45 @@ interface MemeShareItem {
   asset: MemeCardAsset;
 }
 
+/**
+ * v2.42 (Kvalitetsrevisjon 31.07.2026, kap. 1, middels alvorlighet): de tre
+ * `role="radio"`-gruppene i denne filen (formatvelgeren her og i
+ * DomainShareCard, samt kort-velgeren under) hadde ARIA-radiosemantikk uten
+ * det tastaturmønsteret ARIA krever -- skjermleserbrukere fikk annonsert
+ * "radio", men gruppen oppførte seg som separate knapper (hver med eget
+ * tab-stopp, ingen piltast-navigasjon). Denne hooken gir ekte "roving
+ * tabindex"-oppførsel: kun det valgte alternativet er et tab-stopp
+ * (tabIndex 0), resten er tabIndex -1, og piltaster/Home/End flytter BÅDE
+ * valg og fokus innad i gruppen -- standardmønsteret for
+ * `role="radiogroup"` (WAI-ARIA Authoring Practices). Holdt som én delt hook
+ * fremfor tre kopier, siden alle tre gruppene trenger nøyaktig samme atferd.
+ */
+function useRovingRadioGroup<T extends string>(keys: readonly T[], selected: T, onSelect: (key: T) => void) {
+  const buttonRefs = useRef<Partial<Record<T, HTMLButtonElement | null>>>({});
+
+  function registerRef(key: T) {
+    return (el: HTMLButtonElement | null) => {
+      buttonRefs.current[key] = el;
+    };
+  }
+
+  function onKeyDown(e: KeyboardEvent<HTMLButtonElement>) {
+    const currentIndex = keys.indexOf(selected);
+    let nextIndex: number | null = null;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") nextIndex = (currentIndex + 1) % keys.length;
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") nextIndex = (currentIndex - 1 + keys.length) % keys.length;
+    else if (e.key === "Home") nextIndex = 0;
+    else if (e.key === "End") nextIndex = keys.length - 1;
+    if (nextIndex === null) return;
+    e.preventDefault();
+    const nextKey = keys[nextIndex]!;
+    onSelect(nextKey);
+    buttonRefs.current[nextKey]?.focus();
+  }
+
+  return { registerRef, onKeyDown };
+}
+
 function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtMissing: () => void }) {
   const [selectedKey, setSelectedKey] = useState(items[0]!.key);
   const [format, setFormat] = useState<ShareFormat>("story");
@@ -84,6 +123,10 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
   const selected = items.find((c) => c.key === selectedKey) ?? items[0]!;
   const spec = SHARE_FORMATS[format];
   const imgSrc = format === "square" ? selected.asset.square : selected.asset.story;
+
+  const formatGroup = useRovingRadioGroup(FORMAT_ORDER, format, setFormat);
+  const itemKeys = useMemo(() => items.map((c) => c.key), [items]);
+  const itemGroup = useRovingRadioGroup(itemKeys, selectedKey, setSelectedKey);
 
   async function fetchCurrentAsBlob(): Promise<Blob | null> {
     try {
@@ -142,10 +185,13 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
           return (
             <button
               key={key}
+              ref={formatGroup.registerRef(key)}
               type="button"
               role="radio"
               aria-checked={active}
+              tabIndex={active ? 0 : -1}
               onClick={() => setFormat(key)}
+              onKeyDown={formatGroup.onKeyDown}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-holo-sky text-indigo"
@@ -178,10 +224,13 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
           return (
             <button
               key={c.key}
+              ref={itemGroup.registerRef(c.key)}
               type="button"
               role="radio"
               aria-checked={active}
+              tabIndex={active ? 0 : -1}
               onClick={() => setSelectedKey(c.key)}
+              onKeyDown={itemGroup.onKeyDown}
               className={`flex flex-col gap-2 rounded-xl p-1 text-left transition-shadow ${
                 items.length > 1 ? "sm:w-1/3" : "sm:max-w-xs"
               } ${
@@ -253,6 +302,8 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
 
   const uidBase = useId();
   const spec = SHARE_FORMATS[format];
+  const formatKeys = Object.keys(SHARE_FORMATS) as ShareFormat[];
+  const formatGroup = useRovingRadioGroup(formatKeys, format, setFormat);
 
   async function renderCurrentToBlob(): Promise<Blob | null> {
     const svg = refs[format].current;
@@ -310,15 +361,18 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
 
       {/* Formatvelger */}
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Velg delingsformat">
-        {(Object.keys(SHARE_FORMATS) as ShareFormat[]).map((key) => {
+        {formatKeys.map((key) => {
           const active = format === key;
           return (
             <button
               key={key}
+              ref={formatGroup.registerRef(key)}
               type="button"
               role="radio"
               aria-checked={active}
+              tabIndex={active ? 0 : -1}
               onClick={() => setFormat(key)}
+              onKeyDown={formatGroup.onKeyDown}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-holo-sky text-indigo"

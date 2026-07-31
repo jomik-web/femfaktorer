@@ -369,13 +369,17 @@ export default function TestPage() {
         )}
 
         <div key={question.id} className="flex flex-col gap-6 rounded-2xl bg-white/60 p-6 shadow-sm dark:bg-white/5">
-          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
+          <h1
+            id="active-question-heading"
+            className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl"
+          >
             {question.textNo}
           </h1>
           <AnswerScale
             questionId={question.id}
             value={answers[question.id]}
             onAnswer={handleAnswer}
+            questionHeadingId="active-question-heading"
           />
         </div>
 

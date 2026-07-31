@@ -14,14 +14,26 @@ interface AnswerScaleProps {
   questionId: string;
   value: AnswerValue | undefined;
   onAnswer: (value: AnswerValue) => void;
+  /**
+   * v2.42 (Kvalitetsrevisjon 31.07.2026, kap. 1, middels alvorlighet --
+   * uendret funn fra forrige revisjon): radiogruppen hadde tidligere kun en
+   * generisk `aria-label="Svaralternativer"`, uten programmatisk kobling til
+   * selve spørsmålsteksten. En skjermleserbruker som hopper rett til
+   * svaralternativene (f.eks. via "neste radiogruppe") fikk da bare
+   * "Svaralternativer, radiogruppe", ikke HVILKET spørsmål svaret gjelder.
+   * `aria-labelledby` peker nå til selve spørsmålsoverskriften (se
+   * test/page.tsx), som er den anbefalte WAI-ARIA-praksisen når en
+   * synlig, allerede eksisterende tekst kan gjenbrukes som navn.
+   */
+  questionHeadingId: string;
 }
 
 /** Fast 1-5 svarskala (Dokument 03 §6.2) -- samme ordlyd og rekkefølge overalt. */
-export function AnswerScale({ questionId, value, onAnswer }: AnswerScaleProps) {
+export function AnswerScale({ questionId, value, onAnswer, questionHeadingId }: AnswerScaleProps) {
   return (
     <div
       role="radiogroup"
-      aria-label="Svaralternativer"
+      aria-labelledby={questionHeadingId}
       className="flex flex-col gap-3 sm:flex-row sm:gap-3"
     >
       {OPTIONS.map((option) => {

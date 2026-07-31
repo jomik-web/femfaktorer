@@ -54,6 +54,15 @@ export function SiteNav() {
   });
   const reportMenuRef = useRef<HTMLLIElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // v2.42 (Kvalitetsrevisjon 31.07.2026, kap. 1, lav alvorlighet): mobilpanelet
+  // flyttet tidligere ALDRI fokus -- det ble stående på hamburgerknappen både
+  // ved åpning og lukking. Ikke et WCAG-brudd i seg selv (panelet er ikke
+  // modalt), men fokusflytt til første lenke ved åpning sparer
+  // tastaturbrukere for å måtte Tabbe forbi en nå-skjult knapp, og flytt
+  // tilbake til knappen ved Escape gjør at fokus ikke blir "hengende" på et
+  // element som ikke lenger er synlig relevant.
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const firstMobileLinkRef = useRef<HTMLAnchorElement>(null);
 
   // v2.34: bugfiks -- undermenyen lukket seg med en gang musepekeren beveget
   // seg NEDOVER fra "Resultat" og inn i selve undermenyen, fordi det lå et
@@ -112,14 +121,23 @@ export function SiteNav() {
     setMobileMenuOpen(false);
   }, [pathname]);
 
-  // Mobilmeny: lukk med Escape (samme tastaturstøtte som rapportvalg-menyen).
+  // Mobilmeny: lukk med Escape (samme tastaturstøtte som rapportvalg-menyen),
+  // og flytt fokus tilbake til hamburgerknappen når det skjer.
   useEffect(() => {
     if (!mobileMenuOpen) return;
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setMobileMenuOpen(false);
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+        mobileMenuButtonRef.current?.focus();
+      }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
+  // Flytt fokus til første lenke i panelet så snart det åpnes.
+  useEffect(() => {
+    if (mobileMenuOpen) firstMobileLinkRef.current?.focus();
   }, [mobileMenuOpen]);
 
   // Lukk undermenyen ved klikk utenfor, eller ved Escape (tastaturstøtte).
@@ -163,6 +181,7 @@ export function SiteNav() {
             smale skjermer. Under md-breakpoktet skjules listen til fordel
             for denne knappen + panelet lenger ned. */}
         <button
+          ref={mobileMenuButtonRef}
           type="button"
           onClick={() => setMobileMenuOpen((v) => !v)}
           aria-expanded={mobileMenuOpen}
@@ -337,11 +356,12 @@ export function SiteNav() {
       {mobileMenuOpen && (
         <div id="mobil-meny" className="border-t border-lavender-400 bg-white px-6 py-3 dark:border-white/10 dark:bg-indigo md:hidden">
           <ul className="flex flex-col gap-1 text-sm">
-            {LINKS_BEFORE_RESULT.map((link) => {
+            {LINKS_BEFORE_RESULT.map((link, i) => {
               const active = pathname === link.href;
               return (
                 <li key={link.href}>
                   <Link
+                    ref={i === 0 ? firstMobileLinkRef : undefined}
                     href={link.href}
                     aria-current={active ? "page" : undefined}
                     className={

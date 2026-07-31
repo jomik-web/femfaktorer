@@ -11,12 +11,22 @@ import { ButtonHTMLAttributes, forwardRef } from "react";
  * - secondary: lavendel-bakgrunn, indigo tekst. Sekundære handlinger.
  * - ghost: gjennomsiktig, indigo tekst, kun understrek/farge ved hover.
  *   Lavest visuell vekt -- avbryt, tilbake, lenke-aktige handlinger.
+ * - beta: mintgrønn (holo.mint) med indigo tekst. MIDLERTIDIG, kun til
+ *   tilbakemeldingsknappen i betaperioden (v2.41) -- skal fjernes sammen med
+ *   FeedbackPrompt ved lansering, se OPPGAVER-FOR-PRODUKTEIER.md. Finnes
+ *   fordi knappen bevisst skal bryte med resten av siden: alt annet på
+ *   resultatsiden er kjølig (himmelblått, lavendel, fiolett), så en varm
+ *   grønn leses som "dette hører ikke til rapporten" -- som er poenget.
+ *   Ligger her, og ikke som hardkodede klasser i FeedbackPrompt, fordi
+ *   kvalitetsrevisjonen 24.07.2026 (kritisk funn #2) viste at kopierte
+ *   knappestiler er nettopp slik kontrastbrudd sprer seg.
+ *   Kontrast: #5FF0C0 mot indigo #14142B = 12,6:1 (WCAG AAA, krav 4,5:1).
  *
  * Bruker font-display (Bricolage Grotesque) for knappetekst -- gir mer
  * personlighet enn Inter på korte, iøynefallende tekstbiter.
  */
 
-export type ButtonVariant = "primary" | "secondary" | "ghost";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "beta";
 export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -31,6 +41,8 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
     "bg-lavender-100 text-indigo hover:bg-lavender-400/40 active:scale-[0.98]",
   ghost:
     "bg-transparent text-indigo hover:bg-lavender-50 active:scale-[0.98]",
+  beta:
+    "bg-holo-mint text-indigo shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98]",
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
