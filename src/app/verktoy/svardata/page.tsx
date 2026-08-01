@@ -58,7 +58,7 @@ export default function SvardataVerktoyPage() {
           Her kan du laste ned svarene dine som en fil (CSV) og laste dem inn igjen senere -- enten
           fordi du er en betatester som vil ta vare på svarene dine mellom oppdateringer av testen,
           eller fordi du vil teste rapporten og Spir-samtalen mot et kjent, uforandret svarsett.
-          Filen kan også redigeres for hånd i Excel -- endre tallene i "svar"-kolonnen (1-5, tomt =
+          Filen kan også redigeres for hånd i Excel -- endre tallene i «svar»-kolonnen (1-5, tomt =
           ubesvart) for å bygge et helt oppdiktet svarsett fra bunnen av.
         </p>
       </header>

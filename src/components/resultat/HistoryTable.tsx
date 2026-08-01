@@ -34,7 +34,7 @@ export function HistoryTable({ history }: { history: StoredAccountResult[] }) {
       <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
         Du har lagret {history.length} resultater av Utvidet versjon knyttet til denne
         kontoen. Her ser du hvordan de fem hovedfaktorene har målt seg fra gang til gang --
-        ikke som en vurdering av om noe er "bedre" eller "verre", bare som et bilde av
+        ikke som en vurdering av om noe er «bedre» eller «verre», bare som et bilde av
         hvordan svarene dine har variert over tid. Endringstall (i parentes) viser
         differansen fra forrige lagrede resultat.
       </p>

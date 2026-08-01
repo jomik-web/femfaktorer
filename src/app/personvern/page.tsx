@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 /**
@@ -34,6 +35,12 @@ const SECTIONS = [
   { id: "status", label: "Status på denne siden" },
   { id: "kontakt", label: "Kontakt" },
 ];
+
+export const metadata: Metadata = {
+  title: "Personvern",
+  description:
+    "Hva som skjer med opplysningene dine -- og like viktig, hva som ikke skjer. Svarene lagres lokalt i nettleseren din, og ingenting deles uten at du ber om det.",
+};
 
 export default function PersonvernPage() {
   return (
@@ -110,7 +117,7 @@ export default function PersonvernPage() {
             dataene, på samme måte som med annen lokalt lagret nettleserdata.
           </li>
           <li>
-            -- Du kan slette dataene dine når som helst med "Slett mine data" på resultatsiden,
+            -- Du kan slette dataene dine når som helst med «Slett mine data» på resultatsiden,
             eller ved å tømme nettleserdata for siden.
           </li>
           <li>
@@ -125,7 +132,7 @@ export default function PersonvernPage() {
           Anonym normtall-statistikk
         </h2>
         <p className="text-indigo/80 dark:text-lavender-400/80">
-          Dine Fasetter viser i dag resultatet som nivåbånd (f.eks. "Svært tydelig høy"), ikke som et
+          Dine Fasetter viser i dag resultatet som nivåbånd (f.eks. «Svært tydelig høy»), ikke som et
           eksakt tall -- blant annet fordi vi ennå ikke har et dokumentert normgrunnlag å sammenligne
           med (se metode-og-kilder-siden). For å kunne bygge et slikt normgrunnlag over tid, sender
           nettleseren din -- KUN når du fullfører fullversjonen (120 spørsmål) eller Utvidet versjon
@@ -156,12 +163,12 @@ export default function PersonvernPage() {
           Anonyme svarsett til kvalitetsarbeid
         </h2>
         <p className="text-indigo/80 dark:text-lavender-400/80">
-          På skjermen rett før testen starter finner du en avkrysning merket "Bidra til å gjøre
-          testen bedre". Den er huket av på forhånd, og du kan fjerne den -- testen fungerer helt
-          likt uansett hva du velger.
+          På skjermen rett før testen starter finner du en avkrysning merket «Bidra til å gjøre
+          testen bedre». Den står tom, og det skjer ingenting med mindre du selv huker den av --
+          testen fungerer helt likt uansett hva du velger.
         </p>
         <p className="text-indigo/80 dark:text-lavender-400/80">
-          Lar du haken stå, sendes hele svarsettet ditt inn når du fullfører 120 eller 290 spørsmål.
+          Huker du av, sendes hele svarsettet ditt inn når du fullfører 120 eller 290 spørsmål.
           Det er mer enn normtallene over: der sendes bare de ferdig utregnede skårene, her sendes
           svaret på hvert enkelt spørsmål. Grunnen er at det er den eneste måten å oppdage at et
           spørsmål er dårlig oversatt, tvetydig eller ikke måler det samme som de andre spørsmålene
@@ -196,14 +203,20 @@ export default function PersonvernPage() {
           </li>
         </ul>
         <p className="text-indigo/80 dark:text-lavender-400/80">
-          Fordi dataene er reelt anonyme, er de ikke personopplysninger, og faller dermed utenfor
-          personvernregelverket. Vi spør likevel først -- dette er svarene dine på personlige
-          spørsmål, og da mener vi du skal få vite hva som skjer med dem og kunne si nei.
+          Vi mener dataene er anonyme etter tiltakene over, og dermed ikke personopplysninger. Vi
+          vil samtidig være ærlige om at anonymitet er en vurdering, ikke en bryter man skrur på:
+          et komplett svarsett på 290 spørsmål er et detaljert mønster, og fullstendig sikkerhet
+          mot at noen med nok tilleggsinformasjon kunne gjenkjenne et enkelt sett, finnes ikke.
+          Derfor er tiltakene over -- ukenummer i stedet for klokkeslett, egen lagringsplass uten
+          felles nøkkel, ingen lesing av informasjonskapsler -- valgt nettopp for å gjøre den
+          koblingen så vanskelig som mulig. Og derfor spør vi deg først, i stedet for å basere oss
+          på at vi uansett har lov: dette er svarene dine på personlige spørsmål, og valget skal
+          være ditt.
         </p>
         <p className="text-indigo/80 dark:text-lavender-400/80">
           Den samme grunnen gjør at et innsendt svarsett ikke kan trekkes tilbake i etterkant: uten
-          en kobling til deg finnes det ingen måte å finne igjen akkurat ditt. Velger du bort
-          avkrysningen før du starter, sendes ingenting.
+          en kobling til deg finnes det ingen måte å finne igjen akkurat ditt. Lar du avkrysningen
+          stå tom, sendes ingenting -- og det er standardvalget.
         </p>
       </section>
 
@@ -291,7 +304,8 @@ export default function PersonvernPage() {
         </h2>
         <p className="text-indigo/80 dark:text-lavender-400/80">
           Dine Fasetter setter ingen sporings- eller annonsekapsler, og ingen forhåndsavkryssede
-          samtykker eller skjulte avvisningsknapper brukes noe sted.
+          samtykker eller skjulte avvisningsknapper brukes noe sted. Det gjelder også avkrysningen
+          for anonyme svarsett lenger opp: den står tom til du selv huker den av.
         </p>
         <ul className="flex flex-col gap-2 text-indigo/80 dark:text-lavender-400/80">
           <li>

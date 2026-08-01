@@ -199,7 +199,11 @@ export default function LoggInnPage() {
         </header>
 
         {info && <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{info}</p>}
-        {error && <p className="text-sm text-factor-stability">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-factor-stability">
+            {error}
+          </p>
+        )}
 
         {/* v2.47: registrering av passkey ligger her, bak innlogging -- det
             er nettopp dét som lukker sikkerhetshullet den gamle
@@ -211,7 +215,7 @@ export default function LoggInnPage() {
             type="button"
             onClick={() => void fetchSavedResult()}
             disabled={loading}
-            className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-indigo disabled:opacity-50"
+            className={buttonClassNames("primary", "md")}
           >
             {loading ? "Henter …" : "Hent lagret resultat"}
           </button>
@@ -324,7 +328,11 @@ export default function LoggInnPage() {
         </form>
       )}
 
-      {error && <p className="text-sm text-factor-stability">{error}</p>}
+      {error && (
+          <p role="alert" className="text-sm text-factor-stability">
+            {error}
+          </p>
+        )}
 
       <Link href="/" className="text-sm text-indigo/60 underline underline-offset-2 dark:text-lavender-400/60">
         Tilbake til forsiden

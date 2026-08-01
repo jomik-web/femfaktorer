@@ -11,6 +11,15 @@ import { ButtonHTMLAttributes, forwardRef } from "react";
  * - secondary: lavendel-bakgrunn, indigo tekst. Sekundære handlinger.
  * - ghost: gjennomsiktig, indigo tekst, kun understrek/farge ved hover.
  *   Lavest visuell vekt -- avbryt, tilbake, lenke-aktige handlinger.
+ *   MERK: ghost er den ENESTE varianten som ikke setter sin egen bakgrunn,
+ *   og derfor den eneste som arver sidebakgrunnen. Den MÅ derfor ha en
+ *   dark:-tekstfarge. Uten den ble text-indigo (#14142B) stående på
+ *   dark:bg-indigo (#14142B) -- kontrast 1,00:1, altså bokstavelig talt
+ *   usynlige knapper i mørk modus (kvalitetsrevisjon 31.07.2026 kveld,
+ *   kritisk funn 1.1: rammet «Tilbake» på hvert spørsmål og BEGGE valgene
+ *   på sjekkpunktskjermene, slik at brukere i mørk modus trodde det bare
+ *   fantes ett alternativ). Regelen som følger av dette: enhver ny variant
+ *   som ikke setter egen bakgrunn, må ha dark:-tekstfarge.
  * - beta: mintgrønn (holo.mint) med indigo tekst. MIDLERTIDIG, kun til
  *   tilbakemeldingsknappen i betaperioden (v2.41) -- skal fjernes sammen med
  *   FeedbackPrompt ved lansering, se OPPGAVER-FOR-PRODUKTEIER.md. Finnes
@@ -40,7 +49,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   secondary:
     "bg-lavender-100 text-indigo hover:bg-lavender-400/40 active:scale-[0.98]",
   ghost:
-    "bg-transparent text-indigo hover:bg-lavender-50 active:scale-[0.98]",
+    "bg-transparent text-indigo hover:bg-lavender-50 active:scale-[0.98] dark:text-lavender-100 dark:hover:bg-white/10",
   beta:
     "bg-holo-mint text-indigo shadow-sm hover:opacity-90 hover:shadow-md active:opacity-100 active:scale-[0.98]",
 };

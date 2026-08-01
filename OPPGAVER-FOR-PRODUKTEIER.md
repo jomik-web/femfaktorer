@@ -1,6 +1,6 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 31.07.2026
+Sist oppdatert: 01.08.2026
 
 ## Gjenstår -- oversikt (oppdateres fortløpende, se datert changelog under for detaljer)
 
@@ -9,11 +9,27 @@ Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenst�
 - **Partner-/vennekobling** (alle tre nivåvarianter -- skjermbilde for gratis, delbar lenke for Standard, e-postbekreftet + Spir-samtale for Premium). Ikke startet.
 - **Delbare bilder/kort til sosiale medier er FERDIG og live** (v2.37, 25.07.2026) -- delbart Spir-motiv-kort til slutt på rapporten, alle tre nivåer, tre skreddersydde formater. Se changelog under.
 - **PDF-nedlasting (`src/lib/pdfReport.ts`/jsPDF) er FERDIG og live**, ikke ubesluttet arbeid som tidligere logget her -- denne oversikten var kommet ute av synk med kodestatus (funnet i kvalitetsrevisjonen 24.07.2026). Kun kodesplittet i denne runden slik at avhengigheten ikke lastes for besøkende som ikke bruker den.
-- **SEO er bevisst utsatt** (metadata per side, sitemap.xml, robots.txt, Open Graph-tagger) til domene er valgt -- se kvalitetsrevisjonen 24.07.2026, kategori 7.
-- **CSP, DPA/DPIA, jurist-gjennomgang, org.nr.** -- fortsatt bevisst utsatt, krever din oppfølging (uendret fra tidligere oppføringer).
+- **SEO er BYGGET FERDIG** (v2.50, 01.08.2026) -- metadata per side, tittelmal, sitemap.ts, robots.ts, Open Graph med delebilde, JSON-LD og noindex på de sidene som ikke skal indekseres. MEN: alt sammen gir feil adresser til `NEXT_PUBLIC_SITE_URL` er satt i Netlify. Se punktet under om domene.
+- **DOMENE ER NÅ DEN STØRSTE ENKELTBLOKKEREN.** Uten `NEXT_PUBLIC_SITE_URL` peker sitemap, lenkeforhåndsvisning og strukturerte data på `localhost:3000`, og passkeys kan ikke registreres. Alle passkeys som registreres på en `.netlify.app`-adresse må dessuten registreres på nytt etter domenebytte -- det er kryptografisk bundet og kan ikke omgås. Adminpanelets helsesjekk (/admin/drift) sier fra om variabelen mangler.
+- **CSP er lagt inn i RAPPORTERINGSMODUS** (v2.50) -- den blokkerer ingenting ennå. `netlify.toml` inneholder en punktvis oppskrift på hvordan du gjør den virksom; det tar ca. 10 minutter og krever bare at du klikker deg gjennom nettstedet med nettleserkonsollen åpen.
+- **DPA/DPIA, jurist-gjennomgang, org.nr.** -- fortsatt bevisst utsatt, krever din oppfølging. DPIA er blitt mer aktuell enn før, siden det nå samles inn svar på enkeltspørsmål (ikke bare ferdig beregnede skårer).
 - **Premium-nivåets detaljerte innhold** utover det som allerede er bygget (fasettnivå, utvikling over tid) -- fortsatt ikke spesifisert, se prismodell-dokumentets del 8.
 - **Vurdert, ikke gjort: bytte meme-kort-forhåndsvisningen til `next/image`** (kvalitetsrevisjon 31.07.2026, kap. 6, funn 5, lav alvorlighet) -- se begrunnelse i changelog-oppføringen for v2.46. Din avgjørelse om dette skal gjøres nå eller stå som er.
 - **Vurdert, ikke gjort: engangs-fullførelsestoken for anonyme forskningsinnsendinger** (kvalitetsrevisjon 31.07.2026, kap. 8, funn #1, høy alvorlighet -- kun halvparten av funnet er rettet, se v2.47). Krever ny arkitektur (tokenutstedelse, signeringshemmelighet, engangs-sporing, klientendring i testflyten) -- flagget som en egen, større oppfølging fremfor å bygges inn nå.
+
+## Nytt: lukket alle funn fra kvalitetsrevisjonen 01.08.2026 (v2.50)
+
+Kvalitetsrevisjonen 01.08.2026 ga karakteren **7,6/10 (opp fra 6,2)** og hadde for første gang **ingen kritiske funn**. Alle 20 punktene på tiltakslisten er nå lukket. Kort om det som betyr mest for deg:
+
+**Personvern -- det viktigste punktet.** Avkrysningen for anonym forskningsdata ble snudd til "av" i v2.50. Men den endringen nådde ikke dem den gjaldt: alle som allerede hadde vært gjennom "Før du starter"-skjermen bar på et "ja" de aldri aktivt krysset av, og ville aldri blitt spurt igjen. Begge lagringsnøklene er derfor bumpet (`forskningssamtykke.v2`, `intro-sett.v3`), slik at HELE den eksisterende betatestergruppen får spørsmålet på nytt med tom avkrysning. Praktisk konsekvens for deg: alle ser veiledningsskjermen én gang til, og innsamlingsraten faller til null til folk har vært innom. Det er riktig -- et samtykke som ikke kan innhentes på nytt, er ikke et samtykke.
+
+**Delebilde.** `src/app/opengraph-image.png` (1200x630) er laget i merkevarens farger og fonter, med Spir-motivet. Det er dette som nå vises når noen limer inn en lenke i Messenger, Slack, iMessage eller LinkedIn. Tidligere sto det oppgitt at vi hadde et stort delebilde, uten at det fantes. Bytt det gjerne ut med noe du liker bedre -- filen er en vanlig PNG, og Next.js plukker den opp automatisk så lenge navnet står.
+
+**To tak som forkastet ekte data i stillhet.** Rate limit-taket for anonyme svarsett sto på 5 per døgn per IP-adresse. IP-adressen deles av alle bak samme nett, så en skoleklasse eller et kontor ville fått de fleste innsendingene forkastet uten noe varsel -- og normtallene, som utløses av samme handling, tok imot 20 i timen. De to datasettene ville altså sagt ulike ting. Hendelsestellingen for trakten hadde samme problem (60/time). Begge er hevet, og vinduene er gjort glidende.
+
+**Kontrollapparatet er koblet på bygget.** `npm run lint` og `npm test` kjører nå som del av Netlify-byggingen. En rød test eller en lintefeil stopper utrullingen. Det var mulig å gjøre først nå, fordi begge to faktisk gir svar etter v2.50 -- ESLint hadde aldri kjørt, og testpakken hadde tre røde tester, hvorav én siden dagen den ble skrevet.
+
+**Ellers:** hopp-til-innhold-lenke, skjermleseren annonserer nå spørsmålsbytte uten å lese opp alle fem svaralternativer to ganger per spørsmål, alle feilmeldinger annonseres, `lang="nb"` i stedet for `"no"`, kanonisk adresse, apple-ikon, opprydding av to lagringer som vokste uten tak, og tretten håndkopierte knappestiler samlet i den delte byggeren.
 
 ## Nytt: rettet kvalitetsrevisjonens kapittel 7-11 (v2.47, 31.07.2026)
 

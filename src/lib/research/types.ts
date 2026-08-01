@@ -30,10 +30,17 @@
  * ikke legg det til.
  *
  * SAMTYKKE
- * Innsamlingen skjer bare når brukeren har latt avkrysningen på
- * "Før du starter"-skjermen stå på (se src/lib/storage.ts,
- * loadResearchConsent). Den er avkrysset på forhånd etter produkteiers valg
- * 31.07.2026, med synlig forklaring på samme skjerm.
+ * Innsamlingen skjer bare når brukeren AKTIVT har huket av avkrysningen på
+ * "Før du starter"-skjermen (se src/lib/storage.ts, loadResearchConsent).
+ * Avkrysningen står TOM som standard, med synlig forklaring ved siden av.
+ *
+ * v2.50 (kvalitetsrevisjon 01.08.2026, funn 8.3): dette avsnittet beskrev
+ * fram til nå det motsatte -- at avkrysningen var huket av på forhånd. Det
+ * stemte i v2.46-v2.49, men ikke lenger. Et filhode som beskriver gammel
+ * oppførsel er verre enn intet filhode: det er nettopp her neste utvikler
+ * slår opp for å forstå personverngrensen. Forhåndsavkryssing er ikke
+ * gyldig samtykke etter GDPR fortalepunkt 32 (EU-domstolen i Planet49,
+ * C-673/17), og skal ikke gjeninnføres.
  */
 
 /** Svarverdi på Likert-skalaen, 1-5. Samme skala som resten av appen. */

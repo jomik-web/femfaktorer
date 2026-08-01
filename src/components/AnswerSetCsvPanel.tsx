@@ -165,7 +165,14 @@ export function AnswerSetCsvPanel({ afterImport = "navigate", hideDownload = fal
           ))}
         </ul>
       )}
-      {error && <p className="text-sm text-factor-stability">{error}</p>}
+      {/* role="alert" (v2.50, funn 1.2): dette er stedet en betatester får vite
+          at en importert CSV ble avvist. Uten annonsering var nettopp den
+          meldingen stum. */}
+      {error && (
+        <p role="alert" className="text-sm text-factor-stability">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

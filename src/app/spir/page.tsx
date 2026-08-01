@@ -372,7 +372,20 @@ export default function FemPage() {
         )}
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
+      {/* aria-live (v2.50, kvalitetsrevisjon 31.07.2026 kveld, funn 1.2).
+          Spirs svar dukker opp i denne listen uten sidelasting. Uten et
+          live-område ville en skjermleserbruker sendt et spørsmål og fått
+          fullstendig stillhet tilbake, uten noen måte å vite om svaret kom.
+
+          "polite" fordi svaret skal leses når brukeren er klar, ikke avbryte.
+          Bevisst UTEN aria-atomic: her skal bare det NYE innlegget leses opp,
+          ikke hele samtalen på nytt hver gang -- motsatt av spørsmålsbyttet i
+          testen, der hele spørsmålet er én enhet. */}
+      <div
+        aria-live="polite"
+        aria-relevant="additions"
+        className="flex flex-1 flex-col gap-4 overflow-y-auto"
+      >
         {messages
           .filter((m) => !m.hidden)
           .map((m, i) => (
@@ -388,7 +401,11 @@ export default function FemPage() {
             </div>
           ))}
         {loading && <p className="text-sm text-indigo/50 dark:text-lavender-400/50">Spir skriver …</p>}
-        {error && <p className="text-sm text-factor-stability">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-factor-stability">
+            {error}
+          </p>
+        )}
       </div>
 
       {mode === "guided" && !guidedDone && (

@@ -22,6 +22,44 @@ const FACTORS: DisplayFactor[] = [
   "stability",
 ];
 
+/**
+ * Strukturerte data (JSON-LD) -- v2.50, kvalitetsrevisjon 31.07.2026 kveld,
+ * funn 7.4.
+ *
+ * Hva dette er til: det lar en søkemotor forstå HVA nettstedet er, ikke bare
+ * lese teksten. `WebApplication` med `offers: 0 kr` er den typen som best
+ * beskriver et gratis, avgrenset verktøy, og er det som kan gi en rikere
+ * visning i søkeresultatet.
+ *
+ * BEVISST UTELATT: `AggregateRating`. Det er fristende (det gir stjerner i
+ * søkeresultatet), men vi har ingen ekte vurderinger å vise til, og
+ * oppdiktede vurderingsdata er både et brudd på Googles retningslinjer og
+ * uærlig. Legges inn hvis og når det finnes reelle tall.
+ *
+ * `inLanguage: "nb-NO"` er verdt å ha med: testen er norsk, og det er en av
+ * de få tingene som faktisk skiller den fra de engelskspråklige
+ * Big Five-testene den konkurrerer med i søk.
+ */
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Dine Fasetter",
+  url: SITE_URL,
+  applicationCategory: "HealthApplication",
+  inLanguage: "nb-NO",
+  description:
+    "Norsk personlighetstest basert på femfaktormodellen (Big Five). Gratis, uten konto, med svarene lagret lokalt i nettleseren din.",
+  operatingSystem: "Alle moderne nettlesere",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "NOK",
+  },
+  isAccessibleForFree: true,
+};
+
 export default function ForsidePage() {
   // Forsiden viser gratis-inngangen (de første 50) -- ikke hele 120-settet,
   // som er noe man eventuelt fortsetter til etter det foreløpige resultatet.
@@ -29,6 +67,14 @@ export default function ForsidePage() {
 
   return (
     <PageBackground>
+      {/* JSON-LD, se JSON_LD over. Ligger i en <script type="application/ld+json">
+          fordi det er formatet søkemotorene leser -- innholdet vises aldri.
+          dangerouslySetInnerHTML er påkrevd her og trygt: strengen kommer fra
+          en konstant i denne filen, aldri fra brukerinput. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
       <main className="relative mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 overflow-hidden px-6 py-16 text-center">
         {/* Myk, uskarp glød bak Spir -- gir dybde uten å bli støyete */}
         <div

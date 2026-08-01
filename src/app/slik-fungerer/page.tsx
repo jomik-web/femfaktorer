@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonClassNames } from "@/components/ui/Button";
 
@@ -45,6 +46,12 @@ const SECTIONS = [
   { id: "metode-og-kilder", label: "Metode og kilder" },
   { id: "personvern", label: "Personvern" },
 ];
+
+export const metadata: Metadata = {
+  title: "Slik fungerer testen",
+  description:
+    "50, 120 eller 290 spørsmål -- du velger selv hvor langt du vil gå. Slik regnes resultatet ut, og slik skal det leses.",
+};
 
 export default function OmFemfaktorerPage() {
   return (
@@ -142,7 +149,7 @@ export default function OmFemfaktorerPage() {
           <p className="text-indigo/80 dark:text-lavender-400/80">
             I denne tidlige versjonen regnes svarene dine om til en skala fra 0 til 100 ved en
             enkel, lineær omregning -- ikke ved sammenligning med en dokumentert normgruppe. Vi
-            viser derfor resultatet som et nivåbånd (f.eks. "Svært tydelig høy"), ikke som et
+            viser derfor resultatet som et nivåbånd (f.eks. «Svært tydelig høy»), ikke som et
             eksakt tall -- et eksakt tall ville gitt et falskt inntrykk av presisjon vi ikke har
             grunnlag for ennå. Fullfører du hele testen, bidrar de ferdig beregnede skårene dine
             -- helt anonymt -- til å bygge et ekte normgrunnlag over tid (se personvernsiden), som

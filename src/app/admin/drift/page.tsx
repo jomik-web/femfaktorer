@@ -41,7 +41,11 @@ export default function AdminHealthPage() {
 
   return (
     <AdminShell>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      )}
       {!health && !error && (
         <p className="text-sm text-indigo/50 dark:text-lavender-400/50">Sjekker …</p>
       )}

@@ -43,8 +43,37 @@ describe("isValidEmail / normalizeEmail", () => {
 
   it("avviser ugyldige e-poster", () => {
     expect(isValidEmail("ikke-en-epost")).toBe(false);
-    expect(isValidEmail("mangler@domene")).toBe(true); // pragmatisk sjekk -- kun format, se filhode
     expect(isValidEmail("")).toBe(false);
+    expect(isValidEmail("to@snabel@a.no")).toBe(false);
+    expect(isValidEmail("med mellomrom@eksempel.no")).toBe(false);
+    /**
+     * v2.50 (kvalitetsrevisjon 31.07.2026 kveld): denne linjen forventet
+     * tidligere `true`, med kommentaren «pragmatisk sjekk -- kun format».
+     * Det stemte aldri: regexen i otp.ts har krevd et punktum i domenedelen
+     * helt siden den ble skrevet (commit 30c8c36), så assertion-en har vært
+     * feil fra dag én -- og testen motsa dessuten sitt eget navn ved å påstå
+     * at en ugyldig adresse skulle godtas.
+     *
+     * At den aldri ble oppdaget, er poenget: testpakken har ikke vært kjørt.
+     * Samme årsak som at ESLint ikke kjørte (funn 5.1) og at to tester i
+     * scoring.test.ts også var røde.
+     *
+     * KODEN ER RIKTIG, TESTEN VAR FEIL. Å kreve punktum er ønsket oppførsel:
+     * hele hensikten med feltet er at det skal gå an å SENDE en engangskode
+     * dit, og en adresse uten toppdomene kommer aldri fram. Å slippe den
+     * gjennom ville bare flyttet feilen til et sted der brukeren sitter og
+     * venter på en kode som ikke kan komme.
+     */
+    expect(isValidEmail("mangler@domene")).toBe(false);
+  });
+
+  it("godtar adresser opp til 254 tegn, men ikke over", () => {
+    // Grensen står i koden ved siden av regexen, men var utestet.
+    const domene = "@eksempel.no";
+    const akkuratInnenfor = "a".repeat(254 - domene.length) + domene;
+    expect(akkuratInnenfor.length).toBe(254);
+    expect(isValidEmail(akkuratInnenfor)).toBe(true);
+    expect(isValidEmail("a" + akkuratInnenfor)).toBe(false);
   });
 
   it("normaliserer til lowercase og trimmer", () => {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { storeFeedback, type FeedbackEntry } from "@/lib/feedback/blobs";
 import { incrementMetrics } from "@/lib/metrics/blobs";
 import { APP_VERSION } from "@/lib/version";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,20 @@ const AREAS = ["testen", "resultatet", "spir", "spraket", "teknisk", "annet"] as
  * feil som allerede er rettet, eller står den fortsatt?
  */
 export async function POST(request: Request) {
+  // Misbruksbrems (v2.50, funn 5.3). Et åpent fritekstfelt som skriver til
+  // lagring er den klassiske spam-inngangen. Ti i timen er rikelig for en
+  // ivrig betatester og stopper et skript umiddelbart.
+  const limited = await checkRateLimit(request, "feedback", {
+    windowMs: 60 * 60 * 1000,
+    limit: 10,
+  });
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "Du har sendt inn flere tilbakemeldinger nå nettopp. Prøv igjen om en stund." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(limited.retryAfterMs / 1000)) } }
+    );
+  }
+
   const body = (await request.json().catch(() => null)) as {
     message?: unknown;
     rating?: unknown;

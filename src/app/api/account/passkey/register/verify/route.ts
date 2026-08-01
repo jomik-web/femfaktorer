@@ -55,7 +55,11 @@ export async function POST(request: Request) {
       expectedChallenge: stored.challenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
-      requireUserVerification: false,
+      // v2.50 (funn 8.3): må stemme overens med userVerification: "required"
+      // i options-ruten. Sto den fortsatt på false, ville serveren godtatt en
+      // registrering der brukerverifisering IKKE fant sted, selv om vi ba om
+      // det -- altså et krav som bare så ut som et krav.
+      requireUserVerification: true,
     });
   } catch {
     // Vanligste reelle årsak: NEXT_PUBLIC_SITE_URL peker et annet sted enn

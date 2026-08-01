@@ -81,6 +81,124 @@ async function sendRetentionReminderEmail(email: string, expiry: Date): Promise<
   }
 }
 
+/**
+ * ---------------------------------------------------------------------------
+ * OPPRYDDING I KORTLEVDE BUTIKKER (v2.50, kvalitetsrevisjon 01.08.2026,
+ * funn 5.2)
+ * ---------------------------------------------------------------------------
+ *
+ * To butikker skrev poster som ALDRI ble slettet:
+ *
+ *  - `femfaktorer-rate-limit`: én nøkkel per (bøtte, IP, tidsvindu). Så snart
+ *    vinduet er passert kan verdien aldri leses igjen, men den ble liggende.
+ *    Med syv bøtter og trafikk ville dette vokse i det uendelige.
+ *  - `femfaktorer-passkey-challenges`: en utfordring slettes kun når den
+ *    KONSUMERES. Hver gang en bruker avbryter Face ID-dialogen -- helt normal
+ *    atferd, ikke misbruk -- blir posten liggende for alltid.
+ *
+ * Ingen av delene er farlige, men begge er kostnad og kvotebruk som vokser
+ * uten tak, og de er usynlige helt til de ikke er det.
+ *
+ * Denne funksjonen kjørte allerede daglig for kontodataene, og har riktig
+ * form for jobben. Feilene svelges bevisst per nøkkel: opprydding skal aldri
+ * kunne velte selve retention-kjøringen, som er den viktige delen.
+ */
+const RATE_LIMIT_STORE_NAME = "femfaktorer-rate-limit";
+const PASSKEY_CHALLENGE_STORE_NAME = "femfaktorer-passkey-challenges";
+
+/**
+ * Rate limit-nøkler har formen `<bøtte>:<ip>:<vindusindeks>`, der
+ * vindusindeksen er `floor(tid / vinduslengde)`. Vi kjenner ikke
+ * vinduslengden ut fra nøkkelen alene, så vi kan ikke regne oss tilbake til
+ * et tidspunkt.
+ *
+ * Løsningen er å bruke selve blobbens metadata i stedet: Netlify Blobs
+ * oppgir `etag` og størrelse, men ikke tidsstempel, så vi tar den enkle og
+ * trygge veien -- vi sletter en nøkkel først når dens vindu ikke lenger kan
+ * være i bruk uansett vinduslengde vi faktisk benytter. Den lengste
+ * vinduslengden i koden er ett døgn (se lib/rateLimit.ts). En nøkkel hvis
+ * vindusindeks tilsvarer et tidspunkt mer enn to døgn tilbake, kan derfor
+ * ikke leses av noen. To døgn gir margin for det glidende vinduet, som ser
+ * på forrige vindu i tillegg til inneværende.
+ */
+function isStaleRateLimitKey(key: string, now: number): boolean {
+  const lastColon = key.lastIndexOf(":");
+  if (lastColon === -1) return false;
+  const windowIndex = Number.parseInt(key.slice(lastColon + 1), 10);
+  if (!Number.isFinite(windowIndex) || windowIndex <= 0) return false;
+
+  const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+  // Prøv hver vinduslengde som faktisk brukes i koden, fra kortest til
+  // lengst. Er nøkkelen for gammel for ALLE tolkninger, er den trygg å slette.
+  const WINDOW_LENGTHS_MS = [60_000, 10 * 60_000, 15 * 60_000, 60 * 60_000, 24 * 60 * 60_000];
+  return WINDOW_LENGTHS_MS.every((windowMs) => {
+    const windowEnd = (windowIndex + 1) * windowMs;
+    return now - windowEnd > TWO_DAYS_MS;
+  });
+}
+
+async function sweepRateLimitKeys(): Promise<number> {
+  let deleted = 0;
+  try {
+    const store = getStore({
+      name: RATE_LIMIT_STORE_NAME,
+      consistency: "strong",
+      ...manualBlobsConfig(),
+    });
+    const now = Date.now();
+    for await (const { blobs } of store.list({ paginate: true })) {
+      for (const { key } of blobs) {
+        if (!isStaleRateLimitKey(key, now)) continue;
+        try {
+          await store.delete(key);
+          deleted += 1;
+        } catch {
+          // Prøv igjen neste kjøring.
+        }
+      }
+    }
+  } catch {
+    // Butikken finnes kanskje ikke ennå (ingen trafikk). Ikke en feil.
+  }
+  return deleted;
+}
+
+async function sweepPasskeyChallenges(): Promise<number> {
+  let deleted = 0;
+  try {
+    const store = getStore({
+      name: PASSKEY_CHALLENGE_STORE_NAME,
+      consistency: "strong",
+      ...manualBlobsConfig(),
+    });
+    const now = Date.now();
+    for await (const { blobs } of store.list({ paginate: true })) {
+      for (const { key } of blobs) {
+        let record: { expiresAt?: unknown } | null = null;
+        try {
+          record = (await store.get(key, { type: "json" })) as { expiresAt?: unknown } | null;
+        } catch {
+          continue;
+        }
+        // Utfordringen har eget utløpstidspunkt (5 minutter, se
+        // lib/account/passkeys.ts). Poster uten gyldig felt er enten korrupte
+        // eller fra et eldre format -- begge deler er trygge å fjerne.
+        const expiresAt = typeof record?.expiresAt === "number" ? record.expiresAt : 0;
+        if (expiresAt > now) continue;
+        try {
+          await store.delete(key);
+          deleted += 1;
+        } catch {
+          // Prøv igjen neste kjøring.
+        }
+      }
+    }
+  } catch {
+    // Butikken finnes kanskje ikke ennå.
+  }
+  return deleted;
+}
+
 export default async () => {
   const store = accountStore();
   const now = new Date();
@@ -155,8 +273,19 @@ export default async () => {
     }
   }
 
+  const sweptRateLimit = await sweepRateLimitKeys();
+  const sweptChallenges = await sweepPasskeyChallenges();
+
   return new Response(
-    JSON.stringify({ ok: true, checked, reminded, deletedEntries, deletedAccounts }),
+    JSON.stringify({
+      ok: true,
+      checked,
+      reminded,
+      deletedEntries,
+      deletedAccounts,
+      sweptRateLimit,
+      sweptChallenges,
+    }),
     { headers: { "content-type": "application/json" } }
   );
 };

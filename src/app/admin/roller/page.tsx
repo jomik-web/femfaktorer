@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { buttonClassNames } from "@/components/ui/Button";
 
 /**
  * Administrasjon av hvem som har admin-rolle (v2.46, 31.07.2026).
@@ -146,13 +147,17 @@ export default function AdminRolesPage() {
           <button
             type="submit"
             disabled={busy || !newEmail.trim()}
-            className="rounded-lg bg-holo-sky px-4 py-2 text-sm font-medium text-indigo disabled:opacity-40"
+            className={buttonClassNames("primary", "sm")}
           >
             Gi admin-tilgang
           </button>
         </form>
 
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
 
         <p className="text-xs text-indigo/45 dark:text-lavender-400/45">
           Den du legger til får tilgang neste gang de logger inn med denne adressen. De må ha, eller

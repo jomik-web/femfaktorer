@@ -235,8 +235,20 @@ export function clearRestoredAccountResult(): void {
  * praksis samlet inn data fra folk som aldri ble spurt. Prisen er at
  * eksisterende betatestere ser veiledningsskjermen én gang til. Det er en
  * billig pris for at samtykket faktisk skal være reelt.
+ *
+ * BUMPET TIL v3 (v2.50, kvalitetsrevisjon 01.08.2026, funn 8.1). Samme
+ * resonnement, en runde senere og av en alvorligere grunn: avkrysningen var
+ * fram til v2.49 huket av på forhånd, noe som ikke er gyldig samtykke etter
+ * GDPR fortalepunkt 32. Standardvalget er snudd, men alle som hadde vært
+ * innom skjermen bar fortsatt på et "ja" de aldri aktivt ga, og ville aldri
+ * blitt spurt igjen. Bumpen sørger for at hele den eksisterende
+ * betatestergruppen får spørsmålet på nytt, med tom avkrysning.
+ *
+ * Regelen som følger av at dette nå har skjedd to ganger: ENDRER DU NOE VED
+ * SAMTYKKET PÅ DENNE SKJERMEN, MÅ DENNE NØKKELEN BUMPES. Et samtykke som
+ * ikke kan innhentes på nytt, er ikke et samtykke.
  */
-const INTRO_SEEN_STORAGE_KEY = "femfaktorer.intro-sett.v2";
+const INTRO_SEEN_STORAGE_KEY = "femfaktorer.intro-sett.v3";
 
 export function loadIntroSeen(): boolean {
   if (typeof window === "undefined") return false;
@@ -261,18 +273,48 @@ export function saveIntroSeen(): void {
  *
  * Styrer om det fullstendige, anonyme svarsettet sendes inn ved fullført
  * test (se src/lib/research/ og api/research/submit-answers). Avkrysningen
- * står på "Før du starter"-skjermen og er huket av på forhånd, etter
- * produkteiers valg 31.07.2026.
+ * står på "Før du starter"-skjermen, og står TOM -- brukeren må aktivt huke
+ * den av (v2.50).
  *
- * MERK HVORDAN "IKKE SATT" TOLKES: som `false`, ikke som `true`. Det kan
- * virke inkonsekvent når standardvalget er på, men det er med vilje --
- * verdien skrives til lagringen i samme øyeblikk brukeren trykker "start
- * testen", så "ikke satt" betyr i praksis "har aldri sett skjermen med
- * avkrysningen". Og da skal vi ikke samle inn. Alternativet ville gjort det
- * mulig å samle data fra noen som aldri ble spurt, f.eks. dersom
- * intro-nøkkelen bumpes igjen senere.
+ * MERK HVORDAN "IKKE SATT" TOLKES: som `false`. Verdien skrives til
+ * lagringen i samme øyeblikk brukeren trykker "start testen", så "ikke satt"
+ * betyr i praksis "har aldri sett skjermen med avkrysningen". Og da skal vi
+ * ikke samle inn.
+ *
+ * ---------------------------------------------------------------------
+ * HVORFOR NØKKELEN HETER .v2, OG HVORFOR DEN IKKE MÅ SETTES TILBAKE
+ * ---------------------------------------------------------------------
+ * v2.50 (kvalitetsrevisjon 01.08.2026, funn 8.1 -- høy).
+ *
+ * Fram til v2.49 var avkrysningen huket av på forhånd. Det er uttrykkelig
+ * ikke gyldig samtykke etter GDPR fortalepunkt 32 (EU-domstolen i Planet49,
+ * C-673/17), og standardvalget ble derfor snudd i v2.50.
+ *
+ * Men den endringen alene nådde ikke dem den gjaldt. Samtykket ligger i
+ * nettleseren, og hos alle som hadde vært gjennom "Før du starter"-skjermen
+ * lå det allerede på "true" -- satt av en hake de aldri aktivt krysset av.
+ * Skjermen vises dessuten bare når intro-nøkkelen mangler, så de ville
+ * aldri blitt spurt på nytt. Resultatet var at rettelsen gjaldt for
+ * framtidige brukere, mens alle eksisterende betatestere fortsatte å sende
+ * inn svarsett på et samtykke som ikke var gyldig da det ble gitt.
+ *
+ * Å øke nøkkelen til .v2 gjør de gamle verdiene usynlige, slik at ingen
+ * lenger regnes som samtykkende på feil grunnlag.
+ *
+ * MEN DET ER IKKE NOK ALENE, og det er verdt å forstå hvorfor: avkrysningen
+ * finnes bare på "Før du starter"-skjermen, og den skjermen vises kun når
+ * intro-nøkkelen mangler. Hadde vi bumpet BARE denne nøkkelen, ville
+ * eksisterende brukere gått fra "samtykker (ugyldig)" til "samtykker ikke",
+ * uten noen gang å bli spurt. Juridisk trygt, men det er ikke å innhente
+ * samtykke -- det er å slutte å spørre. Derfor er INTRO_SEEN_STORAGE_KEY
+ * bumpet i samme runde (se den), slik at alle faktisk får spørsmålet én gang
+ * til, med tom avkrysning.
+ *
+ * Bumper du denne igjen senere: husk at det nullstiller alle samtykker, som
+ * er den trygge retningen, men at det bare har praktisk effekt hvis
+ * intro-nøkkelen bumpes samtidig.
  */
-const RESEARCH_CONSENT_STORAGE_KEY = "femfaktorer.forskningssamtykke.v1";
+const RESEARCH_CONSENT_STORAGE_KEY = "femfaktorer.forskningssamtykke.v2";
 
 export function loadResearchConsent(): boolean {
   if (typeof window === "undefined") return false;

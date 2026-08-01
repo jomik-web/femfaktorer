@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 /**
@@ -5,6 +6,12 @@ import Link from "next/link";
  * AI-005, AI-006. Lenker til /personvern (v2.5) for den fullstendige
  * oversikten i stedet for å gjenta alt her.
  */
+export const metadata: Metadata = {
+  title: "Hjelp og støtte",
+  description:
+    "Dine Fasetter er et verktøy for selvinnsikt, ikke en diagnose. Her finner du hvor du kan få reell hjelp hvis du trenger noen å snakke med.",
+};
+
 export default function HjelpPage() {
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-16">

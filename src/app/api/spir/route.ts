@@ -5,6 +5,7 @@ import { buildSpirSystemPrompt, buildGuidedFacetSystemPrompt } from "@/lib/spir/
 import { validateSpirResponse, SPIR_FALLBACK_MESSAGE } from "@/lib/spir/responseValidator";
 import { readStore, type AdminSettings } from "@/lib/admin/store";
 import { getGlobalAiUsage, incrementGlobalAiUsage } from "@/lib/admin/aiUsage";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
 
 /**
@@ -218,6 +219,21 @@ export async function POST(request: Request) {
   }
 
   const maxPerSession = settings?.aiMaxQuestionsPerSession ?? Number(process.env.AI_MAX_QUESTIONS_PER_SESSION ?? 100);
+
+  /**
+   * KLIENTENS EGEN TELLER -- KUN FOR EN HYGGELIGERE MELDING, ALDRI SOM SPERRE.
+   *
+   * `body.exchangeCount` kommer fra nettleseren og kan settes til hva som
+   * helst, eller utelates helt. Fram til v2.50 var dette den ENESTE
+   * håndhevingen av taket per økt (kvalitetsrevisjon 31.07.2026 kveld,
+   * kritisk funn 8.2): utelot man feltet, forsvant taket, og da sto bare det
+   * globale taket igjen -- som er felles for alle. Én person med et enkelt
+   * skript kunne dermed brenne hele AI-budsjettet og etterlate alle andre
+   * med "Spir har nådd sitt totale bruksvolum".
+   *
+   * Sjekken er beholdt fordi den gir riktig, vennlig melding til en ærlig
+   * klient før den rekker å bli bremset. Den ekte sperren ligger under.
+   */
   if (typeof body.exchangeCount === "number" && body.exchangeCount >= maxPerSession) {
     return NextResponse.json(
       {
@@ -225,6 +241,44 @@ export async function POST(request: Request) {
           "Du har nådd grensen for hvor mange spørsmål Spir kan svare på i denne økten. Takk for at du utforsket resultatet ditt -- prøv gjerne igjen senere.",
       },
       { status: 429 }
+    );
+  }
+
+  /**
+   * DEN EKTE SPERREN (v2.50): to per-IP-vinduer, håndhevet på serveren.
+   *
+   *  1. Burst: maks 12 meldinger per minutt. Et menneske som skriver
+   *     spørsmål til Spir kommer aldri i nærheten; et skript treffer den
+   *     umiddelbart.
+   *  2. Døgn: maks `aiMaxQuestionsPerSession` meldinger per IP per døgn.
+   *     Dette er den serverlagrede erstatningen for øktstaket over -- samme
+   *     tall, men på et grunnlag klienten ikke kan lyve om.
+   *
+   * IP er et grovt mål (delt nett, mobilt bærernett, VPN), og det er et
+   * bevisst valg: alternativet er en identifikator per besøkende, altså en
+   * helt annen personvernprofil enn resten av systemet har. Formålet er å
+   * stoppe grovt misbruk, ikke å telle presist per person -- samme
+   * resonnement som rateLimit.ts allerede er dokumentert med.
+   */
+  const burst = await checkRateLimit(request, "spir-burst", { windowMs: 60_000, limit: 12 });
+  if (!burst.ok) {
+    return NextResponse.json(
+      { error: "Du sender meldinger litt for raskt. Vent noen sekunder og prøv igjen." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(burst.retryAfterMs / 1000)) } }
+    );
+  }
+
+  const daily = await checkRateLimit(request, "spir-daily", {
+    windowMs: 24 * 60 * 60 * 1000,
+    limit: maxPerSession,
+  });
+  if (!daily.ok) {
+    return NextResponse.json(
+      {
+        error:
+          "Du har nådd grensen for hvor mange spørsmål Spir kan svare på i denne økten. Takk for at du utforsket resultatet ditt -- prøv gjerne igjen senere.",
+      },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(daily.retryAfterMs / 1000)) } }
     );
   }
 

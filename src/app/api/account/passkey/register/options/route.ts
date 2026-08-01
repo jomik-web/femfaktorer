@@ -75,10 +75,24 @@ export async function POST() {
       // uten det måtte brukeren oppgitt adressen sin først likevel, og
       // halve gevinsten ville forsvunnet.
       residentKey: "required",
-      // "preferred": be om Face ID/fingeravtrykk/PIN, men ikke gjør det til
-      // et absolutt krav -- noen fysiske nøkler har ingen slik mulighet, og
-      // de skal fortsatt kunne brukes.
-      userVerification: "preferred",
+      /**
+       * "required" (endret fra "preferred" i v2.50, kvalitetsrevisjon
+       * 31.07.2026 kveld, funn 8.3).
+       *
+       * Krever Face ID / fingeravtrykk / PIN for å bruke passkeyen. Med
+       * "preferred" var en passkey i praksis «noe du har» alene: en mistet,
+       * ulåst enhet ga innlogging uten videre. Kontoen inneholder ferdig
+       * beregnede personlighetsskårer, og det er sensitivt nok til at det
+       * ikke holder.
+       *
+       * Prisen er at fysiske nøkler helt uten PIN-mulighet ikke lenger kan
+       * registreres. Det er en akseptabel avveining her, og bare her, fordi
+       * engangskode på e-post står som garantert reservevei -- ingen kan bli
+       * låst ute av denne innstillingen, de må bare bruke den andre veien
+       * inn. Se filhodet i lib/account/passkeys.ts: den reserveveien skal
+       * aldri fjernes, og denne innstillingen er en av grunnene til det.
+       */
+      userVerification: "required",
     },
     // ES256 (-7) og RS256 (-257). Ed25519 (-8) er BEVISST utelatt: fysiske
     // nøkler som velger Ed25519 gir signaturer som eldre Firefox-versjoner

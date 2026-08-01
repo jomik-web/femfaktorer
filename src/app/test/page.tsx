@@ -140,10 +140,21 @@ export default function TestPage() {
   const [introSeen, setIntroSeen] = useState(false);
 
   // Avkrysningen for anonym forskningsdata på "Før du starter"-skjermen
-  // (v2.46). Huket av på forhånd etter produkteiers valg 31.07.2026 -- selve
-  // verdien skrives til lagringen først når brukeren trykker "start testen",
-  // se knappen lenger nede.
-  const [researchConsent, setResearchConsent] = useState(true);
+  // (v2.46). Selve verdien skrives til lagringen først når brukeren trykker
+  // "start testen", se knappen lenger nede.
+  //
+  // v2.50 (kvalitetsrevisjon 31.07.2026 kveld, kritisk funn 8.1): standard
+  // endret fra huket av til IKKE huket av. Et forhåndsavkrysset felt er
+  // uttrykkelig ikke gyldig samtykke etter GDPR fortalepunkt 32, slått fast
+  // av EU-domstolen i Planet49 (C-673/17). Personvernerklæringen lovet
+  // dessuten allerede i sitt eget cookie-avsnitt at "ingen forhåndsavkryssede
+  // samtykker ... brukes noe sted" -- så dokumentet motsa produktet.
+  //
+  // IKKE sett denne tilbake til true. Ønsker man høyere andel som bidrar, er
+  // veien å gjøre teksten ved siden av mer overbevisende, ikke å ta valget
+  // for brukeren. Tellerne research_consented/research_declined finnes
+  // allerede, så effekten av tekstendringer er målbar.
+  const [researchConsent, setResearchConsent] = useState(false);
 
   const activeQuestions = questionsForTier(tier);
 
@@ -256,7 +267,7 @@ export default function TestPage() {
           </h1>
           <p className="text-sm text-indigo/70 dark:text-lavender-400/70">
             Litt om hvordan du svarer: bruk det første som faller deg inn, uten å tenke for lenge på
-            hvert spørsmål -- det finnes ikke noe "riktig" svar å lete etter. Tenk på hvordan du
+            hvert spørsmål -- det finnes ikke noe «riktig» svar å lete etter. Tenk på hvordan du
             vanligvis er på tvers av ulike sammenhenger (jobb, hjemme, sammen med venner), ikke bare
             hvordan du er akkurat i dag eller i én bestemt situasjon.
           </p>
@@ -264,8 +275,10 @@ export default function TestPage() {
               dette er det eneste stedet i flyten der brukeren ikke er midt i
               noe -- spør vi underveis eller etterpå, blir det enten et
               avbrudd eller et spørsmål om noe som allerede har skjedd.
-              Avkrysningen står på som standard, med teksten synlig ved siden
-              av, ikke gjemt bak en lenke. */}
+              Avkrysningen står AV som standard (v2.50, se researchConsent
+              over), med teksten synlig ved siden av, ikke gjemt bak en lenke.
+              Teksten er samtidig gjort mer konkret om hva bidraget faktisk
+              brukes til -- når valget er aktivt, må begrunnelsen bære det. */}
           <label className="mx-auto flex max-w-md cursor-pointer items-start gap-3 rounded-xl bg-white/50 p-4 text-left dark:bg-white/5">
             <input
               type="checkbox"
@@ -278,9 +291,10 @@ export default function TestPage() {
                 Bidra til å gjøre testen bedre
               </span>
               <br />
-              Svarene dine lagres anonymt, uten navn, e-post eller noe annet som kan spores tilbake
-              til deg, og brukes til å finne spørsmål som er dårlig formulert. Du kan ta testen som
-              normalt selv om du fjerner haken.{" "}
+              Huker du av her, sendes svarene dine inn anonymt når du er ferdig -- uten navn,
+              e-post, IP-adresse eller noe annet som kan spores tilbake til deg. De brukes til å
+              finne spørsmål som er dårlig formulert eller tvetydige, som er den eneste måten å
+              gjøre testen målbart bedre på. Testen fungerer helt likt om du lar være.{" "}
               <Link href="/personvern" className="underline underline-offset-2">
                 Les mer i personvernerklæringen
               </Link>
@@ -521,13 +535,39 @@ export default function TestPage() {
           </button>
         )}
 
-        <div key={question.id} className="flex flex-col gap-6 rounded-2xl bg-white/60 p-6 shadow-sm dark:bg-white/5">
-          <h1
-            id="active-question-heading"
-            className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl"
-          >
-            {question.textNo}
-          </h1>
+        {/* aria-live (v2.50, kvalitetsrevisjon 31.07.2026 kveld, funn 1.2).
+            Testen bytter spørsmål uten sidelasting -- opptil 290 ganger. Uten
+            et live-område skjer det byttet helt lydløst for en skjermleser:
+            brukeren svarer, og står så tilsynelatende på samme sted.
+
+            "polite" og ikke "assertive" er et bevisst valg: byttet skal leses
+            opp når brukeren er ferdig med det de holder på med, ikke avbryte
+            midt i. `aria-atomic` gjør at spørsmålet leses som én enhet i
+            stedet for bare den delen som endret seg.
+
+            Live-området må være det SAMME elementet før og etter endringen
+            for at hjelpemidlet skal oppdage den -- derfor ligger
+            key={question.id} på <h1> inni, ikke på wrapperen.
+
+            OMFANGET ER SNEVRET INN I v2.50 (kvalitetsrevisjon 01.08.2026,
+            funn 1.1): wrapperen omsluttet tidligere også <AnswerScale>. Med
+            aria-atomic betydde det at spørsmålet PLUSS alle fem
+            svaralternativer ble lest opp ved hvert av opptil 290
+            spørsmålsbytter -- og en gang til hver gang brukeren svarte, fordi
+            aria-checked endret seg inne i det samme området. To fulle
+            opplesninger av «Helt uenig, Litt uenig, ...» per spørsmål er
+            ikke hjelp, det er støy. Alternativene har allerede sine egne
+            tilgjengelige navn og skal stå UTENFOR live-området. */}
+        <div className="flex flex-col gap-6 rounded-2xl bg-white/60 p-6 shadow-sm dark:bg-white/5">
+          <div aria-live="polite" aria-atomic="true">
+            <h1
+              id="active-question-heading"
+              key={question.id}
+              className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl"
+            >
+              {question.textNo}
+            </h1>
+          </div>
           <AnswerScale
             questionId={question.id}
             value={answers[question.id]}

@@ -3,6 +3,7 @@ import { ALL_QUESTIONS, ALL_QUESTIONS_EXTENDED } from "@/data/questions";
 import { QUESTION_SET_VERSION } from "@/data/questionSetVersion";
 import { APP_VERSION } from "@/lib/version";
 import { storeAnswerSet } from "@/lib/research/blobs";
+import { checkRateLimit } from "@/lib/rateLimit";
 import {
   clampResponseMs,
   isoWeek,
@@ -47,6 +48,50 @@ const VALID_IDS_FULL = new Set(ALL_QUESTIONS.map((q) => q.id));
 const VALID_IDS_EXTENDED = new Set(ALL_QUESTIONS_EXTENDED.map((q) => q.id));
 
 export async function POST(request: Request) {
+  /**
+   * Misbruksbrems (v2.50, kvalitetsrevisjon 31.07.2026 kveld, funn 5.3).
+   *
+   * Denne ruten validerer strukturen grundig, men ingenting hindret tidligere
+   * at noen sendte inn titusenvis av syntetiske svarsett. Konsekvensen ville
+   * ikke vært nedetid, men noe verre: et forgiftet psykometrisk grunnlag som
+   * SER gyldig ut. Leddanalysen ville da pekt på "dårlige" spørsmål som i
+   * virkeligheten bare var oversvømt av søppel.
+   *
+   * TAKET ER HEVET I v2.50 (kvalitetsrevisjon 01.08.2026, funn 10.1).
+   *
+   * Det sto opprinnelig på 5 per døgn, satt ut fra at ett ærlig menneske
+   * sender inn ett svarsett. Det var feil måte å regne på, og feilen var
+   * alvorligere enn den så ut: IP-adressen deles av alle bak samme nett.
+   * En skoleklasse, et kontor eller et mobilt bærernett kunne dermed fylle
+   * kvoten på noen få respondenter, og resten ble forkastet STILLE med
+   * `{ ok: false }` og status 200.
+   *
+   * To ting gikk galt samtidig. For det første forsvant data fra en gruppe
+   * som ikke er tilfeldig valgt -- og filhodet i lib/research/types.ts
+   * advarer selv mot at manglende svar ikke er tilfeldig fordelt. For det
+   * andre divergerte de to datasettene: /api/stats/submit-norm, som utløses
+   * av NØYAKTIG samme brukerhandling, tillot 20 i timen. Normtallene tok
+   * altså imot innsendinger som svarsettene forkastet.
+   *
+   * Taket følger nå submit-norm: 20 per time per IP. Det er fortsatt langt
+   * under det et skript ville produsert, og godt over det et delt nett
+   * genererer i praksis.
+   *
+   * Merk: dette er det ENESTE stedet ruten berører noe IP-relatert, og det
+   * skjer inne i rateLimit.ts -- verken IP-en eller noe avledet av den når
+   * selve svarsettet som lagres. Anonymitetsgarantien i filhodet til
+   * lib/research/types.ts står derfor uendret.
+   */
+  const limited = await checkRateLimit(request, "research-submit", {
+    windowMs: 60 * 60 * 1000,
+    limit: 20,
+  });
+  if (!limited.ok) {
+    // Stille avvisning: klienten vår viser aldri denne feilen til brukeren,
+    // og en innsender som er over taket skal ikke få vite hvor taket går.
+    return NextResponse.json({ ok: false }, { status: 200 });
+  }
+
   let body: SubmitBody;
   try {
     body = (await request.json()) as SubmitBody;

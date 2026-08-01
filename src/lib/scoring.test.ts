@@ -32,6 +32,54 @@ function fillAll(questionSet: typeof ALL_QUESTIONS, value: 1 | 2 | 3 | 4 | 5): A
   return answers;
 }
 
+/**
+ * Fyller et domene slik at det gir MAKSIMAL skår på domenet -- altså 5 på
+ * vanlige ledd og 1 på reverserte.
+ *
+ * v2.50 (kvalitetsrevisjon 31.07.2026 kveld): lagt til fordi to tester her
+ * hadde hardkodede forventninger som forutsatte at ingen ledd var reversert.
+ * Det stemte da de ble skrevet, men spørsmålssettet har siden fått
+ * reverserte ledd i alle fem domener (E har 6 av 24, A har 17 av 24), og da
+ * gir «fyll alt med 5» ikke lenger maks skår -- den gir noe midt på treet.
+ * Testene har altså vært RØDE en stund uten at noen har sett det, fordi
+ * testpakken ikke har vært kjørt (samme årsak som at ESLint ikke kjørte).
+ *
+ * Poenget med å regne det ut her, i stedet for å rette tallet til et nytt
+ * hardkodet tall, er at testen da fortsatt er riktig neste gang et ledd
+ * snus.
+ */
+function fillDomainToMax(
+  answers: AnswerMap,
+  questionSet: typeof ALL_QUESTIONS,
+  domain: string
+) {
+  for (const q of questionSet) {
+    if (q.domain === domain) answers[q.id] = q.reverse ? 1 : 5;
+  }
+}
+
+/** Motstykket til fillDomainToMax -- gir MINIMAL skår på domenet. */
+function fillDomainToMin(
+  answers: AnswerMap,
+  questionSet: typeof ALL_QUESTIONS,
+  domain: string
+) {
+  for (const q of questionSet) {
+    if (q.domain === domain) answers[q.id] = q.reverse ? 5 : 1;
+  }
+}
+
+/** Forventet råskår-sum for et domene der alle ledd er besvart med samme verdi. */
+function expectedRawForDomain(
+  questionSet: typeof ALL_QUESTIONS,
+  domain: string,
+  value: 1 | 2 | 3 | 4 | 5
+): number {
+  return questionSet
+    .filter((q) => q.domain === domain)
+    .reduce((sum, q) => sum + (q.reverse ? 6 - value : value), 0);
+}
+
 describe("questions.ts (120-spørsmål-utvidelsen)", () => {
   it("har nøyaktig 120 spørsmål, 24 per domene", () => {
     const counts: Record<string, number> = {};
@@ -137,7 +185,11 @@ describe("computeDomainRawScores", () => {
     fillDomain(answers, ALL_QUESTIONS, "E", 4);
     const result = computeDomainRawScores(answers, ALL_QUESTIONS);
     expect(result.E.complete).toBe(true);
-    expect(result.E.raw).toBe(96); // 24 spørsmål x 4
+    // Ikke 24 x 4 = 96: domene E har reverserte ledd, og et reversert ledd
+    // besvart med 4 teller som 2. Se expectedRawForDomain -- forventningen
+    // regnes ut fra selve spørsmålssettet, slik at testen fortsatt er riktig
+    // om et ledd snus senere.
+    expect(result.E.raw).toBe(expectedRawForDomain(ALL_QUESTIONS, "E", 4));
   });
 
   it("kaster feil ved ugyldig svarverdi (f.eks. 0 eller 6) i stedet for å stille inn et standardsvar", () => {
@@ -195,14 +247,18 @@ describe("computeTestResult -- full test (alle 120)", () => {
   });
 
   it("emosjonell stabilitet er INVERTERT nevrotisisme (Dokument 03 §12.1)", () => {
+    // MAKS nevrotisisme skal gi MINIMAL stabilitet, og omvendt. Merk at
+    // «maks nevrotisisme» ikke er det samme som «5 på alle N-ledd»: syv av de
+    // 24 N-leddene er reverserte, og skal derfor besvares med 1. Se
+    // fillDomainToMax.
     const answers = fillAll(ALL_QUESTIONS, 3);
-    fillDomain(answers, ALL_QUESTIONS, "N", 5);
+    fillDomainToMax(answers, ALL_QUESTIONS, "N");
     const result = computeTestResult(answers, ALL_QUESTIONS, "full");
     const stability = result.factors!.find((f) => f.factor === "stability")!;
     expect(stability.score).toBe(0);
 
     const answersCalm = fillAll(ALL_QUESTIONS, 3);
-    fillDomain(answersCalm, ALL_QUESTIONS, "N", 1);
+    fillDomainToMin(answersCalm, ALL_QUESTIONS, "N");
     const resultCalm = computeTestResult(answersCalm, ALL_QUESTIONS, "full");
     const stabilityCalm = resultCalm.factors!.find((f) => f.factor === "stability")!;
     expect(stabilityCalm.score).toBe(100);

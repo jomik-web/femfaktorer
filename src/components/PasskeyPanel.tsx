@@ -224,7 +224,11 @@ export function PasskeyPanel() {
       </button>
 
       {info && <p className="text-sm text-emerald-700 dark:text-emerald-400">{info}</p>}
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      )}
 
       <p className="text-xs text-indigo/45 dark:text-lavender-400/45">
         Engangskode på e-post fungerer fortsatt som før, og forsvinner ikke. Mister du enheten, er

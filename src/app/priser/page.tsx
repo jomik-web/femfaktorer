@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { buttonClassNames } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 /**
  * Grafisk pris-/nivåoversikt (v2.35, produkteiers ønske 20.07.2026): en
@@ -122,6 +125,12 @@ function FeatureCell({ value }: { value: Cell }) {
   );
 }
 
+export const metadata: Metadata = {
+  title: "Priser og nivåer",
+  description:
+    "Gratis, Standard og Premium sammenlignet. Alle nivåer kan prøves gratis i betaperioden.",
+};
+
 export default function PriserPage() {
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-10 px-6 py-16">
@@ -161,9 +170,9 @@ export default function PriserPage() {
                     }`}
                   >
                     {tier.highlight && (
-                      <span className="mb-1 rounded-full bg-holo-sky px-3 py-0.5 text-xs font-semibold text-indigo">
+                      <Badge tone="sky" className="mb-1">
                         Mest populær
-                      </span>
+                      </Badge>
                     )}
                     <span className="font-display text-lg font-bold text-indigo dark:text-white">
                       {tier.name}
@@ -179,7 +188,7 @@ export default function PriserPage() {
                     </span>
                     <Link
                       href="/test"
-                      className="mt-3 w-full rounded-xl bg-holo-sky px-4 py-2 text-sm font-semibold text-indigo shadow-sm hover:opacity-90"
+                      className={buttonClassNames("primary", "sm", "mt-3 w-full text-center")}
                     >
                       Prøv nivået
                     </Link>

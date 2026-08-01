@@ -13,6 +13,7 @@ import {
   ACCOUNT_SESSION_MAX_AGE_SECONDS,
 } from "@/lib/account/session";
 import { accountStore } from "@/lib/account/blobs";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -31,6 +32,21 @@ export const runtime = "nodejs";
  * og admin-rolle avgjøres fortsatt uavhengig av dette, i lib/admin/roles.ts.
  */
 export async function POST(request: Request) {
+  // Misbruksbrems (v2.50, funn 5.3). Signaturverifiseringen gjør gjetting
+  // praktisk talt umulig i seg selv, så dette er ikke et forsvar mot
+  // gjetting -- det er et forsvar mot at noen bruker ruten som en billig
+  // måte å tvinge fram mange Blobs-oppslag på.
+  const limited = await checkRateLimit(request, "passkey-login", {
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+  });
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "For mange innloggingsforsøk. Vent noen minutter og prøv igjen." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(limited.retryAfterMs / 1000)) } }
+    );
+  }
+
   const body = (await request.json().catch(() => null)) as {
     response?: unknown;
     challengeId?: unknown;
@@ -80,7 +96,10 @@ export async function POST(request: Request) {
         counter: passkey.counter,
         transports: passkey.transports as never,
       },
-      requireUserVerification: false,
+      // v2.50 (funn 8.3): se register/options. Innlogging må stille samme
+      // krav som registrering, ellers er kravet uten virkning -- det er ved
+      // innlogging det faktisk betyr noe.
+      requireUserVerification: true,
     });
   } catch {
     return NextResponse.json({ error: "Passkeyen ble ikke godkjent." }, { status: 401 });

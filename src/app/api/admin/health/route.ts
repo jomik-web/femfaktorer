@@ -86,6 +86,28 @@ export async function GET() {
         ? `Måler ${process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}.`
         : "NEXT_PUBLIC_PLAUSIBLE_DOMAIN er ikke satt -- ingen besøksstatistikk samles.",
     },
+    /**
+     * v2.50 (kvalitetsrevisjon 01.08.2026, funn 7.2).
+     *
+     * NEXT_PUBLIC_SITE_URL ble tidligere kun sjekket under "Passkey", med
+     * den begrunnelsen at passkey ville feile uten den. Men samme variabel
+     * styrer nå også sitemap.ts, robots.ts, metadataBase (lenkeforhåndsvisning)
+     * og JSON-LD -- og de feiler på en helt annen og farligere måte: de
+     * feiler STILLE, med adresser som peker på localhost. Et nettstedskart
+     * fullt av localhost-adresser blir sendt til Search Console og avvist
+     * der, uker etter at noen trodde SEO var på plass.
+     *
+     * Derfor en egen linje: passkey-feilen merkes med en gang, denne merkes
+     * ikke før skaden er skjedd.
+     */
+    {
+      key: "site_url",
+      label: "Nettadresse (SEO og lenkedeling)",
+      ok: passkeyRp.configured,
+      detail: passkeyRp.configured
+        ? `Nettstedskart, lenkeforhåndsvisning og strukturerte data bruker ${passkeyRp.origin}.`
+        : "NEXT_PUBLIC_SITE_URL mangler -- sitemap.xml, robots.txt, Open Graph-bildet og JSON-LD peker alle på http://localhost:3000. Det gir ingen feilmelding noe sted, men gjør nettstedskartet ubrukelig for søkemotorer og fjerner forhåndsvisningen når noen deler en lenke.",
+    },
   ];
 
   return NextResponse.json({

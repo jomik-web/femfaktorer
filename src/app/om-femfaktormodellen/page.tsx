@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 /**
@@ -6,6 +7,12 @@ import { redirect } from "next/navigation";
  * side i stedet for tre spredte. Beholder ruten som en redirect slik at
  * eksisterende lenker/bokmerker ikke brekker.
  */
+export const metadata: Metadata = {
+  title: "Om femfaktormodellen",
+  description:
+    "Femfaktormodellen (Big Five) er den mest etterprøvde modellen for personlighet vi har. Her er hva de fem faktorene faktisk måler.",
+};
+
 export default function OmFemfaktormodellenRedirect() {
   redirect("/slik-fungerer#femfaktormodellen");
 }

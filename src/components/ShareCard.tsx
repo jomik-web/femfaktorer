@@ -13,6 +13,7 @@ import {
   shareImageFile,
   type ShareFormat,
 } from "@/lib/shareCard";
+import { buttonClassNames } from "@/components/ui/Button";
 
 /**
  * Delbart Spir-kort, vist til slutt på rapporten (se resultat/page.tsx).
@@ -263,7 +264,31 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
               }`}
             >
               <span className="overflow-hidden rounded-xl">
-                {/* eslint-disable-next-line @next/next/no-img-element -- statisk, ferdig-komponert bilde, ikke egnet for next/image-optimalisering */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- se under.
+
+                    HVORFOR IKKE next/image HER (v2.50, kvalitetsrevisjon
+                    31.07.2026 kveld, funn 4.2 -- vurdert og bevisst avvist):
+
+                    Revisjonen pekte på at next/image ikke brukes noe sted i
+                    kodebasen. Gjennomgangen viste at dette er det ENESTE
+                    <img>-elementet som finnes: alle andre illustrasjoner
+                    (FactorHero, FactorIcon, SpirMascot) er innebygd SVG, som
+                    next/image verken kan eller bør røre.
+
+                    Og akkurat dette bildet skal heller ikke over: det er et
+                    ferdig komponert delekort som tegnes videre inn i et
+                    <canvas> for å lage den nedlastbare filen. next/image
+                    leverer et <img> med srcset og en Next-intern URL, og da
+                    ville canvas fått en annen oppløsning enn den kortet er
+                    tegnet for -- eller blitt "tainted" og nektet eksport.
+
+                    Bildene er dessuten allerede WebP og under 260 KB (de var
+                    64 MB PNG fram til v2.46), og har width/height,
+                    loading="lazy" og decoding="async" satt for hånd under --
+                    altså det next/image ville gitt oss, uten ulempene.
+
+                    Konklusjon: funnet er lukket ved at det ikke finnes noe
+                    riktig sted å bruke next/image, ikke ved at det er gjort. */}
                 <img
                   src={thumbSrc}
                   alt={`Delbart kort: ${c.asset.quote}`}
@@ -290,7 +315,7 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
             type="button"
             onClick={() => void handleShare()}
             disabled={busy !== null}
-            className="rounded-xl bg-holo-sky px-5 py-2.5 text-sm font-semibold text-indigo shadow-sm hover:opacity-90 disabled:opacity-50"
+            className={buttonClassNames("primary", "sm")}
           >
             {busy === "share" ? "Åpner deleark …" : "Del bildet"}
           </button>
@@ -483,7 +508,7 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
             type="button"
             onClick={() => void handleShare()}
             disabled={busy !== null}
-            className="rounded-xl bg-holo-sky px-5 py-2.5 text-sm font-semibold text-indigo shadow-sm hover:opacity-90 disabled:opacity-50"
+            className={buttonClassNames("primary", "sm")}
           >
             {busy === "share" ? "Åpner deleark …" : "Del bildet"}
           </button>

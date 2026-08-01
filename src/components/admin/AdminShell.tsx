@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { buttonClassNames } from "@/components/ui/Button";
 
 /**
  * Felles ramme for alle adminsider (v2.46, 31.07.2026).
@@ -79,7 +80,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           Logg inn med e-postadressen din for å få admin-tilgang, dersom kontoen din har
           admin-rolle.
         </p>
-        <Link href="/logg-inn" className="rounded-lg bg-holo-sky px-5 py-2.5 font-medium text-indigo">
+        <Link href="/logg-inn" className={buttonClassNames("primary", "md")}>
           Logg inn
         </Link>
       </main>

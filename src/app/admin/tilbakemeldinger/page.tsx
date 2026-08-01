@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { filterChipClassNames } from "@/components/ui/Badge";
 
 /**
  * Betatilbakemeldinger i panelet (v2.46, 31.07.2026) -- erstatter å måtte
@@ -80,7 +81,11 @@ export default function AdminFeedbackPage() {
 
   return (
     <AdminShell>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      )}
       {!entries && !error && (
         <p className="text-sm text-indigo/50 dark:text-lavender-400/50">Henter …</p>
       )}
@@ -94,11 +99,7 @@ export default function AdminFeedbackPage() {
                   key={key}
                   type="button"
                   onClick={() => setAreaFilter(key)}
-                  className={
-                    areaFilter === key
-                      ? "rounded-full bg-holo-sky px-3 py-1 text-xs font-medium text-indigo"
-                      : "rounded-full border border-lavender-400 px-3 py-1 text-xs text-indigo/60 dark:border-white/15 dark:text-lavender-400/60"
-                  }
+                  className={filterChipClassNames(areaFilter === key)}
                 >
                   {key === "alle" ? "Alle" : AREA_LABELS[key]}
                 </button>

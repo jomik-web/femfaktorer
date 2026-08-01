@@ -19,7 +19,7 @@ import type { Metadata } from "next";
  */
 
 export const metadata: Metadata = {
-  title: "Verktøy -- Dine Fasetter",
+  title: "Verktøy",
   description: "Ta vare på svarene og resultatet ditt: last ned svardata, eller lagre resultatet på en konto.",
 };
 

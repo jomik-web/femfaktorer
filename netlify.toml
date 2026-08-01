@@ -1,5 +1,21 @@
+# Byggkommandoen kjører KVALITETSPORTEN før selve byggingen (v2.50,
+# kvalitetsrevisjon 01.08.2026, funn 5.4).
+#
+# `npm run verify` = lint + typecheck + tester. Feiler noe av det, stopper
+# utrullingen, og den forrige versjonen blir stående.
+#
+# HVORFOR DETTE IKKE STO HER FØR: fram til v2.50 kunne det ikke stå her.
+# ESLint hadde ingen konfigurasjonsfil og avbrøt med feil uansett hva koden
+# inneholdt, og testpakken hadde tre røde tester -- én av dem siden dagen den
+# ble skrevet. En port foran en dør som alltid er låst, stopper ingenting den
+# skal stoppe; den stopper alt. Nå gir begge to rene kjøringer, og porten
+# betyr det den skal.
+#
+# Blir et bygg noen gang stoppet her: IKKE fjern `verify` for å komme forbi.
+# Det er hele poenget at det ikke skal gå. Kjør `npm run verify` lokalt, se
+# hva som er rødt, og rett det.
 [build]
-  command = "npm run build"
+  command = "npm run verify && npm run build"
   publish = ".next"
 
 [build.environment]
@@ -8,10 +24,39 @@
 # Netlify sitt offisielle Next.js-runtime-plugin oppdages og aktiveres
 # automatisk for Next.js-prosjekter -- ingen ekstra plugin-oppføring nødvendig.
 
-# Sikkerhetsheadere, satt på alle sider. Bevisst IKKE inkludert:
-# Content-Security-Policy -- krever levende testing i nettleser (Next.js sin
-# hydrering, WebAuthn/passkey-innlogging i admin, Spir-samtalen) for å unngå
-# å blokkere noe som faktisk skal fungere. Vurder som egen, testet oppgave.
+# Sikkerhetsheadere, satt på alle sider.
+#
+# CONTENT-SECURITY-POLICY -- LES DETTE FØR DU ENDRER NOE.
+#
+# Lagt til i v2.50 (kvalitetsrevisjon 31.07.2026 kveld, funn 8.4), men
+# BEVISST som Report-Only. Det betyr at nettleseren IKKE blokkerer noe --
+# den rapporterer bare i konsollen hva den ville ha blokkert. Grunnen er den
+# samme som gjorde at headeren ble utsatt i tre revisjoner: en CSP som er satt
+# litt feil, tar ned hydreringen i Next.js, Spir-samtalen eller
+# passkey-innloggingen, og feilen viser seg først når en ekte bruker prøver.
+#
+# SLIK GJØR DU DEN VIRKSOM (én oppgave, 10 minutter, krever nettleser):
+#   1. Åpne nettstedet i Chrome med konsollen oppe.
+#   2. Gå gjennom: forsiden -> /test (svar på noen spørsmål) -> /resultat ->
+#      last ned PDF -> lag et delekort -> snakk med Spir -> logg inn med kode
+#      -> registrer og bruk en passkey -> /admin.
+#   3. Noter hver "Content Security Policy"-melding i konsollen.
+#   4. Er konsollen ren: bytt navnet under fra
+#      Content-Security-Policy-Report-Only til Content-Security-Policy.
+#      Er den ikke ren: utvid riktig direktiv nedenfor FØRST, og gjenta.
+#
+# Om de enkelte direktivene:
+#   'unsafe-inline' i script-src: Next.js legger inn hydreringsdata i en
+#     innebygd <script>. Uten dette virker ingenting. Kan strammes til med
+#     nonce senere, men det krever middleware og er en egen oppgave.
+#   'unsafe-eval': kreves av Next.js sin dev-modus. Beholdes fordi den samme
+#     konfigurasjonen brukes lokalt; vurder å fjerne når headeren håndheves.
+#   plausible.io: besøksstatistikken, se layout.tsx.
+#   api.anthropic.com er IKKE med i connect-src -- Spir-kallet går fra
+#     serveren (api/spir), aldri fra nettleseren. Legger du det til, skjuler
+#     du at noe har flyttet seg til klienten.
+#   blob: og data: i img-src: delekortene og PDF-en genereres i nettleseren
+#     via canvas, og resultatet er nettopp blob:/data:-URL-er.
 [[headers]]
   for = "/*"
   [headers.values]
@@ -20,3 +65,4 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
     Strict-Transport-Security = "max-age=63072000; includeSubDomains"
+    Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://plausible.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
