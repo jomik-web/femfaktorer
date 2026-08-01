@@ -26,37 +26,51 @@
 
 # Sikkerhetsheadere, satt på alle sider.
 #
-# CONTENT-SECURITY-POLICY -- LES DETTE FØR DU ENDRER NOE.
+# CONTENT-SECURITY-POLICY -- HÅNDHEVENDE. LES DETTE FØR DU ENDRER NOE.
 #
-# Lagt til i v2.50 (kvalitetsrevisjon 31.07.2026 kveld, funn 8.4), men
-# BEVISST som Report-Only. Det betyr at nettleseren IKKE blokkerer noe --
-# den rapporterer bare i konsollen hva den ville ha blokkert. Grunnen er den
-# samme som gjorde at headeren ble utsatt i tre revisjoner: en CSP som er satt
-# litt feil, tar ned hydreringen i Next.js, Spir-samtalen eller
-# passkey-innloggingen, og feilen viser seg først når en ekte bruker prøver.
+# Headeren blokkerer nå faktisk. Endrer du noe under, kan du ta ned deler av
+# nettstedet -- og feilen viser seg først når en ekte bruker prøver den
+# funksjonen. Les avsnittet om verifisering før du rører den.
 #
-# SLIK GJØR DU DEN VIRKSOM (én oppgave, 10 minutter, krever nettleser):
-#   1. Åpne nettstedet i Chrome med konsollen oppe.
-#   2. Gå gjennom: forsiden -> /test (svar på noen spørsmål) -> /resultat ->
-#      last ned PDF -> lag et delekort -> snakk med Spir -> logg inn med kode
-#      -> registrer og bruk en passkey -> /admin.
-#   3. Noter hver "Content Security Policy"-melding i konsollen.
-#   4. Er konsollen ren: bytt navnet under fra
-#      Content-Security-Policy-Report-Only til Content-Security-Policy.
-#      Er den ikke ren: utvid riktig direktiv nedenfor FØRST, og gjenta.
+# HISTORIKK
+# Lagt til i v2.50 (kvalitetsrevisjon 31.07.2026 kveld, funn 8.4) som
+# Report-Only -- altså rapporterende, ikke blokkerende. Den sto slik fordi en
+# CSP satt litt feil tar ned hydreringen i Next.js, Spir-samtalen eller
+# passkey-innloggingen, og det lot seg ikke avgjøre uten en nettleser.
+#
+# VERIFISERT OG SKRUDD PÅ 01.08.2026. Produkteier gikk gjennom hele flyten i
+# Chrome med konsollen filtrert på "content security": forsiden, testen,
+# resultatsiden, PDF-nedlasting, delekort, Spir-samtale, innlogging med
+# engangskode, passkey-registrering og adminpanelet. NULL brudd rapportert.
+# Direktivene under er derfor nøyaktig de som er testet -- ikke en teoretisk
+# innstramming lagt til etterpå.
+#
+# HVIS DU MÅ ENDRE NOE SENERE
+# Bytt tilbake til Content-Security-Policy-Report-Only, gjenta runden over,
+# og skru på igjen først når konsollen er ren. Ikke gjett -- det er hele
+# grunnen til at denne headeren tok fire revisjoner å få på plass.
 #
 # Om de enkelte direktivene:
 #   'unsafe-inline' i script-src: Next.js legger inn hydreringsdata i en
 #     innebygd <script>. Uten dette virker ingenting. Kan strammes til med
-#     nonce senere, men det krever middleware og er en egen oppgave.
-#   'unsafe-eval': kreves av Next.js sin dev-modus. Beholdes fordi den samme
-#     konfigurasjonen brukes lokalt; vurder å fjerne når headeren håndheves.
+#     nonce senere, men det krever middleware og er en egen oppgave -- som må
+#     verifiseres på nytt etter samme oppskrift.
+#   'unsafe-eval': BEHOLDT MED VILJE. Next.js sin produksjonsbygging trenger
+#     den strengt tatt ikke, og å fjerne den ville vært en innstramming. Men
+#     runden over ble kjørt MED den, så å fjerne den nå ville betydd å skru på
+#     en policy som aldri er testet. Fjern den gjerne -- men da som en egen
+#     endring, med en ny Report-Only-runde først.
 #   plausible.io: besøksstatistikken, se layout.tsx.
 #   api.anthropic.com er IKKE med i connect-src -- Spir-kallet går fra
 #     serveren (api/spir), aldri fra nettleseren. Legger du det til, skjuler
 #     du at noe har flyttet seg til klienten.
 #   blob: og data: i img-src: delekortene og PDF-en genereres i nettleseren
 #     via canvas, og resultatet er nettopp blob:/data:-URL-er.
+#
+# Ingen report-uri/report-to er satt: brudd vises i nettleserkonsollen, ikke
+# samlet inn hos oss. Det er tilstrekkelig for manuell kontroll, men betyr at
+# et brudd hos en ekte bruker ikke når fram til deg. Vurder et rapporterings-
+# endepunkt hvis nettstedet får reell trafikk.
 [[headers]]
   for = "/*"
   [headers.values]
@@ -65,4 +79,4 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
     Strict-Transport-Security = "max-age=63072000; includeSubDomains"
-    Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://plausible.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://plausible.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
