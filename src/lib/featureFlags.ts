@@ -19,7 +19,7 @@
  * men også som inngang til admin-panelet (se lib/admin/roles.ts) --
  * innloggingen er derfor lagt i toppmenyen (SiteNav), ikke bare i
  * bunnteksten. Planen om å gjenbruke denne til 3-nivå-prismodellen (se
- * FemFaktorer_Forretnings-og-prismodell_v1.2.docx del 6.1) står fortsatt.
+ * Dine_Fasetter_Forretnings-og-prismodell_v1.2.docx del 6.1) står fortsatt.
  */
 export const ACCOUNT_SAVE_ENABLED = true;
 

@@ -45,7 +45,7 @@ export function computeAccountResultExpiry(savedAt: string): Date {
 
 /**
  * v2.27 (produkteiers ønske om "utvikling over tid" for Premium/utvidet
- * versjon, se FemFaktorer_Forretnings-og-prismodell_v1.2.docx del 6.3): en
+ * versjon, se Dine_Fasetter_Forretnings-og-prismodell_v1.2.docx del 6.3): en
  * konto lagrer nå en HISTORIKK av resultater (eldst -> nyest) i stedet for
  * bare det siste. Reglene for hvordan historikken vokser ligger i
  * api/account/save-result/route.ts, ikke her -- kort oppsummert: lagrer man

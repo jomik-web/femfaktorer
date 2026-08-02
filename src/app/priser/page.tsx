@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
  * offentlig side som viser de tre nivåene side ved side -- klassisk
  * "sammenligningstabell"-mønster (overskriftsrad per nivå, funksjonsrader
  * med avkrysning under). Innholdet er hentet fra den besluttede tabellen i
- * FemFaktorer_Forretnings-og-prismodell_v1.2.docx del 6, men KUN funksjoner
+ * Dine_Fasetter_Forretnings-og-prismodell_v1.2.docx del 6, men KUN funksjoner
  * som faktisk er bygget og live er tatt med i selve sammenligningen --
  * planlagte, ikke-bygde funksjoner (partnerkobling, delbare sosiale
  * medie-kort) nevnes for seg under tabellen i stedet for å late som de

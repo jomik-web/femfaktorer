@@ -55,10 +55,10 @@ async function sendRetentionReminderEmail(email: string, expiry: Date): Promise<
       body: JSON.stringify({
         from,
         to: email,
-        subject: "Det lagrede FemFaktorer-resultatet ditt slettes snart",
+        subject: "Det lagrede Dine Fasetter-resultatet ditt slettes snart",
         html:
           `<p>Hei,</p>` +
-          `<p>Det lagrede testresultatet ditt hos FemFaktorer slettes automatisk <strong>${expiryText}</strong>, ` +
+          `<p>Det lagrede testresultatet ditt hos Dine Fasetter slettes automatisk <strong>${expiryText}</strong>, ` +
           `12 måneder etter at det sist ble lagret.</p>` +
           `<p>Vil du beholde tilgangen, logger du bare inn på nytt og lagrer resultatet igjen -- da starter ` +
           `en ny 12-månedersperiode: <a href="${siteUrl}/logg-inn">${siteUrl}/logg-inn</a></p>` +
@@ -66,7 +66,7 @@ async function sendRetentionReminderEmail(email: string, expiry: Date): Promise<
           `før fristen.</p>` +
           `<p>Gjør du ingenting, slettes resultatet automatisk på datoen over, og kan ikke gjenopprettes.</p>`,
         text:
-          `Hei,\n\nDet lagrede testresultatet ditt hos FemFaktorer slettes automatisk ${expiryText}, ` +
+          `Hei,\n\nDet lagrede testresultatet ditt hos Dine Fasetter slettes automatisk ${expiryText}, ` +
           `12 måneder etter at det sist ble lagret.\n\n` +
           `Vil du beholde tilgangen, logger du bare inn på nytt og lagrer resultatet igjen -- da starter ` +
           `en ny 12-månedersperiode: ${siteUrl}/logg-inn\n\n` +

@@ -1,41 +1,22 @@
-# FemFaktorer -- førsteutkast
+# Dine Fasetter -- nettsted
 
-Kildegrunnlag: dokumentbiblioteket i `Dokumentbibliotek/V 0.1/FemFaktorer v1.0 - Grunnlag for koding/`
-(spesielt Grunnlagsdokumentet v1.7 og Dokument 03 v1.1).
+Next.js (App Router) + TypeScript + Tailwind. Personlighetstest basert på
+femfaktormodellen, med AI-følgesvennen Spir.
 
-## Status (13.07.2026)
+Merk: prosjektet het tidligere **FemFaktorer**. Produktnavnet er nå **Dine Fasetter**.
+GitHub-repoet heter fortsatt `femfaktorer`, og lagringsnøkler, informasjonskapsler og
+Netlify Blobs-navn bruker fortsatt prefikset `femfaktorer`. Det er **med vilje** -- endres
+de, mister eksisterende brukere kontoer, passkeys og lagrede resultater. Ikke gi dem nye navn.
 
-Bygget, men **ikke kjørt eller testet** i denne økten -- sandkassen som bygde dette har bare
-nettverkstilgang til `api.anthropic.com`, ikke til npm sitt pakkeregister. Det betyr `npm install`
-er aldri kjørt her. Første reelle test skjer når dette lastes opp til Netlify (som gjør sin egen
-`npm install` og bygg i skyen) eller når noen kjører `npm install` med vanlig internettilgang.
+## Hvor ting ligger
 
-### Ferdig i dette utkastet
-- Prosjektoppsett (Next.js App Router, TypeScript, Tailwind)
-- Design-tokens fra Dokument 02 (farger, mørk modus, typografi, avstander, radius)
-- De 30 spørsmålene + skåringsmotor (ren funksjon, med automatiserte tester i `src/lib/scoring.test.ts`)
-- Testflyt: ett spørsmål om gangen, autolagring lokalt, tilbakeblaing, hopp til ubesvart
-- Resultatside: horisontale skalaer, tolkningstekst, ikke-diagnostisk-merknad
-- FEM: samtykke-gate, API-rute mot Claude Haiku 4.5, Response Validator mot absolutte ord
-- Admin-panel: passkey-registrering/innlogging (WebAuthn), AI av/på, vedlikeholdsmodus, spørsmålstak
-
-### Bevisst IKKE ferdig -- kjente hull
-1. **Tolkningstekstene i `src/data/interpretations.ts` er mitt eget førsteutkast**, ikke hentet
-   ordrett fra Dokument 04 (fulltekstversjonen var ikke tilgjengelig i denne økten). Må samkjøres
-   med Dokument 04 og gjennom faglig kvalitetssikring (Dokument 01 §21 punkt 14) før lansering.
-2. **Admin-panelets lagring (`src/lib/admin/store.ts`) er en JSON-fil**, ikke en ekte database.
-   Fungerer til testing, men Netlifys produksjonsmiljø har ikke et vedvarende filsystem mellom
-   kalde starter -- må byttes til f.eks. Netlify Blobs før reell drift.
-3. **AI-spørsmålstaket per økt er klientrapportert**, ikke serverhåndhevet (se kommentar i
-   `src/app/api/fem/route.ts`). Fungerer som anti-misbruk-brems, ikke som en vanntett økonomisk
-   sperre. Et ekte globalt tak trenger en backend-teller.
-4. **@simplewebauthn/server sin nøyaktige API-form** (`registrationInfo`-strukturen) er skrevet
-   etter beste hukommelse uten mulighet til å sjekke dokumentasjon i denne økten. Første `npm
-   install` + bygg vil vise som TypeScript-feil dersom noe avviker.
-5. Admin-dashbord (besøkstall, AI-kostnad) er ikke bygget -- bare de tekniske bryterne.
-6. Norsk oversettelse av de 30 spørsmålene er en arbeidsoversettelse, ikke språklig kvalitetssikret.
-7. Persentiler/normdata: bruker en ren lineær 0-100-omregning (se Dokument 03 §10.4), ikke ekte
-   normer -- besluttet fremtidig datasett er Johnsons IPIP-NEO-120 via OSF (osf.io/tbmh5).
+| Hva | Hvor |
+| --- | --- |
+| Denne kodemappa | `01 Guldager Digital/Dine Fasetter/02 Nettside/dine-fasetter-web/` |
+| Dokumentbibliotek | `01 Guldager Digital/Dine Fasetter/01 Dokumentbibliotek/` |
+| Kodegrunnlag | Grunnlagsdokumentet v1.7 og Dokument 03 v1.1, begge i dokumentbiblioteket |
+| GitHub | `jomik-web/femfaktorer` |
+| Aktive oppgaver og beslutningslogg | `OPPGAVER-FOR-PRODUKTEIER.md` i denne mappa |
 
 ## Kom i gang lokalt
 
@@ -45,21 +26,32 @@ cp .env.example .env.local   # fyll inn ANTHROPIC_API_KEY og ADMIN_SESSION_SECRE
 npm run dev
 ```
 
-Åpne http://localhost:3000. Generer en sesjonshemmelighet med:
+Åpne http://localhost:3000. Generer en sesjonshemmelighet med `openssl rand -hex 32`.
 
-```bash
-openssl rand -hex 32
-```
+Kjør tester med `npm test`.
 
-## Kjøre tester
+## Publisering
 
-```bash
-npm test
-```
+Netlify bygger automatisk fra GitHub. Produksjonsgrenen er **`main`** -- et vanlig
+`git push` til `main` utløser ny publisering. Grenen `beta` er utdatert og brukes ikke.
 
-## Deploy til Netlify
+Alle variabler i `.env.example` må ligge som miljøvariabler i Netlifys prosjektinnstillinger.
+`.env.local` følger aldri med i git (se `.gitignore`).
 
-Se `netlify.toml`. Bruk "Upload your project files" / "choose a folder" i Netlify sitt
-dashbord (vi bruker ikke Git-integrasjon i denne runden). Husk å legge inn alle variablene fra
-`.env.example` som miljøvariabler i Netlifys prosjektinnstillinger -- `.env.local` følger ikke
-med i opplastingen (det er bevisst, se `.gitignore`).
+Byggkonfigurasjon står i `netlify.toml`.
+
+## Kjente hull
+
+Ført videre fra førsteutkastet 13.07.2026. Sjekk `OPPGAVER-FOR-PRODUKTEIER.md` for hva som
+er lukket siden da -- den fila er den oppdaterte kilden.
+
+1. **Tolkningstekstene i `src/data/interpretations.ts`** stammer fra et førsteutkast, ikke
+   ordrett fra Dokument 04. Må samkjøres med Dokument 04 og gjennom faglig kvalitetssikring
+   (Dokument 01 §21 punkt 14) før lansering.
+2. **AI-spørsmålstaket per økt er klientrapportert**, ikke serverhåndhevet (se kommentar i
+   `src/app/api/fem/route.ts`). Fungerer som anti-misbruk-brems, ikke som en vanntett
+   økonomisk sperre. Et ekte globalt tak trenger en backend-teller.
+3. **Norsk oversettelse av de 30 spørsmålene** er en arbeidsoversettelse, ikke språklig
+   kvalitetssikret.
+4. **Persentiler/normdata**: ren lineær 0-100-omregning (se Dokument 03 §10.4), ikke ekte
+   normer. Besluttet fremtidig datasett er Johnsons IPIP-NEO-120 via OSF (osf.io/tbmh5).

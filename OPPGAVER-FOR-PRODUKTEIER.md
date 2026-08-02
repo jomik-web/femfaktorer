@@ -325,7 +325,7 @@ Etter ditt ønske om en side som viser de tre nivåene grafisk, med overskriftsr
 - **Ny side: `/priser`**, lenket fra bunnteksten ("Nivåer og priser"). Viser Gratis (0 kr) / Standard (19 kr inkl. mva -- endret fra 20 kr etter din beskjed) / Premium (99 kr inkl. mva) side ved side, med en funksjonstabell under (avkryssede runde punkter for inkludert/ikke inkludert, tekstverdier der det ikke er binært, f.eks. antall spørsmål).
 - **Kun funksjoner som faktisk er bygget og live er tatt med i selve sammenligningen**: antall spørsmål, analysedybde, fasettnivå-analyse (kun Premium), Spir-samtale, PDF-nedlasting, skylagring, utvikling over tid (kun Premium). Partner-/vennekobling og delbare sosiale medie-kort er IKKE med i selve tabellen siden de ikke er bygget ennå -- nevnt i en egen boks under tabellen i stedet, så siden ikke lover noe som ikke finnes.
 - **Siden sier tydelig at ingen betalingssperre finnes ennå** -- alle tre nivåene er gratis å prøve under betaperioden, uansett hva prisene i tabellen sier. Dette var ditt eksplisitte krav fra i går (18.07.2026).
-- **Prisrettelsen (20 kr -> 19 kr)** er også oppdatert i `FemFaktorer_Forretnings-og-prismodell_v1.3.docx` (ny versjon lagt i dokumentbiblioteket) -- alle tre stedene prisen nevnes i dokumentet (tabellen, konkurrentanalysen, endringsloggen) er rettet.
+- **Prisrettelsen (20 kr -> 19 kr)** er også oppdatert i `Dine_Fasetter_Forretnings-og-prismodell_v1.3.docx` (ny versjon lagt i dokumentbiblioteket) -- alle tre stedene prisen nevnes i dokumentet (tabellen, konkurrentanalysen, endringsloggen) er rettet.
 - I samme økt: ryddet opp en rekke midlertidige `.fuse_hidden*`-filer som ved en feil havnet i git mens prosjektmappen lå på iCloud (nå flyttet ut av iCloud) -- ingen faktisk kildekode berørt, kun støy fjernet.
 
 Testet: `npx tsc --noEmit` kjører uten feil (ingen faktisk `next build` er mulig i dette utviklingsmiljøet -- se tidligere notater i denne loggen om manglende SWC-binærfil for arm64). Husk `git push`.
@@ -426,7 +426,7 @@ Testet med egne script (append/kutt ved 24, full-nivå nullstiller historikken, 
 
 Etter dine svar på oppfølgingsspørsmålene (Spir flyttes til Standard/Premium, gjenbruk eksisterende innlogging, "mellomting"-partnerdeling på Standard, og konkret innhold for Standard) og din siste beskjed om at du vil kunne prøve alt selv før du bestemmer deg for betaling, er følgende gjort:
 
-- **Kontolagring er gjenaktivert.** `ACCOUNT_SAVE_ENABLED` er satt til `true` i `src/lib/featureFlags.ts` -- innlogging med e-post + 6-sifret engangskode, og "Lagre resultatet mitt" på resultatsiden, virker igjen. Dette var satt på pause under betatesting (v2.16); nå er det en del av den vedtatte prismodellen (skylagring på Standard/Premium, se `FemFaktorer_Forretnings-og-prismodell_v1.2.docx` del 6.1).
+- **Kontolagring er gjenaktivert.** `ACCOUNT_SAVE_ENABLED` er satt til `true` i `src/lib/featureFlags.ts` -- innlogging med e-post + 6-sifret engangskode, og "Lagre resultatet mitt" på resultatsiden, virker igjen. Dette var satt på pause under betatesting (v2.16); nå er det en del av den vedtatte prismodellen (skylagring på Standard/Premium, se `Dine_Fasetter_Forretnings-og-prismodell_v1.2.docx` del 6.1).
 - **Ingen betalingssperre er lagt inn noe sted.** Jeg sjekket hele kodebasen for pris-/betalingstekst -- det finnes ingen i dag. Nivåene (gratis/Standard/Premium) styres allerede kun av hvor mange spørsmål som er besvart, ikke av betaling, så "prøv alt selv"-ønsket ditt er i praksis allerede oppfylt for testlengde, Spir-tilgang, PDF-nedlasting og analysedybde. Når dere faktisk vil ta betalt, er neste steg å legge til en ekte betalingsflyt foran de riktige knappene -- ikke å bygge om noe av det som er gjort nå.
 - **Nytt innhold: "Jobb" og "Kjærlighet" på gratisnivået.** Resultatsiden viser nå, under hver hovedkategori på gratisnivået, en kort "Jobb"-seksjon (styrker/utfordringer å kjenne til i jobbsammenheng) og en "Kjærlighet"-seksjon (samme for relasjoner, pluss et nytt avsnitt om hvilke typer personer som ofte er en god match -- alltid formulert som "ofte"/"som regel", aldri en garanti eller en fasit). Dette gjenbruker delvis tekst som allerede fantes i koden (`careerNote`, `relationshipNote`), pluss 15 helt nye tekster (`partnerNote`, én per hovedkategori × nivå).
 
@@ -446,11 +446,11 @@ Ingen handling kreves -- husk `git push`.
 
 ## Avgjort: tre nivåer, tre priser, og konkurrentanalyse (18.07.2026, se v2.26 over)
 
-Den fremtidige 3-nivå prismodellen (gratis/20 kr/99 kr) er nå ferdig utredet og dokumentert i `FemFaktorer_Forretnings-og-prismodell_v1.2.docx`, inkludert konkurrentanalyse og løsning på alle åpne spørsmål (Spir-plassering, innlogging, partnerdeling, Standard-innhold). Merk: dette representerer en endring fra en tidligere logget beslutning i denne fila ("Prisbeslutning", v2.8) om at 120- og 300-spørsmålsnivået skulle koste det samme -- den beslutningen er nå erstattet av 3-nivå-modellen.
+Den fremtidige 3-nivå prismodellen (gratis/20 kr/99 kr) er nå ferdig utredet og dokumentert i `Dine_Fasetter_Forretnings-og-prismodell_v1.2.docx`, inkludert konkurrentanalyse og løsning på alle åpne spørsmål (Spir-plassering, innlogging, partnerdeling, Standard-innhold). Merk: dette representerer en endring fra en tidligere logget beslutning i denne fila ("Prisbeslutning", v2.8) om at 120- og 300-spørsmålsnivået skulle koste det samme -- den beslutningen er nå erstattet av 3-nivå-modellen.
 
 ## Nytt: tydelig henvisning til hjelp ved vanskelige tanker (v2.24, 18.07.2026)
 
-Etter ditt ønske: FemFaktorer henviste tidligere kun vagt til "nødtjenester eller helsepersonell" ved akutt behov (på hjelp-siden), uten konkrete numre eller lavterskeltilbud -- og ingenting av dette fantes på selve resultatsiden eller i Spir. Lagt til tre steder, med numre verifisert mot Helsenorges offisielle sider:
+Etter ditt ønske: Dine Fasetter henviste tidligere kun vagt til "nødtjenester eller helsepersonell" ved akutt behov (på hjelp-siden), uten konkrete numre eller lavterskeltilbud -- og ingenting av dette fantes på selve resultatsiden eller i Spir. Lagt til tre steder, med numre verifisert mot Helsenorges offisielle sider:
 
 - **Resultatsiden**: en kort, lavmælt linje rett ved den eksisterende "ikke en diagnose"-teksten, som alltid vises (uansett skår) -- Hjelpetelefonen (116 123, gratis/døgnåpen) og nødnummer 113.
 - **Hjelp-siden**: den tidligere vage "ved akutt behov"-boksen er skrevet om til en konkret seksjon ("Trenger du å snakke med noen?") med Hjelpetelefonen, legevakt (116 117) og nødnummer (113), samt at fastlegen kan henvise videre.
@@ -521,7 +521,7 @@ Når betalingsløsning bygges (fortsatt utenfor omfang, se Dokument 07 §9): 120
 Bygget etter ditt ønske om å slippe å ta testen på nytt hver gang, og kunne lagre resultatet for senere. Løsningen bruker Netlify Blobs (innebygd i Netlify -- krever normalt ingen egen oppsett fra deg) og Resend (e-postutsending av innloggingskoder). Følgende trengs fra deg før dette virker i praksis:
 
 - [ ] **Resend-konto**: opprett gratis konto på resend.com. Gå til "API Keys" og lag en nøkkel -- legg den i `.env.local` som `RESEND_API_KEY` (aldri i chatten).
-- [ ] **Avsenderadresse**: sett `RESEND_FROM_ADDRESS` i `.env.local`, f.eks. `FemFaktorer <innlogging@femfaktorer.no>`.
+- [ ] **Avsenderadresse**: sett `RESEND_FROM_ADDRESS` i `.env.local`, f.eks. `Dine Fasetter <innlogging@femfaktorer.no>`.
 - [ ] **VIKTIG begrensning inntil videre**: uten et domene VERIFISERT i Resend (under "Domains" i Resend-dashbordet, krever noen DNS-oppføringer hos domeneleverandøren din) kan e-post med innloggingskode kun sendes til e-postadressen som selve Resend-kontoen din er registrert med. Det betyr at DU kan teste funksjonen fullt ut nå, men andre brukere kan ikke logge inn før et domene er verifisert. Dette er en god del av oppgaven "vurder domenenavn" lenger ned i denne lista.
 - [ ] **Egen hemmelig nøkkel**: sett `ACCOUNT_OTP_PEPPER` i `.env.local` til en tilfeldig lang tekststreng (jeg kan generere en for deg om du vil, si ifra).
 - [ ] Netlify Blobs krever normalt INGEN egen oppsett fra deg -- det er automatisk tilgjengelig for alle Netlify-nettsteder. Kun om noe ikke fungerer som forventet i produksjon, kan `NETLIFY_BLOBS_SITE_ID`/`NETLIFY_BLOBS_TOKEN` settes manuelt (se `.env.example`).
@@ -560,4 +560,4 @@ Denne mappen ligger i Dropbox. Det fungerer, men når prosjektet får en `node_m
 
 ## Datasett for fremtidige normer (avklart 13.07.2026)
 
-Når normbaserte skårer skal bygges (fase 2/senere), brukes Dr. John A. Johnsons offentlige IPIP-NEO-120-datasett (OSF, osf.io/tbmh5) — det eneste åpne datasettet på spørsmålsnivå som faktisk inneholder responser på FemFaktorers 30 spørsmål. Se Dokument 03 §10.4 og Dokument 06 (begge v1.1) for detaljer.
+Når normbaserte skårer skal bygges (fase 2/senere), brukes Dr. John A. Johnsons offentlige IPIP-NEO-120-datasett (OSF, osf.io/tbmh5) — det eneste åpne datasettet på spørsmålsnivå som faktisk inneholder responser på Dine Fasetters 30 spørsmål. Se Dokument 03 §10.4 og Dokument 06 (begge v1.1) for detaljer.
