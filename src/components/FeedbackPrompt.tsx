@@ -143,9 +143,20 @@ export function FeedbackPrompt() {
 
   const current: Step = STEPS[step - 1] ?? STEPS[0];
   const isLastStep = step === LAST_STEP;
-  /** "Neste" er sperret til området er besvart, med mindre det kan hoppes over. */
-  const canAdvance =
-    ratings[current.area] !== null || (current.skipLabel !== undefined && skipped[current.area]);
+
+  /**
+   * Et steg er besvart når det har fått et tall, ELLER når testeren aktivt
+   * har krysset av "brukte den ikke". Merk at det siste også teller som et
+   * svar: vi tvinger ikke fram en mening, men vi ber om et VALG. Forskjellen
+   * er hele grunnen til at "brukte den ikke" finnes.
+   */
+  function isAnswered(s: Step): boolean {
+    return ratings[s.area] !== null || (s.skipLabel !== undefined && !!skipped[s.area]);
+  }
+
+  const canAdvance = isAnswered(current);
+  /** "Send inn" åpner først når alle stegene er besvart -- ikke bare det siste. */
+  const allAnswered = STEPS.every(isAnswered);
 
   function chooseRating(value: number) {
     setRatings((prev) => ({ ...prev, [current.area]: prev[current.area] === value ? null : value }));
@@ -175,6 +186,11 @@ export function FeedbackPrompt() {
       }
       setError(null);
       setStep((s) => s + 1);
+      return;
+    }
+
+    if (!allAnswered) {
+      setError("Velg en karakter for å sende inn.");
       return;
     }
 
@@ -272,7 +288,16 @@ export function FeedbackPrompt() {
             </legend>
             <p className="text-xs text-indigo/70 dark:text-lavender-400/75">{current.hint}</p>
 
-            <div className="mt-1 flex flex-wrap gap-1.5">
+            {/* Tallene og "brukte den ikke" ligger i SAMME rad med
+                flex-wrap. På desktop og brede telefoner står de side om side,
+                som ønsket. På en 360 px skjerm er det ikke plass: fem knapper
+                à 44 px + mellomrom bruker 244 av rundt 264 tilgjengelige piksler,
+                og etiketten trenger omtrent 110. Da brekker raden av seg selv.
+                Knappene er BEVISST ikke krympet under 44 px for å tvinge alt
+                inn på én linje -- det er anbefalt minste trykkflate (WCAG
+                2.5.5), og under den bommer folk med større fingre eller
+                skjelving. En ekstra linje er en billigere pris. */}
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
               {[1, 2, 3, 4, 5].map((value) => {
                 const selected = ratings[current.area] === value;
                 return (
@@ -292,27 +317,30 @@ export function FeedbackPrompt() {
                   </button>
                 );
               })}
+
+              {current.skipLabel && (
+                <button
+                  type="button"
+                  aria-pressed={!!skipped[current.area]}
+                  onClick={chooseSkip}
+                  className={
+                    skipped[current.area]
+                      ? "h-11 whitespace-nowrap rounded-lg bg-gold-dark px-3 text-sm font-medium text-white"
+                      : "h-11 whitespace-nowrap rounded-lg border border-gold-dark/40 px-3 text-sm text-indigo dark:border-gold/30 dark:text-white"
+                  }
+                >
+                  {current.skipLabel}
+                </button>
+              )}
             </div>
 
-            <div className="flex justify-between text-xs text-indigo/60 dark:text-lavender-400/70">
+            {/* Bredden låses til tallrekka (5 × 44 px + 4 × 6 px mellomrom),
+                slik at "5 = ..." står under femmeren og ikke drar ut til
+                kanten av kortet når "brukte den ikke" ligger på samme linje. */}
+            <div className="flex max-w-[244px] justify-between text-xs text-indigo/60 dark:text-lavender-400/70">
               <span>1 = {current.low}</span>
               <span>5 = {current.high}</span>
             </div>
-
-            {current.skipLabel && (
-              <button
-                type="button"
-                aria-pressed={!!skipped[current.area]}
-                onClick={chooseSkip}
-                className={
-                  skipped[current.area]
-                    ? "mt-1 self-start rounded-lg bg-gold-dark px-3 py-1.5 text-sm font-medium text-white"
-                    : "mt-1 self-start rounded-lg border border-gold-dark/40 px-3 py-1.5 text-sm text-indigo dark:border-gold/30 dark:text-white"
-                }
-              >
-                {current.skipLabel}
-              </button>
-            )}
           </fieldset>
 
           {isLastStep && (
@@ -334,10 +362,16 @@ export function FeedbackPrompt() {
           )}
 
           <div className="flex flex-wrap items-center gap-3">
+            {/* Knappen er grå og usendbar til steget er besvart. Vanligvis
+                er deaktiverte knapper et uvennlig valg -- de forklarer ikke
+                hvorfor de ikke virker. Her er grunnen synlig rett over
+                knappen (spørsmålet uten valgt tall), og hjelpeteksten under
+                sier det i klartekst, så testeren står aldri fast uten å
+                skjønne hva som mangler. */}
             <button
               type="button"
               onClick={() => void handlePrimary()}
-              disabled={sending || (!isLastStep && !canAdvance)}
+              disabled={sending || (isLastStep ? !allAnswered : !canAdvance)}
               className={`${buttonClassNames("beta", "md")} disabled:opacity-40`}
             >
               {sending ? "Sender …" : isLastStep ? "Send inn" : "Neste"}
@@ -367,6 +401,16 @@ export function FeedbackPrompt() {
               Avbryt
             </button>
           </div>
+
+          {/* Sier hva som mangler FØR testeren prøver å trykke, i stedet for
+              å la en grå knapp stå der uforklart. */}
+          {!canAdvance && !error && (
+            <p className="text-xs text-indigo/70 dark:text-lavender-400/75">
+              {current.skipLabel
+                ? `Velg et tall, eller "${current.skipLabel}", for å ${isLastStep ? "sende inn" : "gå videre"}.`
+                : `Velg et tall for å ${isLastStep ? "sende inn" : "gå videre"}.`}
+            </p>
+          )}
 
           {error && (
             <p role="alert" className="text-sm font-medium text-factor-stability">
