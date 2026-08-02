@@ -186,7 +186,6 @@ export default function TestPage() {
       setIndex(firstUnanswered);
     }
     setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const question = activeQuestions[index];
