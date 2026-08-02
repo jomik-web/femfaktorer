@@ -17,6 +17,26 @@ Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenst�
 - **Vurdert, ikke gjort: bytte meme-kort-forhåndsvisningen til `next/image`** (kvalitetsrevisjon 31.07.2026, kap. 6, funn 5, lav alvorlighet) -- se begrunnelse i changelog-oppføringen for v2.46. Din avgjørelse om dette skal gjøres nå eller stå som er.
 - **Vurdert, ikke gjort: engangs-fullførelsestoken for anonyme forskningsinnsendinger** (kvalitetsrevisjon 31.07.2026, kap. 8, funn #1, høy alvorlighet -- kun halvparten av funnet er rettet, se v2.47). Krever ny arkitektur (tokenutstedelse, signeringshemmelighet, engangs-sporing, klientendring i testflyten) -- flagget som en egen, større oppfølging fremfor å bygges inn nå.
 
+## Nytt: tilbakemeldingsskjemaet bygget om til tre steg (v2.51, 01.08.2026)
+
+Produkteier testet skjemaet og fant fire ting. Alle fire er rettet, og hver endring har en begrunnelse i metodelitteraturen -- se doc-kommentaren i `FeedbackPrompt.tsx` for detaljene.
+
+- **Fritekst er ikke lenger obligatorisk.** Et åpent tekstfelt ganger frafallet i et skjema med omtrent 2,5, og hvert obligatorisk felt legger på 2-5 prosentpoeng. Obligatorisk fritekst var det dyreste enkeltvalget i forrige utgave. Nå er tallene obligatoriske og teksten frivillig -- motsatt av før.
+- **Én karakter per område, og hver starter blank.** Før delte alle områder én tilstandsvariabel, slik at karakteren fulgte med når man byttet område. Det er verre enn vanlig sekvensiell forankring (dokumentert til å feilvurdere rundt 13 % av svar i Likert-skalaer): en forhåndsutfylt verdi er en *standardverdi* som kan bli sendt inn uten at testeren har tatt stilling.
+- **Tre steg med "Neste", "Send inn" på siste.** Ett spørsmål om gangen gir raskere fullføring og foretrekkes av brukere. Tre steg er et bevisst kompromiss: hvert steg koster et trykk på mobil, og samtaleformede skjemaer begynner å skade fullføring rundt 12-14 spørsmål.
+- **"Brukte den ikke" i stedet for "har ikke en mening"** på Spir. Krosnick m.fl. (Public Opinion Quarterly, 2002) fant at "vet ikke"-alternativer ikke hever datakvaliteten -- de inviterer til å slippe unna tankearbeidet. Men en tester som aldri åpnet Spir har ikke "ingen mening", de har ingen *erfaring*. Ordlyden fanger manglende eksponering uten å gi en bekvem utvei til dem som faktisk mener noe.
+
+**To ting produkteier foreslo som IKKE ble gjort, med begrunnelse:**
+
+- **"Resultatet" og analyseteksten er slått sammen, ikke delt.** Å måle begge med ett tall er et klassisk dobbeltspørsmål: liker testeren grafene men synes teksten er langdryg, får du et 3-tall du ikke kan tolke. Løsningen er ikke et ekstra steg, men å presisere hva som vurderes -- spørsmålet heter nå "Hvor godt traff teksten om deg?". Analyseteksten *er* produktet; grafene er innpakning.
+- **Layout har ikke egen karakter.** Prinsippet: tall er for det du vil følge over tid, fritekst er for det du vil fikse. "Layout 3,8 av 5" er ikke handlingsrettet; "knappen var vanskelig å se på mobil" er det. Layout, språk og tekniske feil ligger derfor som eksempler i fritekstfeltet -- som nøytrale substantiver, ikke ledende formuleringer, slik at de avgrenser omfanget uten å styre svaret.
+
+**Datamodellen er endret.** `FeedbackEntry.rating` + `.area` er erstattet av `.ratings` (ett tall per område). Poster fra v2.46-v2.50 leses fortsatt: `normalizeFeedbackEntry` i `lib/feedback/blobs.ts` legger det gamle tallet der det hørte hjemme. Poster fra områder som ikke lenger har egen karakter (språket, teknisk, annet) mister tallet, men beholder teksten -- som var det verdifulle i dem.
+
+**Adminpanelet viser nå ett snitt per område** i stedet for ett samlet tall, med antall svar under hvert. Ubesvarte holdes utenfor snittet: teller man dem som null, ser Spir kunstig dårlig ut bare fordi mange ikke brukte den. Nytt filter "Med tekst" for å hoppe rett til postene som sier noe.
+
+**Testet:** `npx tsc --noEmit` uten feil, også med `--noUnusedLocals`. **Ikke testet:** selve innsendingen ende-til-ende -- gjør en runde på mobil og sjekk at posten dukker opp i `/admin/tilbakemeldinger` med tre tall.
+
 ## Nytt: lukket alle funn fra kvalitetsrevisjonen 01.08.2026 (v2.50)
 
 Kvalitetsrevisjonen 01.08.2026 ga karakteren **7,6/10 (opp fra 6,2)** og hadde for første gang **ingen kritiske funn**. Alle 20 punktene på tiltakslisten er nå lukket. Kort om det som betyr mest for deg:

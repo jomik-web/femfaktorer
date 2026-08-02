@@ -13,24 +13,25 @@ import { filterChipClassNames } from "@/components/ui/Badge";
  * er rettet, eller står den fortsatt?
  */
 
+type RatedArea = "testen" | "resultatet" | "spir";
+
 interface FeedbackEntry {
   submittedAt: string;
-  rating: number | null;
+  /** v2.51: én karakter per område. `null` = ikke besvart, ALDRI "dårlig". */
+  ratings: Record<RatedArea, number | null>;
   message: string;
-  area: string;
   appVersion: string;
   device: string;
   durationSeconds: number | null;
 }
 
-const AREA_LABELS: Record<string, string> = {
-  testen: "Selve testen",
-  resultatet: "Resultatet",
+const AREA_LABELS: Record<RatedArea, string> = {
+  testen: "Testen",
+  resultatet: "Teksten om deg",
   spir: "Spir",
-  spraket: "Språket",
-  teknisk: "Noe teknisk",
-  annet: "Annet",
 };
+
+const RATED_AREAS = Object.keys(AREA_LABELS) as RatedArea[];
 
 function formatDate(iso: string): string {
   try {
@@ -67,16 +68,31 @@ export default function AdminFeedbackPage() {
     })();
   }, []);
 
+  // Filteret betyr nå "poster som har en karakter på dette området", siden
+  // hver post kan dekke flere områder.
   const filtered = useMemo(() => {
     if (!entries) return [];
-    return areaFilter === "alle" ? entries : entries.filter((e) => e.area === areaFilter);
+    if (areaFilter === "alle") return entries;
+    if (areaFilter === "medtekst") return entries.filter((e) => e.message.trim().length > 0);
+    return entries.filter((e) => e.ratings?.[areaFilter as RatedArea] !== null);
   }, [entries, areaFilter]);
 
-  const averageRating = useMemo(() => {
+  /**
+   * Ett snitt PER OMRÅDE. Ubesvarte (null) holdes utenfor -- teller man dem
+   * som 0, ser Spir kunstig dårlig ut bare fordi mange ikke brukte den.
+   */
+  const averages = useMemo(() => {
     if (!entries) return null;
-    const rated = entries.filter((e) => e.rating !== null);
-    if (rated.length === 0) return null;
-    return (rated.reduce((sum, e) => sum + (e.rating ?? 0), 0) / rated.length).toFixed(1);
+    return RATED_AREAS.map((area) => {
+      const values = entries
+        .map((e) => e.ratings?.[area])
+        .filter((v): v is number => typeof v === "number");
+      return {
+        area,
+        average: values.length > 0 ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : null,
+        count: values.length,
+      };
+    });
   }, [entries]);
 
   return (
@@ -92,24 +108,48 @@ export default function AdminFeedbackPage() {
 
       {entries && (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-1.5">
-              {["alle", ...Object.keys(AREA_LABELS)].map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setAreaFilter(key)}
-                  className={filterChipClassNames(areaFilter === key)}
+          {averages && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              {averages.map(({ area, average, count }) => (
+                <div
+                  key={area}
+                  className="flex flex-col gap-0.5 rounded-xl border border-lavender-400 p-4 dark:border-white/10"
                 >
-                  {key === "alle" ? "Alle" : AREA_LABELS[key]}
-                </button>
+                  <span className="text-xs text-indigo/60 dark:text-lavender-400/60">
+                    {AREA_LABELS[area]}
+                  </span>
+                  <span className="font-display text-2xl font-semibold text-indigo dark:text-white">
+                    {average ?? "–"}
+                    {average && (
+                      <span className="text-sm font-normal text-indigo/50 dark:text-lavender-400/50">
+                        {" "}
+                        av 5
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-xs text-indigo/45 dark:text-lavender-400/45">
+                    {count === 0 ? "ingen svar ennå" : `${count} svar`}
+                  </span>
+                </div>
               ))}
             </div>
-            {averageRating && (
-              <span className="text-xs text-indigo/50 dark:text-lavender-400/50">
-                Snittvurdering {averageRating} av 5
-              </span>
-            )}
+          )}
+
+          <div className="flex flex-wrap gap-1.5">
+            {["alle", ...RATED_AREAS, "medtekst"].map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setAreaFilter(key)}
+                className={filterChipClassNames(areaFilter === key)}
+              >
+                {key === "alle"
+                  ? "Alle"
+                  : key === "medtekst"
+                    ? "Med tekst"
+                    : AREA_LABELS[key as RatedArea]}
+              </button>
+            ))}
           </div>
 
           {filtered.length === 0 ? (
@@ -126,14 +166,21 @@ export default function AdminFeedbackPage() {
                   className="flex flex-col gap-2 rounded-xl border border-lavender-400 p-4 dark:border-white/10"
                 >
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="rounded-full bg-holo-sky/30 px-2 py-0.5 font-medium text-indigo dark:text-white">
-                      {AREA_LABELS[entry.area] ?? entry.area}
-                    </span>
-                    {entry.rating !== null && (
-                      <span className="text-indigo/60 dark:text-lavender-400/60">
-                        {entry.rating}/5
-                      </span>
-                    )}
+                    {RATED_AREAS.map((area) => {
+                      const value = entry.ratings?.[area];
+                      return (
+                        <span
+                          key={area}
+                          className={
+                            typeof value === "number"
+                              ? "rounded-full bg-holo-sky/30 px-2 py-0.5 font-medium text-indigo dark:text-white"
+                              : "rounded-full border border-lavender-400 px-2 py-0.5 text-indigo/40 dark:border-white/15 dark:text-lavender-400/40"
+                          }
+                        >
+                          {AREA_LABELS[area]} {typeof value === "number" ? `${value}/5` : "–"}
+                        </span>
+                      );
+                    })}
                     <span className="text-indigo/45 dark:text-lavender-400/45">
                       v{entry.appVersion} · {entry.device}
                       {entry.durationSeconds !== null &&
@@ -143,9 +190,15 @@ export default function AdminFeedbackPage() {
                       {formatDate(entry.submittedAt)}
                     </span>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm text-indigo/85 dark:text-lavender-400/85">
-                    {entry.message}
-                  </p>
+                  {entry.message.trim().length > 0 ? (
+                    <p className="whitespace-pre-wrap text-sm text-indigo/85 dark:text-lavender-400/85">
+                      {entry.message}
+                    </p>
+                  ) : (
+                    <p className="text-sm italic text-indigo/40 dark:text-lavender-400/40">
+                      Ingen fritekst -- bare karakterer.
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>

@@ -34,19 +34,56 @@ function feedbackStore() {
 /** Hvor lenge tilbakemeldinger beholdes. Se filhodet for hvorfor det er begrenset. */
 export const FEEDBACK_TTL_DAYS = 365;
 
+/**
+ * Områdene det gis karakter på (v2.48). Bevisst kort liste -- se
+ * FeedbackPrompt.tsx for hvorfor "språket", "teknisk" og "layout" IKKE har
+ * egne tall lenger.
+ */
+export const RATED_AREAS = ["testen", "resultatet", "spir"] as const;
+export type RatedArea = (typeof RATED_AREAS)[number];
+
 export interface FeedbackEntry {
   /** ISO 8601. Her er nøyaktig tidspunkt greit -- posten er ikke koblet til noe svarmønster. */
   submittedAt: string;
-  /** 1-5, der 5 er best. Valgfritt -- noen vil bare skrive. */
-  rating: number | null;
-  /** Selve tilbakemeldingen. */
+  /**
+   * Karakter 1-5 per område, der 5 er best. `null` betyr IKKE "dårlig", men
+   * "ikke besvart" -- for spir betyr det konkret at testeren ikke brukte den.
+   * Skillet er viktig når snittet regnes ut: en ubesvart post skal ikke telle
+   * som en lav skår.
+   */
+  ratings: Record<RatedArea, number | null>;
+  /** Fritekst. Valgfri fra v2.48 -- obligatorisk fritekst ganget frafallet. */
   message: string;
-  /** Hvilken del av nettstedet det gjelder. */
-  area: string;
   appVersion: string;
   device: string;
   /** Tidsbruk på testen i sekunder, om det er kjent. */
   durationSeconds: number | null;
+
+  /**
+   * v2.46-format, beholdt KUN for å kunne lese poster som allerede ligger i
+   * lagringen. Den gamle formen var én karakter + ett valgt område; den nye
+   * er én karakter per område. Skriv aldri disse feltene på nytt -- se
+   * normalizeFeedbackEntry under.
+   */
+  rating?: number | null;
+  area?: string;
+}
+
+/**
+ * Gjør en post fra hvilken som helst versjon lesbar med den nye formen.
+ * Gamle poster hadde ett tall knyttet til ett valgt område -- det tallet
+ * legges der det hørte hjemme, og resten står som ubesvart. Poster fra
+ * områder som ikke lenger har egen karakter ("språket", "teknisk", "annet")
+ * mister tallet sitt, men beholder teksten, som er det som faktisk var verdt
+ * noe i dem.
+ */
+export function normalizeFeedbackEntry(entry: FeedbackEntry): FeedbackEntry {
+  if (entry.ratings) return entry;
+  const ratings: Record<RatedArea, number | null> = { testen: null, resultatet: null, spir: null };
+  if (entry.area && (RATED_AREAS as readonly string[]).includes(entry.area)) {
+    ratings[entry.area as RatedArea] = entry.rating ?? null;
+  }
+  return { ...entry, ratings };
 }
 
 export async function storeFeedback(entry: FeedbackEntry): Promise<boolean> {
@@ -76,7 +113,7 @@ export async function listFeedback(limit = 100): Promise<FeedbackEntry[]> {
         }
       })
     );
-    return entries.filter((e): e is FeedbackEntry => e !== null);
+    return entries.filter((e): e is FeedbackEntry => e !== null).map(normalizeFeedbackEntry);
   } catch {
     return [];
   }

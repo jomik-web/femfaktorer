@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { storeFeedback, type FeedbackEntry } from "@/lib/feedback/blobs";
+import { storeFeedback, RATED_AREAS, type FeedbackEntry, type RatedArea } from "@/lib/feedback/blobs";
 import { incrementMetrics } from "@/lib/metrics/blobs";
 import { APP_VERSION } from "@/lib/version";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -9,8 +9,12 @@ export const runtime = "nodejs";
 /** Maks lengde på fritekst. Nok til et grundig avsnitt, lite nok til å ikke kunne misbrukes som lagring. */
 const MAX_MESSAGE_LENGTH = 4000;
 
-/** Hvilke deler av nettstedet en tilbakemelding kan gjelde. Lukket liste, som hendelsesnavnene i metrics. */
-const AREAS = ["testen", "resultatet", "spir", "spraket", "teknisk", "annet"] as const;
+/**
+ * Områder testeren MÅ gi en karakter. "spir" står utenfor med vilje: en
+ * tester som aldri åpnet den har ikke en mening å gi, og tvinger vi fram et
+ * tall der, får vi oppdiktede tall i stedet for ingen -- som er verre.
+ */
+const REQUIRED_AREAS = ["testen", "resultatet"] as const;
 
 /**
  * Tar imot en betatilbakemelding. Leser bevisst ingen cookies eller økt --
@@ -20,6 +24,11 @@ const AREAS = ["testen", "resultatet", "spir", "spraket", "teknisk", "annet"] as
  * med feltet: en klage må kunne knyttes til NØYAKTIG den versjonen testeren
  * så, ellers er den umulig å tolke etter noen utrullinger -- gjaldt den en
  * feil som allerede er rettet, eller står den fortsatt?
+ *
+ * v2.51: én karakter PER OMRÅDE i stedet for én karakter + ett valgt område,
+ * og fritekst er ikke lenger obligatorisk. Se FeedbackPrompt.tsx for
+ * begrunnelsen -- kort sagt ganger et obligatorisk fritekstfelt frafallet med
+ * omtrent 2,5, og var det dyreste enkeltvalget i den forrige utgaven.
  */
 export async function POST(request: Request) {
   // Misbruksbrems (v2.50, funn 5.3). Et åpent fritekstfelt som skriver til
@@ -38,33 +47,40 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as {
     message?: unknown;
-    rating?: unknown;
-    area?: unknown;
+    ratings?: unknown;
     device?: unknown;
     durationSeconds?: unknown;
   } | null;
 
-  if (!body || typeof body.message !== "string" || body.message.trim().length === 0) {
-    return NextResponse.json({ error: "Skriv noe før du sender." }, { status: 400 });
+  if (!body) {
+    return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
   }
 
-  const message = body.message.trim().slice(0, MAX_MESSAGE_LENGTH);
+  const raw = (body.ratings ?? {}) as Record<string, unknown>;
+  const ratings = Object.fromEntries(
+    RATED_AREAS.map((area) => {
+      const value = raw[area];
+      const valid = typeof value === "number" && value >= 1 && value <= 5;
+      return [area, valid ? Math.round(value as number) : null];
+    })
+  ) as Record<RatedArea, number | null>;
 
-  const rating =
-    typeof body.rating === "number" && body.rating >= 1 && body.rating <= 5
-      ? Math.round(body.rating)
-      : null;
+  for (const area of REQUIRED_AREAS) {
+    if (ratings[area] === null) {
+      return NextResponse.json(
+        { error: "Gi en karakter på både testen og resultatet før du sender." },
+        { status: 400 }
+      );
+    }
+  }
 
-  const area =
-    typeof body.area === "string" && (AREAS as readonly string[]).includes(body.area)
-      ? body.area
-      : "annet";
+  const message =
+    typeof body.message === "string" ? body.message.trim().slice(0, MAX_MESSAGE_LENGTH) : "";
 
   const entry: FeedbackEntry = {
     submittedAt: new Date().toISOString(),
-    rating,
+    ratings,
     message,
-    area,
     appVersion: APP_VERSION,
     device: typeof body.device === "string" ? body.device.slice(0, 20) : "ukjent",
     durationSeconds:
