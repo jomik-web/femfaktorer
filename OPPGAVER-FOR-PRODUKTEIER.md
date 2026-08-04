@@ -1,11 +1,24 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 01.08.2026
+Sist oppdatert: 03.08.2026
+
+## Nytt: vei ut av adminområdet etter utlogging (v2.52, 04.08.2026)
+
+**Rapportert:** logget man ut fra adminpanelet, havnet man på en nesten tom side med bare en "Logg inn"-knapp. Ingen meny, ingen bunntekst, ingen vei tilbake til testen. Eneste utvei var nettleserens tilbakeknapp.
+
+**Årsaken** er at toppmenyen og bunnteksten bevisst er skjult på `/admin` -- adminpanelet skal være et eget, avgrenset område uten den vanlige brukerreisen rundt seg. Det er riktig når man er inne i panelet, men ble en blindvei i det øyeblikket man ble logget ut.
+
+**Løsningen:** de to skjermene "ikke innlogget" og "ikke admin-tilgang" har nå tre lenker nederst -- **Til testen**, **Mitt resultat** og **Til forsiden**.
+
+Selve panelet er uendret. Der er fravær av sidenavigasjon fortsatt riktig: er du inne og jobber, ville lenker ut bare vært støy.
+
+**Ikke typesjekket:** `node_modules` finnes ikke i den nye prosjektmappa, så `npx tsc --noEmit` kunne ikke kjøres. Endringen er en liten, lokal komponent som kun bruker `Link` (allerede importert). Kjør `npm install` og `npm run build` før push.
 
 ## Gjenstår -- oversikt (oppdateres fortløpende, se datert changelog under for detaljer)
 
 Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenstår?" alltid kan besvares herfra uten å lete gjennom hele loggen.
 
+- **NYTT, IKKE KODET: prisene er hevet (besluttet 03.08.2026)** -- Standard fra 19 kr til 49 kr, Premium fra 99 kr til 249 kr. Besluttet i Dine_Fasetter_Forretnings-og-prismodell_v1.4.docx, del 6 og endringslogg, basert på konkurrentanalyse i eget regneark (`Dine_Fasetter_Prismodell_og_kostnadsanalyse_v1.0.xlsx`, `00 Forretning - Guldager Digital ENK/Økonomi`). `/priser`-siden og Stripe/Vipps-produktprisene i koden viser fortsatt de gamle beløpene -- dette er en kodeoppgave for en senere økt, ikke gjort her. Produkteier vurderer i tillegg om Standard-nivået bør fjernes helt til fordel for ett enkelt betalt nivå (foreslått 199 kr) -- se samme regneark for resonnementet. Ingen beslutning tatt om det ennå; ikke bygg om prisstrukturen før det er avklart.
 - **Partner-/vennekobling** (alle tre nivåvarianter -- skjermbilde for gratis, delbar lenke for Standard, e-postbekreftet + Spir-samtale for Premium). Ikke startet.
 - **Delbare bilder/kort til sosiale medier er FERDIG og live** (v2.37, 25.07.2026) -- delbart Spir-motiv-kort til slutt på rapporten, alle tre nivåer, tre skreddersydde formater. Se changelog under.
 - **PDF-nedlasting (`src/lib/pdfReport.ts`/jsPDF) er FERDIG og live**, ikke ubesluttet arbeid som tidligere logget her -- denne oversikten var kommet ute av synk med kodestatus (funnet i kvalitetsrevisjonen 24.07.2026). Kun kodesplittet i denne runden slik at avhengigheten ikke lastes for besøkende som ikke bruker den.

@@ -31,6 +31,47 @@ const TABS = [
 
 type Screen = "loading" | "logged-out" | "not-admin" | "ok";
 
+/**
+ * Vei ut av adminområdet (v2.50, produkteiers rapport 04.08.2026).
+ *
+ * BAKGRUNN: toppmenyen og bunnteksten er bevisst skjult på /admin (se
+ * SiteNav og SiteFooter, som returnerer null der) -- adminpanelet skal være
+ * et eget, avgrenset område uten den vanlige brukerreisen rundt seg.
+ *
+ * Bieffekten var en blindvei: logget man ut fra panelet, satt man igjen med
+ * en nesten tom side der eneste utvei var å logge inn igjen. Ingen meny,
+ * ingen bunntekst, ingen vei tilbake til nettstedet. Eneste utvei var
+ * nettleserens tilbakeknapp eller å skrive inn adressen manuelt.
+ *
+ * Vises KUN på de to skjermene der man ikke er inne i panelet. Inne i selve
+ * panelet er fravær av sidenavigasjon fortsatt riktig -- da er man i gang
+ * med noe, og lenker ut ville bare vært støy.
+ */
+function ExitLinks() {
+  return (
+    <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+      <Link
+        href="/test"
+        className="text-indigo/70 underline underline-offset-2 dark:text-lavender-400/70"
+      >
+        Til testen
+      </Link>
+      <Link
+        href="/resultat"
+        className="text-indigo/70 underline underline-offset-2 dark:text-lavender-400/70"
+      >
+        Mitt resultat
+      </Link>
+      <Link
+        href="/"
+        className="text-indigo/70 underline underline-offset-2 dark:text-lavender-400/70"
+      >
+        Til forsiden
+      </Link>
+    </div>
+  );
+}
+
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [screen, setScreen] = useState<Screen>("loading");
@@ -83,6 +124,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <Link href="/logg-inn" className={buttonClassNames("primary", "md")}>
           Logg inn
         </Link>
+        <ExitLinks />
       </main>
     );
   }
@@ -103,6 +145,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         >
           Logg ut
         </button>
+        <ExitLinks />
       </main>
     );
   }
