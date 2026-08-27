@@ -142,20 +142,28 @@ export function canShareFiles(file: File): boolean {
  * IKKE også vise en nedlastingsknapp-handling i tillegg), `false` hvis
  * nettleseren ikke støtter det (kalleren bør falle tilbake til nedlasting).
  *
- * `url` (v2.46, Kvalitetsrevisjon 31.07.2026, kap. 11, funn #2 -- lav):
- * valgfri lenke som gis videre til `navigator.share` -- de fleste
- * delearkmottakere (Meldinger, e-post o.l.) viser denne som en klikkbar
- * lenke ved siden av bildet, slik at mottakeren finner tilbake til testen.
- * Bevisst IKKE en hardkodet "dinefasetter.no" (domenet er ikke registrert/
- * live ennå) -- kalleren sender inn `window.location.origin`, som alltid er
- * korrekt for stedet siden faktisk kjører, uansett om det er en
- * Netlify-underdomene eller det fremtidige egendefinerte domenet.
+ * `url` SENDES BEVISST IKKE LENGER VIDERE (v2.52, 02.08.2026 -- produkteier
+ * testet deling til Messenger og fikk KUN en lenkeforhåndsvisning, ikke
+ * kortet sitt).
+ *
+ * Årsak: `navigator.share` gir hele nyttelasten til mottakerappen, og det er
+ * MOTTAKEREN som bestemmer hva den bruker. Får Messenger både en fil og en
+ * `url`, velger den lenken og lager et OG-forhåndsvisningskort av nettstedet
+ * -- bildet forsvinner. Det samme gjelder flere andre delemål. Man kan i
+ * praksis ikke få både bilde og klikkbar lenke; man må velge.
+ *
+ * Vi velger bildet. Det er bildet som faktisk sprer seg, og domenet er
+ * allerede påført kortene som en footer (se memeCards.ts), så mottakeren
+ * finner veien uansett -- samme løsning som Spotify Wrapped bruker.
+ *
+ * Parameteren beholdes i signaturen slik at kallerne ikke må endres, men den
+ * er ubrukt. Fjern den helt hvis du er sikker på at den ikke skal tilbake.
  */
 export async function shareImageFile(
   blob: Blob,
   filename: string,
   shareText: string,
-  url?: string
+  _url?: string
 ): Promise<boolean> {
   // v2.44 (Kvalitetsrevisjon 31.07.2026, kap. 4): brukte tidligere en
   // hardkodet "image/png" -- feil for de ferdigproduserte meme-kortene, som
@@ -166,7 +174,7 @@ export async function shareImageFile(
   const file = new File([blob], filename, { type: blob.type || "image/png" });
   if (!canShareFiles(file)) return false;
   try {
-    await navigator.share(url ? { files: [file], text: shareText, url } : { files: [file], text: shareText });
+    await navigator.share({ files: [file], text: shareText });
     return true;
   } catch (err) {
     // Brukeren avbrøt deleark-valget -- ikke en feil, bare ikke fall videre til nedlasting.
