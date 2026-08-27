@@ -117,6 +117,12 @@ export default function AdminSettingsPage() {
           onChange={(v) => void save({ resultAccountSaveEnabled: v })}
         />
         <Toggle
+          label="Deling av kort"
+          description="Av under betatestingen: kortene peker til dinefasetter.no, som ikke er registrert ennå. Skru på når domenet er koblet til."
+          checked={settings.sharingEnabled}
+          onChange={(v) => void save({ sharingEnabled: v })}
+        />
+        <Toggle
           label="Svardata-verktøyet (last ned/opp CSV)"
           description="Betatesternes måte å slippe å svare på alt på nytt etter en oppdatering."
           checked={settings.betaAnswerSetToolsEnabled}

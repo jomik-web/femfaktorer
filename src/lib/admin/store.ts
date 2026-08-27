@@ -22,6 +22,7 @@ import {
   ACCOUNT_SAVE_ENABLED,
   RESULT_ACCOUNT_SAVE_ENABLED,
   BETA_ANSWER_SET_TOOLS_ENABLED,
+  SHARING_ENABLED,
 } from "@/lib/featureFlags";
 
 function manualConfig(): { siteID: string; token: string } | Record<string, never> {
@@ -61,6 +62,8 @@ export interface AdminSettings {
   accountSaveEnabled: boolean;
   resultAccountSaveEnabled: boolean;
   betaAnswerSetToolsEnabled: boolean;
+  /** Deling av meme-kort. Av under beta -- se SHARING_ENABLED i featureFlags.ts. */
+  sharingEnabled: boolean;
 }
 
 export interface AdminStoreData {
@@ -77,6 +80,7 @@ const DEFAULT_SETTINGS: AdminSettings = {
   accountSaveEnabled: ACCOUNT_SAVE_ENABLED,
   resultAccountSaveEnabled: RESULT_ACCOUNT_SAVE_ENABLED,
   betaAnswerSetToolsEnabled: BETA_ANSWER_SET_TOOLS_ENABLED,
+  sharingEnabled: SHARING_ENABLED,
 };
 
 export async function readStore(): Promise<AdminStoreData> {

@@ -43,6 +43,9 @@ export async function POST(request: Request) {
   if (typeof body.resultAccountSaveEnabled === "boolean") {
     next.resultAccountSaveEnabled = body.resultAccountSaveEnabled;
   }
+  if (typeof body.sharingEnabled === "boolean") {
+    next.sharingEnabled = body.sharingEnabled;
+  }
   if (typeof body.betaAnswerSetToolsEnabled === "boolean") {
     next.betaAnswerSetToolsEnabled = body.betaAnswerSetToolsEnabled;
   }

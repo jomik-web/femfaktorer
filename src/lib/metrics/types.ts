@@ -50,6 +50,12 @@ export const METRIC_EVENTS = [
   "spir_opened",
   /** Sendte inn en betatilbakemelding. */
   "feedback_submitted",
+  /**
+   * Trykket "Del bildet" eller "Last ned bildet". Telles OGSA naar delingen
+   * er avslaatt under beta -- da er dette maalet paa om folk i det hele tatt
+   * vil dele, og dermed om kortene er verdt mer arbeid.
+   */
+  "share_attempted",
   /** Lot avkrysningen for anonym forskningsdata stå på. */
   "research_consented",
   /** Fjernet haken for anonym forskningsdata. */

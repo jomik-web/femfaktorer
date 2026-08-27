@@ -36,3 +36,22 @@ export const RESULT_ACCOUNT_SAVE_ENABLED = false;
 
 /** Synlige last ned/last opp-knapper for svarsett på resultatsiden -- KUN for betatestperioden. */
 export const BETA_ANSWER_SET_TOOLS_ENABLED = true;
+
+/**
+ * Deling av meme-kort (v2.53, 02.08.2026, produkteiers ønske) -- AV under
+ * betatestingen.
+ *
+ * Grunnen er ikke at delingen ikke virker, men HVOR den peker: kortene har
+ * "dinefasetter.no" malt inn i footeren, og det domenet er ikke registrert
+ * ennå. Deler noen et kort nå, havner den som blir nysgjerrig på en død
+ * adresse -- den dårligst tenkelige førstekontakten med produktet.
+ *
+ * Seksjonen VISES fortsatt, med vilje: vi vil vite om folk i det hele tatt
+ * prøver å dele. Knappene sier fra at funksjonen kommer, og hvert forsøk
+ * telles som `share_attempted` i statistikken. Er tallet null når betaen er
+ * over, vet du at kortene ikke er verdt mer arbeid.
+ *
+ * SKRU PÅ når domenet er registrert og koblet til Netlify. Det kan gjøres
+ * fra adminpanelet uten ny utrulling.
+ */
+export const SHARING_ENABLED = false;

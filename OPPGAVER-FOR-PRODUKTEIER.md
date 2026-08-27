@@ -2,6 +2,27 @@
 
 Sist oppdatert: 03.08.2026
 
+## Nytt: deling avskrudd under beta + rettet at bildet forsvant (v2.53, 04.08.2026)
+
+Produkteier delte et meme-kort til Messenger og fikk **bare en lenkeforhåndsvisning av nettstedet** -- ikke sitt eget kort. Det avdekket to ting.
+
+**Feilen (rettet):** `shareImageFile` sendte både filen og en `url` til `navigator.share`. Hele nyttelasten gis videre til mottakerappen, og det er MOTTAKEREN som velger hva den bruker -- Messenger valgte lenken og laget et OG-kort av nettstedet, så bildet forsvant. Man kan i praksis ikke få både bilde og klikkbar lenke; man må velge. Vi velger bildet: det er det som faktisk sprer seg, og domenet er allerede malt inn i kortene som footer (samme løsning som Spotify Wrapped). `url`-parameteren står igjen i signaturen som `_url`, ubrukt.
+
+**Det større problemet (utsatt, med vilje):** kortene har `dinefasetter.no` malt inn i footeren, men domenet er ikke registrert. Deler noen et kort nå, havner den nysgjerrige på en død adresse -- dårligst tenkelige førstekontakt. Produkteier registrerer domenet etter betatestingen.
+
+**Derfor er deling nå avskrudd med en bryter,** `sharingEnabled` (standard `false`, se `SHARING_ENABLED` i `featureFlags.ts`). Kan skrus på fra Admin → Innstillinger uten ny utrulling, den dagen domenet er koblet til Netlify.
+
+**Seksjonen vises fortsatt, og knappene er klikkbare -- det er et bevisst valg.** Trykker man, kommer det en tekst om at deling åpnes ved lansering, og forsøket telles som `share_attempted` i statistikken. Det tallet er hele grunnen til at seksjonen ikke bare er skjult: er det null når betaen er over, vet du at kortene ikke er verdt mer arbeid. Skjuler du funksjonen, får du aldri vite det.
+
+**Å GJØRE NÅR DOMENET ER PÅ PLASS:**
+
+1. Registrer `dinefasetter.no` og koble det til Netlify (Domain management → Add custom domain).
+2. Bekreft at adressen faktisk serverer siden.
+3. Admin → Innstillinger → skru på **Deling av kort**.
+4. Del ett kort til deg selv fra mobil og bekreft at bildet -- ikke en lenke -- kommer fram.
+
+**Testet:** `tsc --noEmit` og `eslint` uten feil. Testene kan ikke kjøres i sandkassen (macOS-binærfiler i `node_modules`), men `metrics/types.test.ts` itererer over listen og sjekker unikhet, uten hardkodet antall, så den nye hendelsen påvirker den ikke. **Ikke verifisert i nettleser:** at meldingen faktisk vises ved klikk -- kjør `npm run dev` og trykk på begge knappene.
+
 ## Nytt: vei ut av adminområdet etter utlogging (v2.52, 04.08.2026)
 
 **Rapportert:** logget man ut fra adminpanelet, havnet man på en nesten tom side med bare en "Logg inn"-knapp. Ingen meny, ingen bunntekst, ingen vei tilbake til testen. Eneste utvei var nettleserens tilbakeknapp.

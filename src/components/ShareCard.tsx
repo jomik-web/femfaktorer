@@ -14,6 +14,8 @@ import {
   type ShareFormat,
 } from "@/lib/shareCard";
 import { buttonClassNames } from "@/components/ui/Button";
+import { useFlags } from "@/components/FlagsProvider";
+import { trackEvent } from "@/lib/metrics/client";
 
 /**
  * Delbart Spir-kort, vist til slutt på rapporten (se resultat/page.tsx).
@@ -117,6 +119,7 @@ function useRovingRadioGroup<T extends string>(keys: readonly T[], selected: T, 
 
 function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtMissing: () => void }) {
   const [selectedKey, setSelectedKey] = useState(items[0]!.key);
+  const { sharingEnabled } = useFlags();
   const [format, setFormat] = useState<ShareFormat>("story");
   const [busy, setBusy] = useState<"share" | "download" | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -145,7 +148,22 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
     }
   }
 
+  /**
+   * Delingen er avskrudd under beta, men knappene står fortsatt der og er
+   * klikkbare -- med vilje. Hvert forsøk telles som `share_attempted`, og
+   * det tallet er hele grunnen til at seksjonen ikke bare er skjult: er det
+   * null når betaen er over, vet du at kortene ikke er verdt mer arbeid.
+   * Returnerer true når kallet ble stoppet her.
+   */
+  function blockedByBeta(): boolean {
+    if (sharingEnabled) return false;
+    trackEvent("share_attempted");
+    setFeedback(SHARING_OFF_MESSAGE);
+    return true;
+  }
+
   async function handleShare() {
+    if (blockedByBeta()) return;
     setBusy("share");
     setFeedback(null);
     const blob = await fetchCurrentAsBlob();
@@ -153,12 +171,8 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
       setBusy(null);
       return;
     }
-    const shared = await shareImageFile(
-      blob,
-      downloadFilename,
-      GENERIC_SHARE_TEXT,
-      typeof window !== "undefined" ? window.location.origin : undefined
-    );
+    trackEvent("share_attempted");
+    const shared = await shareImageFile(blob, downloadFilename, GENERIC_SHARE_TEXT);
     if (!shared) {
       downloadBlob(blob, downloadFilename);
       setFeedback("Bildet ble lastet ned i stedet -- del det manuelt fra nedlastingene dine.");
@@ -167,10 +181,12 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
   }
 
   async function handleDownload() {
+    if (blockedByBeta()) return;
     setBusy("download");
     setFeedback(null);
     const blob = await fetchCurrentAsBlob();
     if (blob) {
+      trackEvent("share_attempted");
       downloadBlob(blob, downloadFilename);
       setFeedback("Bildet er lastet ned.");
     }
@@ -334,6 +350,15 @@ function MemeShareCard({ items, onArtMissing }: { items: MemeShareItem[]; onArtM
   );
 }
 
+/**
+ * Meldingen som vises i stedet for å dele, mens sharingEnabled er av.
+ * Se SHARING_ENABLED i featureFlags.ts for hvorfor: kortene har
+ * dinefasetter.no malt inn i footeren, og det domenet er ikke registrert
+ * ennå -- en delt kort ville sendt nysgjerrige til en død adresse.
+ */
+const SHARING_OFF_MESSAGE =
+  "Deling åpnes når testen lanseres for alvor -- den er avskrudd mens vi betatester. Takk for at du ville dele!";
+
 // ---------- v2.37: fallback -- SVG-generert domenekort (ingen meme-kort tilgjengelig ennå) ----------
 
 function DomainShareCard({ factors }: { factors: FactorResult[] }) {
@@ -346,6 +371,7 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
   // meningsløs inkonsistens mellom de to variantene av samme funksjon.
   // Unifisert til "story" begge steder (produkteiers begrunnelse for at
   // story skal være standard, se FORMAT_ORDER-kommentaren over).
+  const { sharingEnabled } = useFlags();
   const [format, setFormat] = useState<ShareFormat>("story");
   const [busy, setBusy] = useState<"share" | "download" | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -374,7 +400,16 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
     }
   }
 
+  /** Samme betasperre som i hovedkortet over -- se kommentaren der. */
+  function blockedByBeta(): boolean {
+    if (sharingEnabled) return false;
+    trackEvent("share_attempted");
+    setFeedback(SHARING_OFF_MESSAGE);
+    return true;
+  }
+
   async function handleShare() {
+    if (blockedByBeta()) return;
     setBusy("share");
     setFeedback(null);
     const blob = await renderCurrentToBlob();
@@ -382,12 +417,8 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
       setBusy(null);
       return;
     }
-    const shared = await shareImageFile(
-      blob,
-      spec.filename,
-      GENERIC_SHARE_TEXT,
-      typeof window !== "undefined" ? window.location.origin : undefined
-    );
+    trackEvent("share_attempted");
+    const shared = await shareImageFile(blob, spec.filename, GENERIC_SHARE_TEXT);
     if (!shared) {
       // Nettleseren støtter ikke fildeling -- fall tilbake til nedlasting,
       // slik at knappen uansett gjør NOE nyttig i stedet for å feile stille.
@@ -398,10 +429,12 @@ function DomainShareCard({ factors }: { factors: FactorResult[] }) {
   }
 
   async function handleDownload() {
+    if (blockedByBeta()) return;
     setBusy("download");
     setFeedback(null);
     const blob = await renderCurrentToBlob();
     if (blob) {
+      trackEvent("share_attempted");
       downloadBlob(blob, spec.filename);
       setFeedback("Bildet er lastet ned.");
     }

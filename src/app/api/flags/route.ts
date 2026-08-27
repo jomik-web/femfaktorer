@@ -24,6 +24,7 @@ export async function GET() {
       accountSaveEnabled: settings.accountSaveEnabled,
       resultAccountSaveEnabled: settings.resultAccountSaveEnabled,
       betaAnswerSetToolsEnabled: settings.betaAnswerSetToolsEnabled,
+      sharingEnabled: settings.sharingEnabled,
       /**
        * v2.49: hvilket domene passkeys er bundet til. Trygt å eksponere --
        * det er nettstedets eget domene, ikke en hemmelighet.

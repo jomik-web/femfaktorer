@@ -5,6 +5,7 @@ import {
   ACCOUNT_SAVE_ENABLED,
   RESULT_ACCOUNT_SAVE_ENABLED,
   BETA_ANSWER_SET_TOOLS_ENABLED,
+  SHARING_ENABLED,
 } from "@/lib/featureFlags";
 
 /**
@@ -31,6 +32,8 @@ export interface RuntimeFlags {
   accountSaveEnabled: boolean;
   resultAccountSaveEnabled: boolean;
   betaAnswerSetToolsEnabled: boolean;
+  /** Deling av meme-kort -- av under beta, se SHARING_ENABLED. */
+  sharingEnabled: boolean;
   /**
    * v2.49: domenet passkeys er bundet til. Tom streng betyr "vet ikke ennå"
    * (svaret er ikke kommet) -- da skal ingen advarsel vises, siden vi ikke
@@ -44,6 +47,7 @@ export const DEFAULT_FLAGS: RuntimeFlags = {
   accountSaveEnabled: ACCOUNT_SAVE_ENABLED,
   resultAccountSaveEnabled: RESULT_ACCOUNT_SAVE_ENABLED,
   betaAnswerSetToolsEnabled: BETA_ANSWER_SET_TOOLS_ENABLED,
+  sharingEnabled: SHARING_ENABLED,
   passkeyRpID: "",
 };
 
@@ -60,6 +64,7 @@ function isRuntimeFlags(value: unknown): value is RuntimeFlags {
     typeof v.accountSaveEnabled === "boolean" &&
     typeof v.resultAccountSaveEnabled === "boolean" &&
     typeof v.betaAnswerSetToolsEnabled === "boolean" &&
+    typeof v.sharingEnabled === "boolean" &&
     typeof v.passkeyRpID === "string"
   );
 }
