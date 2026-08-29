@@ -74,7 +74,7 @@ export const ALL_QUESTIONS: readonly Question[] = [
   { id: "n3_1", facet: "N3", facetName: "Depression", domain: "N", textEn: "Often feel blue.", textNo: "Jeg føler meg ofte nedfor.", reverse: false, order: 11 },
   { id: "e3_1", facet: "E3", facetName: "Assertiveness", domain: "E", textEn: "Take charge.", textNo: "Jeg tar styringen.", reverse: false, order: 12 },
   { id: "o3_1", facet: "O3", facetName: "Emotionality", domain: "O", textEn: "Experience my emotions intensely.", textNo: "Jeg opplever følelsene mine sterkt.", reverse: false, order: 13 },
-  { id: "a3_1", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Love to help others.", textNo: "Jeg liker godt å hjelpe andre.", reverse: false, order: 14 },
+  { id: "a3_1", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Love to help others.", textNo: "Jeg elsker å hjelpe andre.", reverse: false, order: 14 },
   { id: "c3_1", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Keep my promises.", textNo: "Jeg holder løftene mine.", reverse: false, order: 15 },
   { id: "n4_1", facet: "N4", facetName: "Self-Consciousness", domain: "N", textEn: "Find it difficult to approach others.", textNo: "Jeg synes det er vanskelig å ta kontakt med andre.", reverse: false, order: 16 },
   { id: "e4_1", facet: "E4", facetName: "Activity Level", domain: "E", textEn: "Am always busy.", textNo: "Jeg har det alltid travelt.", reverse: false, order: 17 },
@@ -89,7 +89,7 @@ export const ALL_QUESTIONS: readonly Question[] = [
   { id: "n6_1", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Panic easily.", textNo: "Jeg får lett panikk.", reverse: false, order: 26 },
   { id: "e6_1", facet: "E6", facetName: "Cheerfulness", domain: "E", textEn: "Radiate joy.", textNo: "Jeg utstråler glede.", reverse: false, order: 27 },
   { id: "o1_comp", facet: "O1", facetName: "Imagination", domain: "O", textEn: "Spend time reflecting on things.", textNo: "Jeg bruker tid på å reflektere over ting.", reverse: false, order: 28, compensatesForO6: true },
-  { id: "a6_1", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Sympathize with the homeless.", textNo: "Jeg føler medynk med hjemløse.", reverse: false, order: 29 },
+  { id: "a6_1", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Sympathize with the homeless.", textNo: "Jeg føler medfølelse med hjemløse.", reverse: false, order: 29 },
   { id: "c6_1", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Jump into things without thinking.", textNo: "Jeg kaster meg ut i ting uten å tenke meg om.", reverse: true, order: 30 },
 
   // ---- Runde 2 (order 31-50 er fortsatt del av gratisversjonen) ----
@@ -101,7 +101,7 @@ export const ALL_QUESTIONS: readonly Question[] = [
   { id: "n2_2", facet: "N2", facetName: "Anger", domain: "N", textEn: "Get irritated easily.", textNo: "Jeg blir lett irritert.", reverse: false, order: 36 },
   { id: "e2_2", facet: "E2", facetName: "Gregariousness", domain: "E", textEn: "Talk to a lot of different people at parties.", textNo: "Jeg snakker med mange forskjellige folk på fester.", reverse: false, order: 37 },
   { id: "o2_2", facet: "O2", facetName: "Artistic Interests", domain: "O", textEn: "See beauty in things that others might not notice.", textNo: "Jeg legger merke til skjønnhet andre kan overse.", reverse: false, order: 38 },
-  { id: "a2_2", facet: "A2", facetName: "Morality", domain: "A", textEn: "Cheat to get ahead.", textNo: "Jeg jukser for å komme seg frem.", reverse: true, order: 39 },
+  { id: "a2_2", facet: "A2", facetName: "Morality", domain: "A", textEn: "Cheat to get ahead.", textNo: "Jeg jukser for å komme meg frem.", reverse: true, order: 39 },
   { id: "c2_2", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Often forget to put things back in their proper place.", textNo: "Jeg glemmer ofte å legge ting tilbake på plass.", reverse: true, order: 40 },
   { id: "n3_2", facet: "N3", facetName: "Depression", domain: "N", textEn: "Dislike myself.", textNo: "Jeg liker ikke meg selv.", reverse: false, order: 41 },
   { id: "e3_2", facet: "E3", facetName: "Assertiveness", domain: "E", textEn: "Try to lead others.", textNo: "Jeg forsøker å lede andre.", reverse: false, order: 42 },
@@ -111,7 +111,7 @@ export const ALL_QUESTIONS: readonly Question[] = [
   { id: "n4_2", facet: "N4", facetName: "Self-Consciousness", domain: "N", textEn: "Am afraid to draw attention to myself.", textNo: "Jeg er redd for å tiltrekke meg oppmerksomhet.", reverse: false, order: 46 },
   { id: "e4_2", facet: "E4", facetName: "Activity Level", domain: "E", textEn: "Am always on the go.", textNo: "Jeg er alltid i farta.", reverse: false, order: 47 },
   { id: "o4_2", facet: "O4", facetName: "Adventurousness", domain: "O", textEn: "Prefer to stick with things that I know.", textNo: "Jeg foretrekker å holde meg til det jeg kjenner.", reverse: true, order: 48 },
-  { id: "a4_2", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Yell at people.", textNo: "Jeg roper til folk.", reverse: true, order: 49 },
+  { id: "a4_2", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Yell at people.", textNo: "Jeg kjefter på folk.", reverse: true, order: 49 },
   { id: "c4_2", facet: "C4", facetName: "Achievement-Striving", domain: "C", textEn: "Do more than what's expected of me.", textNo: "Jeg gjør mer enn det som forventes av meg.", reverse: false, order: 50 },
 
   // ---- Runde 2 fortsetter (order 51-60) -- del av full test (51-120) ----
@@ -123,7 +123,7 @@ export const ALL_QUESTIONS: readonly Question[] = [
   { id: "n6_2", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Become overwhelmed by events.", textNo: "Jeg blir overveldet av det som skjer.", reverse: false, order: 56 },
   { id: "e6_2", facet: "E6", facetName: "Cheerfulness", domain: "E", textEn: "Have a lot of fun.", textNo: "Jeg har det ofte gøy.", reverse: false, order: 57 },
   { id: "o2_comp", facet: "O2", facetName: "Artistic Interests", domain: "O", textEn: "Enjoy the beauty of nature.", textNo: "Jeg setter pris på naturens skjønnhet.", reverse: false, order: 58, compensatesForO6: true },
-  { id: "a6_2", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Feel sympathy for those who are worse off than myself.", textNo: "Jeg føler sympati for de som har det verre enn meg selv.", reverse: false, order: 59 },
+  { id: "a6_2", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Feel sympathy for those who are worse off than myself.", textNo: "Jeg føler medfølelse med dem som har det verre enn meg.", reverse: false, order: 59 },
   { id: "c6_2", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Make rash decisions.", textNo: "Jeg tar forhastede beslutninger.", reverse: true, order: 60 },
 
   // ---- Runde 3 (order 61-90) ----
@@ -167,7 +167,7 @@ export const ALL_QUESTIONS: readonly Question[] = [
   { id: "n2_4", facet: "N2", facetName: "Anger", domain: "N", textEn: "Am not easily annoyed.", textNo: "Det skal mye til før jeg blir irritert.", reverse: true, order: 96 },
   { id: "e2_4", facet: "E2", facetName: "Gregariousness", domain: "E", textEn: "Avoid crowds.", textNo: "Jeg unngår folkemengder.", reverse: true, order: 97 },
   { id: "o2_4", facet: "O2", facetName: "Artistic Interests", domain: "O", textEn: "Do not enjoy going to art museums.", textNo: "Jeg liker ikke å gå på kunstmuseer.", reverse: true, order: 98 },
-  { id: "a2_4", facet: "A2", facetName: "Morality", domain: "A", textEn: "Obstruct others' plans.", textNo: "Jeg saboterer andres planer.", reverse: true, order: 99 },
+  { id: "a2_4", facet: "A2", facetName: "Morality", domain: "A", textEn: "Obstruct others' plans.", textNo: "Jeg legger hindringer i veien for andres planer.", reverse: true, order: 99 },
   { id: "c2_4", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Leave my belongings around.", textNo: "Jeg lar tingene mine ligge og flyte.", reverse: true, order: 100 },
   { id: "n3_4", facet: "N3", facetName: "Depression", domain: "N", textEn: "Feel comfortable with myself.", textNo: "Jeg har det bra med meg selv.", reverse: true, order: 101 },
   { id: "e3_4", facet: "E3", facetName: "Assertiveness", domain: "E", textEn: "Wait for others to lead the way.", textNo: "Jeg venter på at andre skal vise vei.", reverse: true, order: 102 },
@@ -187,7 +187,7 @@ export const ALL_QUESTIONS: readonly Question[] = [
   { id: "n6_4", facet: "N6", facetName: "Vulnerability", domain: "N", textEn: "Remain calm under pressure.", textNo: "Jeg holder meg rolig under press.", reverse: true, order: 116 },
   { id: "e6_4", facet: "E6", facetName: "Cheerfulness", domain: "E", textEn: "Look at the bright side of life.", textNo: "Jeg ser lyst på livet.", reverse: false, order: 117 },
   { id: "o5_comp", facet: "O5", facetName: "Intellect", domain: "O", textEn: "Enjoy thinking about things.", textNo: "Jeg liker å tenke på ting.", reverse: false, order: 118, compensatesForO6: true },
-  { id: "a6_4", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Try not to think about the needy.", textNo: "Jeg prøver å ikke tenke på de som har det vanskelig.", reverse: true, order: 119 },
+  { id: "a6_4", facet: "A6", facetName: "Sympathy", domain: "A", textEn: "Try not to think about the needy.", textNo: "Jeg prøver å ikke tenke på dem som har det vanskelig.", reverse: true, order: 119 },
   { id: "c6_4", facet: "C6", facetName: "Cautiousness", domain: "C", textEn: "Act without thinking.", textNo: "Jeg handler uten å tenke.", reverse: true, order: 120 },
 ] as const;
 
@@ -234,7 +234,7 @@ export const EXTENDED_QUESTIONS_N: readonly Question[] = [
   { id: "n2_9", facet: "N2", facetName: "Anger", domain: "N", textEn: "Keep my cool.", textNo: "Jeg holder hodet kaldt.", reverse: true, order: 131 },
   { id: "n2_10", facet: "N2", facetName: "Anger", domain: "N", textEn: "Rarely complain.", textNo: "Jeg klager sjelden.", reverse: true, order: 132 },
 
-  { id: "n3_5", facet: "N3", facetName: "Depression", domain: "N", textEn: "Have a low opinion of myself.", textNo: "Jeg har lave tanker om meg selv.", reverse: false, order: 133 },
+  { id: "n3_5", facet: "N3", facetName: "Depression", domain: "N", textEn: "Have a low opinion of myself.", textNo: "Jeg har en lav oppfatning av meg selv.", reverse: false, order: 133 },
   { id: "n3_6", facet: "N3", facetName: "Depression", domain: "N", textEn: "Have frequent mood swings.", textNo: "Jeg har ofte humørsvingninger.", reverse: false, order: 134 },
   { id: "n3_7", facet: "N3", facetName: "Depression", domain: "N", textEn: "Feel desperate.", textNo: "Jeg føler meg fortvilet.", reverse: false, order: 135 },
   { id: "n3_8", facet: "N3", facetName: "Depression", domain: "N", textEn: "Feel that my life lacks direction.", textNo: "Jeg føler at livet mitt mangler retning.", reverse: false, order: 136 },
@@ -343,10 +343,10 @@ export const EXTENDED_QUESTIONS_O: readonly Question[] = [
 export const EXTENDED_QUESTIONS_A: readonly Question[] = [
   { id: "a1_5", facet: "A1", facetName: "Trust", domain: "A", textEn: "Believe that people are basically moral.", textNo: "Jeg tror folk grunnleggende sett er moralske.", reverse: false, order: 219 },
   { id: "a1_6", facet: "A1", facetName: "Trust", domain: "A", textEn: "Believe in human goodness.", textNo: "Jeg tror på det gode i mennesket.", reverse: false, order: 220 },
-  { id: "a1_7", facet: "A1", facetName: "Trust", domain: "A", textEn: "Think that all will be well.", textNo: "Jeg tror som regel at alt ordner seg.", reverse: false, order: 221 },
-  { id: "a1_8", facet: "A1", facetName: "Trust", domain: "A", textEn: "Suspect hidden motives in others.", textNo: "Jeg mistenker ofte andre for skjulte motiver.", reverse: true, order: 222 },
+  { id: "a1_7", facet: "A1", facetName: "Trust", domain: "A", textEn: "Think that all will be well.", textNo: "Jeg tror at alt ordner seg.", reverse: false, order: 221 },
+  { id: "a1_8", facet: "A1", facetName: "Trust", domain: "A", textEn: "Suspect hidden motives in others.", textNo: "Jeg mistenker andre for skjulte motiver.", reverse: true, order: 222 },
   { id: "a1_9", facet: "A1", facetName: "Trust", domain: "A", textEn: "Am wary of others.", textNo: "Jeg er på vakt overfor andre.", reverse: true, order: 223 },
-  { id: "a1_10", facet: "A1", facetName: "Trust", domain: "A", textEn: "Believe that people are essentially evil.", textNo: "Jeg tror grunnleggende sett at folk er onde.", reverse: true, order: 224 },
+  { id: "a1_10", facet: "A1", facetName: "Trust", domain: "A", textEn: "Believe that people are essentially evil.", textNo: "Jeg tror folk grunnleggende sett er onde.", reverse: true, order: 224 },
 
   { id: "a2_5", facet: "A2", facetName: "Morality", domain: "A", textEn: "Would never cheat on my taxes.", textNo: "Jeg ville aldri jukset med skatten.", reverse: false, order: 225 },
   { id: "a2_6", facet: "A2", facetName: "Morality", domain: "A", textEn: "Stick to the rules.", textNo: "Jeg holder meg til reglene.", reverse: false, order: 226 },
@@ -362,7 +362,7 @@ export const EXTENDED_QUESTIONS_A: readonly Question[] = [
   { id: "a3_9", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Make people feel uncomfortable.", textNo: "Jeg får andre til å føle seg utilpass.", reverse: true, order: 235 },
   { id: "a3_10", facet: "A3", facetName: "Altruism", domain: "A", textEn: "Turn my back on others.", textNo: "Jeg snur ryggen til andre.", reverse: true, order: 236 },
 
-  { id: "a4_5", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Am easy to satisfy.", textNo: "Jeg er lett å tilfredsstille.", reverse: false, order: 237 },
+  { id: "a4_5", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Am easy to satisfy.", textNo: "Jeg er lett å gjøre til lags.", reverse: false, order: 237 },
   { id: "a4_6", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Can't stand confrontations.", textNo: "Jeg tåler ikke konfrontasjoner.", reverse: false, order: 238 },
   { id: "a4_7", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Hate to seem pushy.", textNo: "Jeg hater å virke pågående.", reverse: false, order: 239 },
   { id: "a4_8", facet: "A4", facetName: "Cooperation", domain: "A", textEn: "Have a sharp tongue.", textNo: "Jeg har en skarp tunge.", reverse: true, order: 240 },
@@ -371,7 +371,7 @@ export const EXTENDED_QUESTIONS_A: readonly Question[] = [
 
   { id: "a5_5", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Dislike being the center of attention.", textNo: "Jeg liker ikke å være midtpunktet.", reverse: false, order: 243 },
   { id: "a5_6", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Dislike talking about myself.", textNo: "Jeg liker ikke å snakke om meg selv.", reverse: false, order: 244 },
-  { id: "a5_7", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Consider myself an average person.", textNo: "Jeg anser meg selv som ganske gjennomsnittlig.", reverse: false, order: 245 },
+  { id: "a5_7", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Consider myself an average person.", textNo: "Jeg anser meg selv som gjennomsnittlig.", reverse: false, order: 245 },
   { id: "a5_8", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Seldom toot my own horn.", textNo: "Jeg skryter sjelden av meg selv.", reverse: false, order: 246 },
   { id: "a5_9", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Know the answers to many questions.", textNo: "Jeg vet svaret på mange spørsmål.", reverse: true, order: 247 },
   { id: "a5_10", facet: "A5", facetName: "Modesty", domain: "A", textEn: "Make myself the center of attention.", textNo: "Jeg gjør meg selv til midtpunktet.", reverse: true, order: 248 },

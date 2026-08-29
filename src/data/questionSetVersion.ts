@@ -66,7 +66,19 @@ import { ALL_QUESTIONS_EXTENDED } from "@/data/questions";
  *     endret. Hovedfunnet: «følelsesladet» ble brukt om mennesker i to item,
  *     mens NAOBs belegg utelukkende gjelder ting (dikt, roller, slagord).
  *
- * A og C er foreløpig kun endret språklig (punkt a), ikke innholdsmessig.
+ *  e) Medmenneskelighet (60 item) er gjennomgått innholdsmessig. 12
+ *     formuleringer endret, pluss én rettelse tilbake i N3. Domenet hadde
+ *     flest sikre feil: to grammatikkfeil («komme seg frem» der subjektet er
+ *     jeg, og «de som» etter preposisjon to steder), og «medynk» der NAOB
+ *     definerer ordet som «å ynkes over noen» — nedlatende der originalen er
+ *     likeverdig medfølelse.
+ *
+ *     N3 `n3_5` er endret fra «lave tanker» til «lav oppfatning». Grunnen er
+ *     at A5 har den parallelle konstruksjonen «Have a high opinion of
+ *     myself», og de to må løses likt. «Tanker» hører nå til think
+ *     highly/lowly, «oppfatning» til high/low opinion, på tvers av domenene.
+ *
+ * C er foreløpig kun endret språklig (punkt a), ikke innholdsmessig.
  * Hver kommende domenegjennomgang øker revisjonen på nytt.
  */
 export const QUESTION_SET_REVISION = 2;
