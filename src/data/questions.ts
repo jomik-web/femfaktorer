@@ -386,22 +386,22 @@ export const EXTENDED_QUESTIONS_A: readonly Question[] = [
 
 export const EXTENDED_QUESTIONS_C: readonly Question[] = [
   { id: "c1_5", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Am sure of my ground.", textNo: "Jeg er trygg i det jeg gjør.", reverse: false, order: 255 },
-  { id: "c1_6", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Come up with good solutions.", textNo: "Jeg kommer opp med gode løsninger.", reverse: false, order: 256 },
+  { id: "c1_6", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Come up with good solutions.", textNo: "Jeg finner gode løsninger.", reverse: false, order: 256 },
   { id: "c1_7", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Misjudge situations.", textNo: "Jeg feilvurderer situasjoner.", reverse: true, order: 257 },
-  { id: "c1_8", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Don't understand things.", textNo: "Jeg forstår ikke alltid ting.", reverse: true, order: 258 },
+  { id: "c1_8", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Don't understand things.", textNo: "Jeg forstår ikke hvordan ting henger sammen.", reverse: true, order: 258 },
   { id: "c1_9", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Have little to contribute.", textNo: "Jeg har lite å bidra med.", reverse: true, order: 259 },
-  { id: "c1_10", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Don't see the consequences of things.", textNo: "Jeg ser ikke alltid konsekvensene av ting.", reverse: true, order: 260 },
+  { id: "c1_10", facet: "C1", facetName: "Self-Efficacy", domain: "C", textEn: "Don't see the consequences of things.", textNo: "Jeg ser ikke hva ting fører til.", reverse: true, order: 260 },
 
   { id: "c2_5", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Like order.", textNo: "Jeg liker orden.", reverse: false, order: 261 },
   { id: "c2_6", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Want everything to be \"just right.\"", textNo: "Jeg vil at alt skal være akkurat riktig.", reverse: false, order: 262 },
   { id: "c2_7", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Love order and regularity.", textNo: "Jeg elsker orden og faste rutiner.", reverse: false, order: 263 },
   { id: "c2_8", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Do things according to a plan.", textNo: "Jeg gjør ting etter en plan.", reverse: false, order: 264 },
-  { id: "c2_9", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Am not bothered by messy people.", textNo: "Jeg bryr meg ikke om rotete mennesker.", reverse: true, order: 265 },
-  { id: "c2_10", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Am not bothered by disorder.", textNo: "Jeg bryr meg ikke om uorden.", reverse: true, order: 266 },
+  { id: "c2_9", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Am not bothered by messy people.", textNo: "Jeg lar meg ikke plage av rotete mennesker.", reverse: true, order: 265 },
+  { id: "c2_10", facet: "C2", facetName: "Orderliness", domain: "C", textEn: "Am not bothered by disorder.", textNo: "Jeg lar meg ikke plage av uorden.", reverse: true, order: 266 },
 
   { id: "c3_5", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Try to follow the rules.", textNo: "Jeg prøver å følge reglene.", reverse: false, order: 267 },
   { id: "c3_6", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Pay my bills on time.", textNo: "Jeg betaler regningene i tide.", reverse: false, order: 268 },
-  { id: "c3_7", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Listen to my conscience.", textNo: "Jeg følger samvittigheten min.", reverse: false, order: 269 },
+  { id: "c3_7", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Listen to my conscience.", textNo: "Jeg lytter til samvittigheten min.", reverse: false, order: 269 },
   { id: "c3_8", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Get others to do my duties.", textNo: "Jeg får andre til å gjøre pliktene mine.", reverse: true, order: 270 },
   { id: "c3_9", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Do the opposite of what is asked.", textNo: "Jeg gjør det motsatte av det som blir bedt om.", reverse: true, order: 271 },
   { id: "c3_10", facet: "C3", facetName: "Dutifulness", domain: "C", textEn: "Misrepresent the facts.", textNo: "Jeg fremstiller fakta feil.", reverse: true, order: 272 },
@@ -414,7 +414,7 @@ export const EXTENDED_QUESTIONS_C: readonly Question[] = [
   { id: "c4_10", facet: "C4", facetName: "Achievement-Striving", domain: "C", textEn: "Am not highly motivated to succeed.", textNo: "Jeg er ikke spesielt motivert for å lykkes.", reverse: true, order: 278 },
 
   { id: "c5_5", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Get chores done right away.", textNo: "Jeg gjør unna gjøremål med en gang.", reverse: false, order: 279 },
-  { id: "c5_6", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Start tasks right away.", textNo: "Jeg starter oppgaver umiddelbart.", reverse: false, order: 280 },
+  { id: "c5_6", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Start tasks right away.", textNo: "Jeg starter på oppgaver med en gang.", reverse: false, order: 280 },
   { id: "c5_7", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Get to work at once.", textNo: "Jeg går rett i gang med arbeidet.", reverse: false, order: 281 },
   { id: "c5_8", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Find it difficult to get down to work.", textNo: "Jeg synes det er vanskelig å komme i gang med arbeid.", reverse: true, order: 282 },
   { id: "c5_9", facet: "C5", facetName: "Self-Discipline", domain: "C", textEn: "Need a push to get started.", textNo: "Jeg trenger et puff for å komme i gang.", reverse: true, order: 283 },

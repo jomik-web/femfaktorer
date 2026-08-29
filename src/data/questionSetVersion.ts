@@ -78,8 +78,19 @@ import { ALL_QUESTIONS_EXTENDED } from "@/data/questions";
  *     myself», og de to må løses likt. «Tanker» hører nå til think
  *     highly/lowly, «oppfatning» til high/low opinion, på tvers av domenene.
  *
- * C er foreløpig kun endret språklig (punkt a), ikke innholdsmessig.
- * Hver kommende domenegjennomgang øker revisjonen på nytt.
+ *  f) Planmessighet (60 item) er gjennomgått innholdsmessig. 7 formuleringer
+ *     endret. Hovedfunnet: «Jeg bryr meg ikke om rotete mennesker/uorden» for
+ *     `Am not bothered by …` målte feil begrep. NAOB definerer «bry seg om»
+ *     som «vise interesse for; være interessert i», og med person som objekt
+ *     «være glad i» — altså en dom over dem, ikke egen toleranse. Sammen med
+ *     «Overdriver sjelden» i N er dette de to eneste stedene i hele testen
+ *     der norsk tekst målte noe annet enn fasetten.
+ *
+ * ALLE FEM DOMENER ER NÅ GJENNOMGÅTT. Videre kvalitetssikring bør skje mot
+ * innsamlede data (leddanalyse), ikke mot teksten alene -- en gjennomgang av
+ * ordlyden finner ikke item som fungerer dårlig psykometrisk.
+ *
+ * Endres spørsmålsteksten igjen etter dette, øk revisjonen til 3.
  */
 export const QUESTION_SET_REVISION = 2;
 
