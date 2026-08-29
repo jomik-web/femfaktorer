@@ -62,7 +62,11 @@ import { ALL_QUESTIONS_EXTENDED } from "@/data/questions";
  *     («gjerne», «helst») og tre engelske uttrykk som var kollapset til samme
  *     norske ord.
  *
- * O, A og C er foreløpig kun endret språklig (punkt a), ikke innholdsmessig.
+ *  d) Åpenhet (50 item) er gjennomgått innholdsmessig. 11 formuleringer
+ *     endret. Hovedfunnet: «følelsesladet» ble brukt om mennesker i to item,
+ *     mens NAOBs belegg utelukkende gjelder ting (dikt, roller, slagord).
+ *
+ * A og C er foreløpig kun endret språklig (punkt a), ikke innholdsmessig.
  * Hver kommende domenegjennomgang øker revisjonen på nytt.
  */
 export const QUESTION_SET_REVISION = 2;
