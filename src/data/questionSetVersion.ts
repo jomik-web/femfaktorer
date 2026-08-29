@@ -39,10 +39,18 @@ import { ALL_QUESTIONS_EXTENDED } from "@/data/questions";
 /**
  * Økes manuelt ved reell endring i spørsmålssettet. Se filhodet.
  *
- * Revisjon 1 = spørsmålssettet slik det har stått siden 19.07.2026
- * (siste endring i questions.ts, commit 5bb6f80). Innsamlingen starter her.
+ * Revisjon 1 = spørsmålssettet slik det stod fra 19.07.2026 til 04.08.2026
+ * (siste endring i questions.ts, commit 5bb6f80).
+ *
+ * Revisjon 2 = språkgjennomgangen av nevrotisisme (04.08.2026). Alle 60
+ * N-item er omskrevet: subjektet «Jeg» er lagt til, og sju formuleringer er
+ * endret etter en gjennomgang mot engelsk original og fasettdefinisjonene.
+ * Én av dem, «Overdriver sjelden» for `Rarely overindulge`, målte et annet
+ * begrep enn fasetten — svar på det item fra revisjon 1 kan derfor IKKE
+ * sammenlignes med revisjon 2. De øvrige fire domenene er urørt i denne
+ * omgangen og gjennomgås hver for seg; hver slik runde øker revisjonen igjen.
  */
-export const QUESTION_SET_REVISION = 1;
+export const QUESTION_SET_REVISION = 2;
 
 /**
  * FNV-1a, 32 bit. Valgt fordi den er kort, deterministisk og ikke krever noe

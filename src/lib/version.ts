@@ -20,4 +20,4 @@
  * samtykkevalg som endrer HVEM som bidrar med data. Nøyaktig den typen
  * glidning questionSetVersion.ts er bygget for å hindre ett nivå ned.
  */
-export const APP_VERSION = "2.53";
+export const APP_VERSION = "2.54";
