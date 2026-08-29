@@ -42,13 +42,22 @@ import { ALL_QUESTIONS_EXTENDED } from "@/data/questions";
  * Revisjon 1 = spørsmålssettet slik det stod fra 19.07.2026 til 04.08.2026
  * (siste endring i questions.ts, commit 5bb6f80).
  *
- * Revisjon 2 = språkgjennomgangen av nevrotisisme (04.08.2026). Alle 60
- * N-item er omskrevet: subjektet «Jeg» er lagt til, og sju formuleringer er
- * endret etter en gjennomgang mot engelsk original og fasettdefinisjonene.
- * Én av dem, «Overdriver sjelden» for `Rarely overindulge`, målte et annet
- * begrep enn fasetten — svar på det item fra revisjon 1 kan derfor IKKE
- * sammenlignes med revisjon 2. De øvrige fire domenene er urørt i denne
- * omgangen og gjennomgås hver for seg; hver slik runde øker revisjonen igjen.
+ * Revisjon 2 = språkgjennomgangen påbegynt 04.08.2026. To ting skjedde:
+ *
+ *  a) ALLE 290 item har fått subjektet «Jeg». Engelsk IPIP er laget for å
+ *     følge en innledning og tåler underforstått subjekt; norsk gjør ikke
+ *     det, og «Bekymrer meg for ting» leste som et fragment. Rent mekanisk
+ *     endring, ingen betydning er rørt. Unntaket er `n2_4`, der «Det skal
+ *     mye til før jeg blir irritert» er valgt bevisst.
+ *
+ *  b) Nevrotisisme (60 item) er i tillegg gjennomgått innholdsmessig mot
+ *     engelsk original og fasettdefinisjonene. Sju formuleringer er endret.
+ *     Én av dem, «Overdriver sjelden» for `Rarely overindulge`, målte et
+ *     annet begrep enn fasetten — svar på det item fra revisjon 1 kan derfor
+ *     IKKE sammenlignes med revisjon 2.
+ *
+ * E, O, A og C er foreløpig kun endret språklig (punkt a), ikke innholdsmessig.
+ * Hver kommende domenegjennomgang øker revisjonen på nytt.
  */
 export const QUESTION_SET_REVISION = 2;
 
