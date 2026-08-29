@@ -1,6 +1,6 @@
 # Oppgaver før/under bygging av første utkast
 
-Sist oppdatert: 03.08.2026
+Sist oppdatert: 04.08.2026
 
 ## Nytt: deling avskrudd under beta + rettet at bildet forsvant (v2.53, 04.08.2026)
 
@@ -40,6 +40,18 @@ Selve panelet er uendret. Der er fravær av sidenavigasjon fortsatt riktig: er d
 Dette punktet holdes alltid oppdatert øverst i dokumentet, slik at "hva gjenstår?" alltid kan besvares herfra uten å lete gjennom hele loggen.
 
 - **NYTT, IKKE KODET: prisene er hevet (besluttet 03.08.2026)** -- Standard fra 19 kr til 49 kr, Premium fra 99 kr til 249 kr. Besluttet i Dine_Fasetter_Forretnings-og-prismodell_v1.4.docx, del 6 og endringslogg, basert på konkurrentanalyse i eget regneark (`Dine_Fasetter_Prismodell_og_kostnadsanalyse_v1.0.xlsx`, `00 Forretning - Guldager Digital ENK/Økonomi`). `/priser`-siden og Stripe/Vipps-produktprisene i koden viser fortsatt de gamle beløpene -- dette er en kodeoppgave for en senere økt, ikke gjort her. Produkteier vurderer i tillegg om Standard-nivået bør fjernes helt til fordel for ett enkelt betalt nivå (foreslått 199 kr) -- se samme regneark for resonnementet. Ingen beslutning tatt om det ennå; ikke bygg om prisstrukturen før det er avklart.
+- **NYTT, IKKE BYGGET: samlet informasjonsside om testen** (besluttet 04.08.2026, under språkgjennomgangen). Skal svare på det en tester lurer på, samlet ett sted i stedet for spredt. Innholdet er avklart, siden er ikke laget:
+  - **At fasetten O6 Liberalism er utelatt** og hvorfor (IPIP måler den gjennom politiske og religiøse påstander, som er særlig kategori persondata etter GDPR art. 9). De fire posisjonene er erstattet med item fra andre åpenhetsfasetter. Siden sier i dag «bygger på IPIP-NEO-120» uten å opplyse om avviket -- den som leser det, tror de tar IPIP-NEO-120, men tar en tilpasning av den.
+  - **At den norske teksten er oversatt for denne testen**, og hva det betyr. Dette er det viktigste punktet: IPIP-NEO-120 sine psykometriske egenskaper er dokumentert på ENGELSK. Den norske versjonen arver utformingen, ikke bevisene. En uvalidert oversettelse av et validert instrument er ikke et validert instrument. Språkgjennomgangen 04.08.2026 fant to item som målte feil begrep -- det illustrerer nettopp hvorfor.
+  - **Hvordan skåren beregnes**, og hvorfor den vises som bånd og ikke tall. Står allerede på `/slik-fungerer` og er godt formulert -- skal samles hit.
+  - **Hva testen ikke er.** Står også allerede.
+  - **Personvern:** hva som lagres lokalt, hva som sendes anonymt, hva forskningsdataene brukes til.
+  - **Spørsmål testere faktisk vil ha:** «hvorfor fikk jeg dette resultatet?», «kan resultatet endre seg?», «hvem ser svarene mine?»
+
+  **Formuleringer å holde seg til:** «bygger på femfaktormodellen», «bygger på IPIP-NEO-120, et fritt tilgjengelig forskningsbasert spørsmålssett», «spørsmålene er oversatt til norsk for denne testen». **Skal IKKE sies:** at testen *er* IPIP-NEO-120, at den er «validert» eller «sertifisert», eller noe som knytter den til NEO-PI-R (Costa og McCraes kommersielle, varemerkebeskyttede instrument).
+
+  Merk: det finnes ingen godkjenningsordning for personlighetstester rettet mot privatpersoner i Norge, så ingen tilpasning gjør testen «ikke godkjent». DNVs sertifisering (Sertifiseringsrådet for testbruk, bygget på EFPAs standarder) gjelder arbeidspsykologiske verktøy i rekruttering -- relevant først hvis testen en dag skal brukes slik.
+
 - **Partner-/vennekobling** (alle tre nivåvarianter -- skjermbilde for gratis, delbar lenke for Standard, e-postbekreftet + Spir-samtale for Premium). Ikke startet.
 - **Delbare bilder/kort til sosiale medier er FERDIG og live** (v2.37, 25.07.2026) -- delbart Spir-motiv-kort til slutt på rapporten, alle tre nivåer, tre skreddersydde formater. Se changelog under.
 - **PDF-nedlasting (`src/lib/pdfReport.ts`/jsPDF) er FERDIG og live**, ikke ubesluttet arbeid som tidligere logget her -- denne oversikten var kommet ute av synk med kodestatus (funnet i kvalitetsrevisjonen 24.07.2026). Kun kodesplittet i denne runden slik at avhengigheten ikke lastes for besøkende som ikke bruker den.
