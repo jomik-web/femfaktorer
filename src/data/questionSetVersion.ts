@@ -56,7 +56,13 @@ import { ALL_QUESTIONS_EXTENDED } from "@/data/questions";
  *     annet begrep enn fasetten — svar på det item fra revisjon 1 kan derfor
  *     IKKE sammenlignes med revisjon 2.
  *
- * E, O, A og C er foreløpig kun endret språklig (punkt a), ikke innholdsmessig.
+ *  c) Ekstroversjon (60 item) er gjennomgått innholdsmessig. 19 formuleringer
+ *     endret. Ingen av dem målte feil begrep slik «Overdriver sjelden» gjorde
+ *     i N — funnene var upresise eller tunge formuleringer, tillagte adverb
+ *     («gjerne», «helst») og tre engelske uttrykk som var kollapset til samme
+ *     norske ord.
+ *
+ * O, A og C er foreløpig kun endret språklig (punkt a), ikke innholdsmessig.
  * Hver kommende domenegjennomgang øker revisjonen på nytt.
  */
 export const QUESTION_SET_REVISION = 2;
