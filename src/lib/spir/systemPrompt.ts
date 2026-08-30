@@ -51,6 +51,29 @@ import { FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
  * i stedet for det engelske IPIP-navnet, og (b) legge til en eksplisitt
  * retningsregel (`SCORE_DIRECTION_NOTE`) som ber Spir se bort fra egen
  * bakgrunnskunnskap om hvordan lignende skalaer normalt er orientert.
+ *
+ * v2.60 (04.08.2026): SAMME FEIL KOM TILBAKE. En betatester fikk 87/100 og
+ * ble beskrevet som "svært irritabel". Rotårsaken denne gangen var at
+ * v2.20-rettelsen ikke fjernet konflikten, bare la en regel oppå den:
+ *
+ *   - N2 (Irritabilitet / sindighet), domene N: 87/100
+ *
+ * Fire signaler i én linje. "N2" er Anger i IPIP. "domene N" er Neuroticism.
+ * "Irritabilitet" står rett ved siden av tallet. Bare regelen pekte riktig --
+ * og den krevde at modellen leste merkelappen, fant skråstreken, plukket
+ * siste ord og bandt tallet til det. Hver gang, for hver fasett, midt i en
+ * samtale. Dessuten gjaldt regelen bare de fem fasettene som HAR skråstrek,
+ * så modellen måtte i tillegg avgjøre om den var relevant.
+ *
+ * Fikset ved å fjerne konflikten i stedet for å veie den opp: fasettlinjen
+ * inneholder nå KUN det unipolare navnet og tallet ("- Sindighet: 87/100"),
+ * og den guidede prompten får samme unipolare navn (se api/spir/route.ts).
+ * Det finnes ikke lenger noe signal som peker feil vei.
+ *
+ * MERK: dette gjør feilen usannsynlig, ikke umulig. En språkmodell er
+ * sannsynlighetsbasert. Den strukturelle garantien får man først ved å la
+ * koden bære faktapåstanden og Spir bare stille spørsmålet -- se skissen i
+ * prosjektnotatene, ikke besluttet ennå.
  */
 
 const SHARED_INTRO =
@@ -73,7 +96,7 @@ const SHARED_TONE_RULES = `REGLER DU ALDRI SKAL BRYTE:
  * v2.20: eksplisitt retningsanker for tallene -- se filhodets feilrettingsnotat.
  * Skal ALLTID vises rett under fasettlisten i begge prompt-varianter.
  */
-const SCORE_DIRECTION_NOTE = `VIKTIG OM RETNING PÅ TALLENE: for hver fasett over betyr en høy skår alltid mer av det ordet som står SIST i den norske merkelappen, når merkelappen er delt med skråstrek (f.eks. i "Bekymring / ro" betyr en høy skår MER RO, ikke mer bekymring -- i "Nedstemthet / motstandskraft" betyr en høy skår MER MOTSTANDSKRAFT). Stol UTELUKKENDE på dette prinsippet og på selve tallet du får oppgitt -- ikke på egen bakgrunnskunnskap om hvordan lignende psykologiske delskalaer (f.eks. engelske IPIP-fasettnavn) vanligvis er orientert. Denne tjenesten har bevisst snudd retningen på enkelte fasetter (særlig innen Emosjonell stabilitet) slik at en høy skår alltid samsvarer med retningen til hovedfaktoren den hører til.`;
+const SCORE_DIRECTION_NOTE = `VIKTIG OM RETNING PÅ TALLENE: navnet på hver fasett over er ALLTID den enden en HØY skår peker mot. Skårer brukeren 87 av 100 på "Sindighet", er hun altså svært sindig -- ikke svært irritabel. Stol UTELUKKENDE på navnet og tallet du får oppgitt, ikke på egen bakgrunnskunnskap om hvordan lignende psykologiske delskalaer vanligvis er orientert.`;
 
 function buildFactorAndFacetLines(factors: FactorResult[], facets: FacetResult[]): { factorLines: string; facetLines: string } {
   const factorLines = factors.map((f) => `- ${f.label}: ${f.score}/100`).join("\n");
@@ -81,12 +104,14 @@ function buildFactorAndFacetLines(factors: FactorResult[], facets: FacetResult[]
     facets.length > 0
       ? facets
           .map((f) => {
-            // Norsk bipolart visningsnavn (samme som i selve rapporten) --
-            // IKKE det engelske IPIP-navnet (f.eks. "Anxiety"), som har
-            // motsatt implisitt retning av det snudde tallet for N-fasetter.
-            // Se v2.20-feilrettingen i filhodet.
-            const label = FACET_INTERPRETATIONS[f.facet]?.label ?? f.facetName;
-            return `- ${f.facet} (${label}), domene ${f.domain}: ${f.score}/100`;
+            // v2.60: KUN det unipolare navnet og tallet. Alt annet er fjernet
+            // med vilje -- se filhodets feilrettingsnotat. Den forrige formen
+            // var `- N2 (Irritabilitet / sindighet), domene N: 87/100`, der
+            // tre av fire signaler pekte feil vei: IPIP-koden "N2" (Anger),
+            // domenebokstaven "N" (Neuroticism) og ordet "Irritabilitet" rett
+            // ved siden av tallet. Ingen av dem gir Spir noe hun trenger.
+            const label = FACET_INTERPRETATIONS[f.facet]?.textLabel ?? f.facetName;
+            return `- ${label}: ${f.score}/100`;
           })
           .join("\n")
       : "(ikke tilgjengelig i denne samtalen)";

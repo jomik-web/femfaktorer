@@ -309,7 +309,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Ugyldig underkategori for guidet gjennomgang." }, { status: 400 });
     }
     systemPrompt = buildGuidedFacetSystemPrompt(body.factors, body.facets ?? [], {
-      facetLabel: facetMeta.label,
+      // v2.60: UNIPOLART navn, ikke det bipolare. Den guidede prompten
+      // skriver "tolkning av brukerens skår på \"${ctx.facetLabel}\"
+      // (${ctx.facetScore}/100)" -- med den bipolare merkelappen havnet det
+      // motsatte ordet rett ved siden av tallet, i selve instruksen om hva
+      // Spir skulle åpne med. Se facetInterpretations.ts sitt textLabel-felt.
+      facetLabel: facetMeta.textLabel,
       facetDescription: facetMeta.description,
       domainLabel: DISPLAY_FACTOR_LABELS_NO[DOMAIN_TO_DISPLAY[facetMeta.domain]],
       facetScore: facetScoreEntry.score,
