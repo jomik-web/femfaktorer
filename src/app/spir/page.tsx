@@ -200,6 +200,9 @@ export default function FemPage() {
             isLastFacetOverall: position.isLastFacetOverall,
             // Ny fasett -- ingen vinkler brukt ennå.
             usedAngleIds: [],
+            // v2.63: forskyver startvinkelen, slik at ikke alle fasetter
+            // åpner med samme spørsmålstype. Se data/questionAngles.ts.
+            facetIndex: index,
           },
         }),
       });
@@ -357,6 +360,7 @@ export default function FemPage() {
                   exchangeCountForFacet: guidedExchangeCountForFacet,
                   isLastFacetOverall: guidedPosition.isLastFacetOverall,
                   usedAngleIds,
+                  facetIndex: guidedIndex,
                 },
               }
             : {}),

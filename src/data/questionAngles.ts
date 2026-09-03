@@ -77,9 +77,29 @@ export const QUESTION_ANGLES: readonly QuestionAngle[] = [
  * Neste ubrukte vinkel for denne fasetten. Returnerer null når alle er brukt
  * -- da har temaet vært snudd fra seks kanter, og Spir bør si det rett ut i
  * stedet for å begynne på nytt (se buildGuidedFacetSystemPrompt).
+ *
+ * `startOffset` (v2.63) roterer HVOR i listen fasetten begynner. Uten den
+ * åpnet hver eneste av de 29 underkategoriene med den første vinkelen, siden
+ * brukte vinkler nullstilles ved hver ny fasett. Produkteier så det med én
+ * gang i test: to fasetter på rad åpnet med "finnes det likevel ..." -- samme
+ * spørsmålstype, bare nye ord. Rotasjonen virket innenfor én fasett, men ikke
+ * på tvers av dem.
+ *
+ * Med offset lik fasettens plass i gjennomgangen åpner fasett 1 med unntaket,
+ * fasett 2 med situasjonen, fasett 3 med andres blikk, og så videre. Innenfor
+ * hver fasett fortsetter rotasjonen som før, rundt lista.
  */
-export function nextAngle(usedAngleIds: readonly string[]): QuestionAngle | null {
-  return QUESTION_ANGLES.find((a) => !usedAngleIds.includes(a.id)) ?? null;
+export function nextAngle(
+  usedAngleIds: readonly string[],
+  startOffset = 0
+): QuestionAngle | null {
+  const n = QUESTION_ANGLES.length;
+  const start = ((startOffset % n) + n) % n;
+  for (let i = 0; i < n; i += 1) {
+    const angle = QUESTION_ANGLES[(start + i) % n];
+    if (angle && !usedAngleIds.includes(angle.id)) return angle;
+  }
+  return null;
 }
 
 export function isValidAngleId(value: unknown): value is string {

@@ -119,6 +119,8 @@ interface FemRequestBody {
      * gjentas, så det trenger ingen serverside-sperre.
      */
     usedAngleIds?: string[];
+    /** v2.63: fasettens plass i gjennomgangen (0-basert). Forskyver hvilken spørsmålsvinkel den åpner med -- se data/questionAngles.ts. */
+    facetIndex?: number;
   };
 }
 
@@ -158,7 +160,8 @@ function isValidGuidedFacet(value: unknown): value is NonNullable<FemRequestBody
     v.exchangeCountForFacet >= 0 &&
     typeof v.isLastFacetOverall === "boolean" &&
     (v.usedAngleIds === undefined ||
-      (Array.isArray(v.usedAngleIds) && v.usedAngleIds.every((a) => typeof a === "string")))
+      (Array.isArray(v.usedAngleIds) && v.usedAngleIds.every((a) => typeof a === "string"))) &&
+    (v.facetIndex === undefined || (typeof v.facetIndex === "number" && v.facetIndex >= 0))
   );
 }
 
@@ -313,7 +316,12 @@ export async function POST(request: Request) {
   // v2.61: vinkelen velges her, og meldes tilbake til klienten i svaret slik
   // at neste spørsmål på samme fasett blir en annen type.
   const chosenAngle = body.guidedFacet
-    ? nextAngle((body.guidedFacet.usedAngleIds ?? []).filter(isValidAngleId))
+    ? nextAngle(
+        (body.guidedFacet.usedAngleIds ?? []).filter(isValidAngleId),
+        // v2.63: forskyv startvinkelen med fasettens plass i gjennomgangen,
+        // slik at ikke alle 29 åpner med samme spørsmålstype.
+        body.guidedFacet.facetIndex ?? 0
+      )
     : null;
 
   if (body.guidedFacet) {
@@ -464,7 +472,7 @@ export async function POST(request: Request) {
             { role: "assistant" as const, content: text },
             {
               role: "user" as const,
-              content: `Det svaret ble for langt (${countSentences(text)} setninger). Si det samme på høyst ${MAX_SENTENCES} setninger, med ETT spørsmål til slutt. Ikke legg til noe nytt -- stryk.`,
+              content: `Det svaret ble for langt (${countSentences(text)} setninger). Skriv det om til høyst ${MAX_SENTENCES} setninger. VIKTIG: spørsmålet til slutt skal BEHOLDES -- kort ned forklaringen foran det, ikke spørsmålet. Ikke legg til noe nytt.`,
             },
           ],
         }),
