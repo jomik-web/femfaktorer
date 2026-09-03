@@ -88,6 +88,10 @@ export default function FemPage() {
   // (nullstilles ved hver fremgang). Kun i bruk når mode === "guided".
   const [guidedIndex, setGuidedIndex] = useState(0);
   const [guidedExchangeCountForFacet, setGuidedExchangeCountForFacet] = useState(0);
+  // v2.61: hvilke spørsmålsvinkler Spir allerede har brukt på DENNE fasetten
+  // -- nullstilles ved hver fremgang, se sendGuidedTrigger. Serveren velger
+  // neste ubrukte, se data/questionAngles.ts.
+  const [usedAngleIds, setUsedAngleIds] = useState<string[]>([]);
   const [guidedDone, setGuidedDone] = useState(false);
 
   useEffect(() => {
@@ -194,6 +198,8 @@ export default function FemPage() {
             facetCode: position.facetCode,
             exchangeCountForFacet: 0,
             isLastFacetOverall: position.isLastFacetOverall,
+            // Ny fasett -- ingen vinkler brukt ennå.
+            usedAngleIds: [],
           },
         }),
       });
@@ -209,6 +215,7 @@ export default function FemPage() {
       ]);
       setGuidedIndex(index);
       setGuidedExchangeCountForFacet(0);
+      setUsedAngleIds(data.usedAngleId ? [data.usedAngleId] : []);
     } catch {
       setError("Fikk ikke kontakt med Spir. Sjekk nettforbindelsen og prøv igjen.");
     } finally {
@@ -332,6 +339,7 @@ export default function FemPage() {
                   facetCode: guidedPosition.facetCode,
                   exchangeCountForFacet: guidedExchangeCountForFacet,
                   isLastFacetOverall: guidedPosition.isLastFacetOverall,
+                  usedAngleIds,
                 },
               }
             : {}),
@@ -343,7 +351,14 @@ export default function FemPage() {
         return;
       }
       setMessages([...nextMessages, { role: "fem", text: data.reply }]);
-      if (guidedPosition) setGuidedExchangeCountForFacet((n) => n + 1);
+      if (guidedPosition) {
+        setGuidedExchangeCountForFacet((n) => n + 1);
+        // Serveren melder tilbake hvilken vinkel den valgte, slik at neste
+        // spørsmål blir en annen -- se data/questionAngles.ts.
+        if (typeof data.usedAngleId === "string") {
+          setUsedAngleIds((prev) => (prev.includes(data.usedAngleId) ? prev : [...prev, data.usedAngleId]));
+        }
+      }
     } catch {
       setError("Fikk ikke kontakt med Spir. Sjekk nettforbindelsen og prøv igjen.");
     } finally {

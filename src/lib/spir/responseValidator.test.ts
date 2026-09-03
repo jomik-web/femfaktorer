@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateSpirResponse, SPIR_FALLBACK_MESSAGE } from "./responseValidator";
+import { validateSpirResponse, SPIR_FALLBACK_MESSAGE, countSentences } from "./responseValidator";
 
 /**
  * Regresjonstester for Response Validator (kvalitetsrevisjon 2026-07-24,
@@ -62,5 +62,27 @@ describe("validateSpirResponse", () => {
   it("SPIR_FALLBACK_MESSAGE er satt og ikke-skyldplasserende", () => {
     expect(SPIR_FALLBACK_MESSAGE.length).toBeGreaterThan(0);
     expect(SPIR_FALLBACK_MESSAGE.toLowerCase()).not.toContain("din feil");
+  });
+});
+
+describe("countSentences (v2.61)", () => {
+  it("teller vanlige setninger", () => {
+    expect(countSentences("Én setning.")).toBe(1);
+    expect(countSentences("Én. To. Tre.")).toBe(3);
+    expect(countSentences("Spørsmål? Ja! Og punktum.")).toBe(3);
+  });
+
+  it("håndterer tekst uten avsluttende tegn", () => {
+    expect(countSentences("uten punktum")).toBe(1);
+    expect(countSentences("   ")).toBe(0);
+  });
+
+  it("flagger for lange svar, men ikke korte", () => {
+    const kort = "Én. To. Tre. Fire.";
+    const langt = "Én. To. Tre. Fire. Fem. Seks. Sju.";
+    expect(validateSpirResponse(kort).tooLong).toBe(false);
+    expect(validateSpirResponse(langt).tooLong).toBe(true);
+    // Lengde alene skal ikke se ut som et tonebrudd.
+    expect(validateSpirResponse(langt).flaggedTerms).toEqual([]);
   });
 });

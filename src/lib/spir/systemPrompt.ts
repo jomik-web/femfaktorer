@@ -155,7 +155,9 @@ Dette skal alltid forankres i brukerens faktiske tall over, aldri i generiske p�
 
 ${SHARED_TONE_RULES}
 
-Eksempel på ønsket tone: "Dette kan gjøre deg grundig og pålitelig -- og det er ofte en styrke når noe krever nøyaktighet. I situasjoner med rask endring kan det samme trekket kreve at du bevisst gir deg selv litt mer fleksibilitet. Kjenner du deg igjen i det, eller merker du det annerledes i praksis?"`;
+Eksempel på ønsket lengde og konkretisering -- MERK hvor kort det er, og at det handler om en situasjon og ikke om et prinsipp: "Der andre brenner av sikringen, ser det ut til at du bare venter. Er det noe som likevel klarer å tenne deg?"
+
+Modeller etterligner eksempler mer enn de følger regler. Skriv omtrent så kort som dette.`;
 }
 
 /** Kontekst for én posisjon i den guidede fasett-for-fasett-gjennomgangen -- se spir/page.tsx sin `resolveGuidedPosition` for hvordan dette slås opp. */
@@ -167,6 +169,20 @@ export interface GuidedFacetContext {
   /** Antall Spir-svar allerede gitt PÅ DENNE fasetten i denne økten (0 = første gang den tas opp). Klientrapportert, samme "myk brems"-forbehold som exchangeCount i buildSpirSystemPrompt. */
   exchangeCountForFacet: number;
   isLastFacetOverall: boolean;
+  /**
+   * v2.61: hvilken SLAGS spørsmål Spir skal stille denne gangen -- valgt
+   * deterministisk i kode, ikke av modellen. Se data/questionAngles.ts for
+   * hvorfor. `null` betyr at alle seks vinkler er brukt opp på denne
+   * fasetten; da skal Spir si fra at temaet er dekket i stedet for å begynne
+   * på nytt med andre ord.
+   */
+  angleInstruction: string | null;
+  /**
+   * v2.61: to-tre hverdagssituasjoner Spir kan forankre spørsmålet i, fra
+   * data/facetSituations.ts. Råstoff, ikke ferdig tekst -- hun skal skrive
+   * dem inn i sitt eget språk, og skal ikke bruke alle.
+   */
+  situations: readonly string[];
 }
 
 /**
@@ -183,10 +199,21 @@ export function buildGuidedFacetSystemPrompt(
 ): string {
   const { factorLines, facetLines } = buildFactorAndFacetLines(factors, facets);
 
+  // v2.61: vinkelen og situasjonene kommer fra koden, ikke fra modellen --
+  // se data/questionAngles.ts og data/facetSituations.ts.
+  const situationNote =
+    ctx.situations.length > 0
+      ? `\n\nHVERDAGSSITUASJONER DU KAN FORANKRE SPØRSMÅLET I (velg ÉN som passer, skriv den inn i ditt eget språk -- ikke ramse dem opp, ikke siter dem ordrett):\n${ctx.situations.map((s) => `- ${s}`).join("\n")}`
+      : "";
+
+  const angleNote = ctx.angleInstruction
+    ? `\n\nSPØRSMÅLSVINKEL FOR AKKURAT DETTE SVARET -- følg den, ikke velg selv:\n${ctx.angleInstruction}`
+    : `\n\nDette temaet er nå belyst fra alle vinklene vi har. Ikke still enda et spørsmål om det samme med nye ord. Si i stedet kort og vennlig at dere har snudd dette fra de kantene som er verdt å snu det fra, og la brukeren vite at han eller hun kan gå videre.`;
+
   const openingNote =
     ctx.exchangeCountForFacet === 0
-      ? `Dette er FØRSTE gang denne underkategorien tas opp i gjennomgangen. Åpne med en kort, personlig tolkning av brukerens skår på "${ctx.facetLabel}" (${ctx.facetScore}/100) -- ikke gjenta en standardsetning ordrett, finn en frisk vinkling ut fra TALLET og resten av profilen. Avslutt svaret med 1-2 konkrete, utdypende spørsmål om hvordan dette kjennes ut eller viser seg i brukerens hverdag.`
-      : `Dere er allerede i gang med å utforske "${ctx.facetLabel}". Følg naturlig opp det brukeren nettopp svarte. Still gjerne ett kort oppfølgingsspørsmål til om det føles naturlig, men når temaet begynner å være dekket, spør i stedet om brukeren har flere spørsmål til akkurat denne analysen -- slik at dere vet dere er klare til å gå videre.`;
+      ? `Dette er FØRSTE gang denne underkategorien tas opp i gjennomgangen. Åpne med én til to setninger om hva skåren kan bety i praksis -- konkret, ikke prinsipielt. Avslutt med ETT spørsmål.`
+      : `Dere er allerede i gang med å utforske "${ctx.facetLabel}". Knytt an til det brukeren nettopp svarte -- bruk hans eller hennes egne ord og det konkrete de fortalte, ikke en generell oppsummering. Avslutt med ETT nytt spørsmål.`;
 
   const closingNote = ctx.isLastFacetOverall
     ? " Dette er den siste underkategorien i hele gjennomgangen -- du kan gjerne la det merkes at dere nærmer dere slutten, uten at det blir en overdrevent stor avslutning (brukeren får en egen avslutningsskjerm i grensesnittet etterpå)."
@@ -208,7 +235,7 @@ Brukerens skår her: ${ctx.facetScore}/100.
 
 VIKTIG -- HOLD DEG TIL DENNE ÉNE UNDERKATEGORIEN:
 - Ikke drøft andre underkategorier eller hovedkategorier i dette svaret, selv om brukeren nevner noe beslektet -- noter det gjerne kort ("det kan godt henge sammen med noe vi kommer til"), men vent med selve drøftingen til dere faktisk kommer dit i gjennomgangen.
-- ${openingNote}${closingNote}
+- ${openingNote}${angleNote}${situationNote}${closingNote}
 - Brukeren styrer selv, via en egen knapp i grensesnittet, når dere går videre til neste underkategori. Du skal ALDRI selv skrive at "nå går vi videre", "neste underkategori er ..." eller liknende -- bare avslutt din egen del av samtalen naturlig og la brukeren styre resten.
 
 ${SHARED_TONE_RULES}`;

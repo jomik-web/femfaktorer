@@ -36,9 +36,35 @@ const ABSOLUTE_PATTERNS: RegExp[] = [
   /\bdiagnos/i,
 ];
 
+/**
+ * Maks antall setninger i et Spir-svar (v2.61).
+ *
+ * Systemprompten har hatt regelen "2-4 setninger normalt" siden v1, men den
+ * har aldri vært håndhevet -- og betatesteren beskrev svarene som "litt lang
+ * tekst" og "litt mye ord". En instruks en modell kan overse, er ikke en
+ * grense.
+ *
+ * Seks er bevisst romsligere enn regelen i prompten. Hensikten er ikke å
+ * presse hvert svar ned i fire setninger, men å fange de som stikker av.
+ */
+export const MAX_SENTENCES = 6;
+
+/**
+ * Teller setninger. Bevisst enkel: punktum, spørsmålstegn og utropstegn
+ * fulgt av mellomrom eller slutt. Forkortelser som "f.eks." kan gi en
+ * overtelling, men konsekvensen er kun at et langt svar bes omskrevet --
+ * langt mildere enn motsatt feil.
+ */
+export function countSentences(text: string): number {
+  const matches = text.trim().match(/[.!?]+(\s|$)/g);
+  return matches ? matches.length : text.trim().length > 0 ? 1 : 0;
+}
+
 export interface ValidationResult {
   ok: boolean;
   flaggedTerms: string[];
+  /** Sant når svaret er for langt. Håndteres ANNERLEDES enn tonebrudd -- se api/spir/route.ts. */
+  tooLong: boolean;
 }
 
 export function validateSpirResponse(text: string): ValidationResult {
@@ -47,7 +73,8 @@ export function validateSpirResponse(text: string): ValidationResult {
     const match = text.match(pattern);
     if (match) flagged.push(match[0]);
   }
-  return { ok: flagged.length === 0, flaggedTerms: flagged };
+  const tooLong = countSentences(text) > MAX_SENTENCES;
+  return { ok: flagged.length === 0 && !tooLong, flaggedTerms: flagged, tooLong };
 }
 
 /** Nøktern, ikke-skyldplasserende fallback dersom valideringen feiler eller AI-leverandøren feiler. */

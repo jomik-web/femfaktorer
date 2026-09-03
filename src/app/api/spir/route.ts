@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import type { FactorResult, FacetResult } from "@/lib/scoring";
 import { DOMAIN_TO_DISPLAY, DISPLAY_FACTOR_LABELS_NO } from "@/lib/scoring";
 import { buildSpirSystemPrompt, buildGuidedFacetSystemPrompt } from "@/lib/spir/systemPrompt";
-import { validateSpirResponse, SPIR_FALLBACK_MESSAGE } from "@/lib/spir/responseValidator";
+import { validateSpirResponse, countSentences, MAX_SENTENCES, SPIR_FALLBACK_MESSAGE } from "@/lib/spir/responseValidator";
 import { readStore, type AdminSettings } from "@/lib/admin/store";
 import { getGlobalAiUsage, incrementGlobalAiUsage } from "@/lib/admin/aiUsage";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { FACET_INTERPRETATIONS } from "@/data/facetInterpretations";
+import { situationsFor } from "@/data/facetSituations";
+import { nextAngle, isValidAngleId } from "@/data/questionAngles";
 
 /**
  * v2.46 (Kvalitetsrevisjon 31.07.2026, kap. 6, funn 4, middels alvorlighet):
@@ -110,6 +112,13 @@ interface FemRequestBody {
     /** Antall Spir-svar allerede gitt PÅ DENNE fasetten i denne økten -- samme "myk brems, ikke vanntett sperre"-forbehold som exchangeCount over. */
     exchangeCountForFacet: number;
     isLastFacetOverall: boolean;
+    /**
+     * v2.61: spørsmålsvinkler allerede brukt på DENNE fasetten, slik at Spir
+     * ikke stiller samme slags spørsmål to ganger. Klientrapportert, som
+     * resten av feltene her -- konsekvensen av juks er kun at en vinkel
+     * gjentas, så det trenger ingen serverside-sperre.
+     */
+    usedAngleIds?: string[];
   };
 }
 
@@ -147,7 +156,9 @@ function isValidGuidedFacet(value: unknown): value is NonNullable<FemRequestBody
     v.facetCode.length > 0 &&
     typeof v.exchangeCountForFacet === "number" &&
     v.exchangeCountForFacet >= 0 &&
-    typeof v.isLastFacetOverall === "boolean"
+    typeof v.isLastFacetOverall === "boolean" &&
+    (v.usedAngleIds === undefined ||
+      (Array.isArray(v.usedAngleIds) && v.usedAngleIds.every((a) => typeof a === "string")))
   );
 }
 
@@ -299,6 +310,12 @@ export async function POST(request: Request) {
   }
 
   let systemPrompt: string;
+  // v2.61: vinkelen velges her, og meldes tilbake til klienten i svaret slik
+  // at neste spørsmål på samme fasett blir en annen type.
+  const chosenAngle = body.guidedFacet
+    ? nextAngle((body.guidedFacet.usedAngleIds ?? []).filter(isValidAngleId))
+    : null;
+
   if (body.guidedFacet) {
     // Slår opp fasettmetadata (navn/domene/definisjon) SELV, fra den
     // godkjente kildefilen -- stoler aldri på tekst klienten måtte sende for
@@ -320,6 +337,13 @@ export async function POST(request: Request) {
       facetScore: facetScoreEntry.score,
       exchangeCountForFacet: body.guidedFacet.exchangeCountForFacet,
       isLastFacetOverall: body.guidedFacet.isLastFacetOverall,
+      // v2.61: vinkelen velges HER, ikke av modellen -- se
+      // data/questionAngles.ts. Klienten rapporterer hvilke som allerede er
+      // brukt på denne fasetten; vi tar den første ubrukte. Ugyldige id-er
+      // fra klienten filtreres bort i stedet for å avvise hele kallet, siden
+      // konsekvensen bare er at en vinkel gjentas.
+      angleInstruction: chosenAngle?.instruction ?? null,
+      situations: situationsFor(body.guidedFacet.facetCode),
     });
   } else {
     systemPrompt = buildSpirSystemPrompt(body.factors, body.facets ?? [], body.exchangeCount ?? 0);
@@ -396,7 +420,7 @@ export async function POST(request: Request) {
   });
 
   const data = await anthropicRes.json();
-  const text: string = data?.content?.[0]?.text ?? "";
+  let text: string = data?.content?.[0]?.text ?? "";
 
   if (!text) {
     // v2.21: logg til Netlify sine funksjonslogger -- før dette var
@@ -408,7 +432,65 @@ export async function POST(request: Request) {
     return NextResponse.json({ reply: SPIR_FALLBACK_MESSAGE, flagged: false });
   }
 
-  const validation = validateSpirResponse(text);
+  let validation = validateSpirResponse(text);
+
+  // v2.61: for langt svar er GYLDIG innhold, bare for mye av det -- helt
+  // annerledes enn et tonebrudd. Å vise fallback-meldingen her ville vært
+  // verre enn å vise et langt svar. Vi ber derfor om ETT nytt forsøk, og
+  // beholder det opprinnelige hvis det andre heller ikke blir kortere.
+  //
+  // Kun når lengden er eneste problem: er svaret også flagget for tone, går
+  // det rett til fallback som før.
+  if (validation.tooLong && validation.flaggedTerms.length === 0) {
+    console.warn("[spir] For langt svar, ber om nytt forsøk", {
+      sentences: countSentences(text),
+      max: MAX_SENTENCES,
+    });
+    try {
+      const retryRes = await fetch(ANTHROPIC_MESSAGES_URL, {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": ANTHROPIC_VERSION,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: settings?.aiModel || process.env.ANTHROPIC_MODEL || DEFAULT_MODEL,
+          max_tokens: MAX_OUTPUT_TOKENS,
+          temperature: TEMPERATURE,
+          system: systemPrompt,
+          messages: [
+            ...anthropicMessages,
+            { role: "assistant" as const, content: text },
+            {
+              role: "user" as const,
+              content: `Det svaret ble for langt (${countSentences(text)} setninger). Si det samme på høyst ${MAX_SENTENCES} setninger, med ETT spørsmål til slutt. Ikke legg til noe nytt -- stryk.`,
+            },
+          ],
+        }),
+      });
+      if (retryRes.ok) {
+        const retryData = await retryRes.json();
+        const retryText = (retryData?.content?.[0]?.text ?? "").trim();
+        const retryValidation = retryText ? validateSpirResponse(retryText) : null;
+        // Bruk det korte svaret bare hvis det faktisk BLE bedre.
+        if (retryText && retryValidation && retryValidation.ok) {
+          text = retryText;
+          validation = retryValidation;
+        }
+      }
+    } catch {
+      // Nytt forsøk feilet -- behold det opprinnelige, lange svaret.
+      // Et langt svar er bedre enn ingen svar.
+    }
+  }
+
+  // Er lengden fortsatt eneste innvending etter forsøket, vis svaret likevel.
+  if (!validation.ok && validation.tooLong && validation.flaggedTerms.length === 0) {
+    console.warn("[spir] Fortsatt for langt etter nytt forsøk -- viser det likevel");
+    return NextResponse.json({ reply: text, flagged: false, usedAngleId: chosenAngle?.id ?? null });
+  }
+
   if (!validation.ok) {
     // Teknisk håndheving (besluttet v1.5): ikke vis et svar som bryter tonekravet.
     // v2.21: logg de faktiske flaggede ordene + selve svarteksten, slik at et
@@ -426,5 +508,5 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({ reply: text, flagged: false });
+  return NextResponse.json({ reply: text, flagged: false, usedAngleId: chosenAngle?.id ?? null });
 }
