@@ -208,6 +208,23 @@ export default function FemPage() {
         setError(data.error ?? "Noe gikk galt. Prøv igjen.");
         return;
       }
+      // v2.62 (betatesterfunn): "Når vi trykker gå videre, så får vi en
+      // melding at den ikke skjønner og så skjer det ikke noe."
+      //
+      // Rotårsaken var ikke meldingen, men linjen under den: `setGuidedIndex`
+      // kjørte UANSETT, også når svaret var fallback-teksten. Tilstanden gikk
+      // altså videre selv om innholdet aldri ble laget -- og trykket brukeren
+      // "gå videre" en gang til, hoppet han enda et hakk fram. To
+      // underkategorier tapt uten at noe sa fra.
+      //
+      // Nå står gjennomgangen stille når det ikke kom innhold, slik at et nytt
+      // trykk faktisk prøver SAMME fasett på nytt.
+      if (data.isFallback) {
+        setError(
+          "Jeg fikk ikke laget en god innledning til dette temaet akkurat nå. Prøv å trykke én gang til."
+        );
+        return;
+      }
       setMessages([
         ...history,
         { role: "user", text: triggerText, hidden: true },

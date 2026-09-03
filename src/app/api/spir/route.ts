@@ -429,7 +429,7 @@ export async function POST(request: Request) {
     // brukerens egen melding eller resultatdata, kun Anthropic-svarets egen
     // stopp-årsak (nyttig for å skille "tom respons" fra andre feilmodus).
     console.error("[spir] Tomt svar fra Anthropic", { stopReason: data?.stop_reason ?? null });
-    return NextResponse.json({ reply: SPIR_FALLBACK_MESSAGE, flagged: false });
+    return NextResponse.json({ reply: SPIR_FALLBACK_MESSAGE, flagged: false, isFallback: true });
   }
 
   let validation = validateSpirResponse(text);
@@ -488,7 +488,7 @@ export async function POST(request: Request) {
   // Er lengden fortsatt eneste innvending etter forsøket, vis svaret likevel.
   if (!validation.ok && validation.tooLong && validation.flaggedTerms.length === 0) {
     console.warn("[spir] Fortsatt for langt etter nytt forsøk -- viser det likevel");
-    return NextResponse.json({ reply: text, flagged: false, usedAngleId: chosenAngle?.id ?? null });
+    return NextResponse.json({ reply: text, flagged: false, isFallback: false, usedAngleId: chosenAngle?.id ?? null });
   }
 
   if (!validation.ok) {
@@ -505,8 +505,12 @@ export async function POST(request: Request) {
       reply: SPIR_FALLBACK_MESSAGE,
       flagged: true,
       flaggedTerms: validation.flaggedTerms,
+      // v2.62: klienten MÅ vite dette. Uten flagget flyttet den guidede
+      // gjennomgangen seg videre selv når det ikke kom noe innhold, og
+      // brukeren mistet en underkategori uten å merke det.
+      isFallback: true,
     });
   }
 
-  return NextResponse.json({ reply: text, flagged: false, usedAngleId: chosenAngle?.id ?? null });
+  return NextResponse.json({ reply: text, flagged: false, isFallback: false, usedAngleId: chosenAngle?.id ?? null });
 }
