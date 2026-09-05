@@ -1,7 +1,6 @@
 import { RoughFactorIndicator } from "@/components/RoughFactorIndicator";
 import { FactorHero } from "@/components/FactorHero";
 import { FactorIcon } from "@/components/FactorIcon";
-import { ShareCard } from "@/components/ShareCard";
 import { GrowthSection } from "@/components/resultat/GrowthSection";
 import { ClosingSummarySection } from "@/components/resultat/ClosingSummarySection";
 import type { Domain } from "@/data/questions";
@@ -291,12 +290,6 @@ export function DetailedResult({
 
       <ClosingSummarySection closing={closing} activeFactor={activeFactor} tier={tier} />
 
-      {/* v2.37/v2.38: delbart Spir-kort -- til slutt på rapporten, uansett
-          hvilken fane/hovedkategori som er aktiv (produkteiers eksplisitte
-          ønske 25.07.2026), gjelder alle tre nivåer. Her er `facets`
-          populert for "full"/"extended", så disse brukerne får
-          meme-kort-velgeren når kort finnes for profilen. */}
-      <ShareCard factors={factors} facets={facets} />
     </>
   );
 }

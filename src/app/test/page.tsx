@@ -7,7 +7,6 @@ import {
   ALL_QUESTIONS,
   ALL_QUESTIONS_EXTENDED,
   FREE_QUESTIONS,
-  FREE_TIER_LENGTH,
   type Question,
 } from "@/data/questions";
 import type { AnswerValue, FactorResult, FacetResult, ResultTier } from "@/lib/scoring";
@@ -123,9 +122,10 @@ export default function TestPage() {
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [tier, setTier] = useState<ResultTier>("free");
   const [index, setIndex] = useState(0);
-  // "afterFree" = sjekkpunktet ved 50 (tilbyr full), "afterFull" = sjekkpunktet
+  // "afterFull" = sjekkpunktet ved 120 (tilbyr utvidet versjon). 50-
+  // sjekkpunktet er fjernet i v2.64 -- alle tar 120 rett gjennom.
   // ved 120 (tilbyr utvidet versjon).
-  const [checkpoint, setCheckpoint] = useState<"none" | "afterFree" | "afterFull">("none");
+  const [checkpoint, setCheckpoint] = useState<"none" | "afterFull">("none");
   const [hydrated, setHydrated] = useState(false);
   // v2.25: vises når brukeren havner på /test og allerede har et FERDIG
   // resultat fra før -- i stedet for å hoppe rett til /resultat uten
@@ -168,14 +168,17 @@ export default function TestPage() {
     setIntroSeen(loadIntroSeen());
     const stored = loadAnswers();
     setAnswers(stored.answers);
-    setTier(stored.tier);
+    // v2.64: 50-sjekkpunktet er fjernet -- alle tar 120. Brukere som har et
+    // lagret "free"-svarsett fra den gamle modellen løftes til "full", slik
+    // at de fortsetter der de slapp i stedet for å møte en tier som ikke
+    // lenger finnes i flyten. Svarene deres er uendret og fullt gyldige.
+    const effectiveTier = stored.tier === "free" ? "full" : stored.tier;
+    setTier(effectiveTier);
 
-    const list = questionsForTier(stored.tier);
+    const list = questionsForTier(effectiveTier);
     const firstUnanswered = list.findIndex((q) => stored.answers[q.id] === undefined);
     if (firstUnanswered === -1) {
-      if (stored.tier === "free") {
-        setCheckpoint("afterFree");
-      } else if (stored.tier === "full") {
+      if (effectiveTier === "full") {
         setCheckpoint("afterFull");
       } else {
         // tier === "extended" og alt besvart -- ferdig avklart, vis
@@ -226,7 +229,6 @@ export default function TestPage() {
 
   /** Sjekkpunktene 50 og 120 -- de to stedene folk faktisk faller av. */
   useEffect(() => {
-    if (checkpoint === "afterFree") trackEventOncePerSession("reached_checkpoint_50");
     if (checkpoint === "afterFull") trackEventOncePerSession("reached_checkpoint_120");
   }, [checkpoint]);
 
@@ -316,6 +318,18 @@ export default function TestPage() {
               Jeg er klar -- start testen
             </Button>
           </div>
+          {/* v2.64 (betatesterens ønske: "rett under start testen -- skriv at
+              dette er underholdning"). Forventningsstyring FØR testen, ikke
+              forbehold etter: si tidlig hva dette ER, si sent hva det ikke er
+              (selve ikke-diagnostisk-forbeholdet ligger nederst på
+              resultatsiden). Her står også tidsbruken, slik at ingen blir
+              overrasket av lengden -- det er den vanligste grunnen til at folk
+              gir opp midtveis. */}
+          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
+            Testen tar omtrent et kvarter, og er ment som underholdning og
+            selvrefleksjon -- ikke som en helsefaglig vurdering. Resultatet er
+            gratis.
+          </p>
         </main>
       </PageBackground>
     );
@@ -339,57 +353,6 @@ export default function TestPage() {
               Ta testen på nytt
             </Button>
           </div>
-        </main>
-      </PageBackground>
-    );
-  }
-
-  if (checkpoint === "afterFree") {
-    return (
-      <PageBackground>
-        <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-6 py-12 text-center">
-          <h1 className="font-display text-xl font-semibold text-indigo dark:text-white sm:text-2xl">
-            Du har svart på de første {FREE_TIER_LENGTH} spørsmålene
-          </h1>
-          <p className="text-indigo/80 dark:text-lavender-400/80">
-            Vil du se hva som ligger bak hovedtrekkene? Ved å fortsette til alle 120 spørsmål får du
-            et mer presist resultat, og du låser opp muligheten til å snakke videre med Spir om det.
-          </p>
-          <p className="text-sm text-indigo/60 dark:text-lavender-400/60">
-            Resultatet ditt er ikke ufullstendig som beskrivelse av deg fordi du velger å stoppe her
-            -- de resterende spørsmålene gir bare en mer detaljert måling.
-          </p>
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Button
-              type="button"
-              onClick={() => {
-                setTier("full");
-                saveAnswers(answers, "full");
-                setCheckpoint("none");
-                const nextIndex = ALL_QUESTIONS.findIndex((q) => answers[q.id] === undefined);
-                setIndex(nextIndex === -1 ? 0 : nextIndex);
-              }}
-            >
-              Fortsett til alle 120
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                trackEvent("completed_free");
-                router.push("/resultat");
-              }}
-            >
-              Behold det foreløpige resultatet
-            </Button>
-          </div>
-          <button
-            type="button"
-            onClick={restartTest}
-            className="self-center text-xs text-indigo/50 underline underline-offset-2 dark:text-lavender-400/50"
-          >
-            Trykket du hit ved en feiltakelse? Start testen helt på nytt
-          </button>
         </main>
       </PageBackground>
     );
@@ -478,9 +441,7 @@ export default function TestPage() {
 
     const result = computeTestResult(next, activeQuestions, tier);
     if (result.complete) {
-      if (tier === "free") {
-        setCheckpoint("afterFree");
-      } else if (tier === "full") {
+      if (tier === "full") {
         setCheckpoint("afterFull");
       } else {
         // tier === "extended" -- brukerens endelige, mest presise nivå.

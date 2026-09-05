@@ -20,6 +20,7 @@ import {
   clearRestoredAccountResult,
 } from "@/lib/storage";
 import { FeedbackPrompt } from "@/components/FeedbackPrompt";
+import { ShareCard } from "@/components/ShareCard";
 import {
   NON_DIAGNOSTIC_NOTICE,
   CRISIS_NOTICE,
@@ -375,16 +376,16 @@ function ResultatContent() {
             </Button>
           )}
         </div>
-        {/* Ikke-diagnostisk-forbeholdet og krisehenvisningen er BEVISST alltid
-            synlige, ikke inni Disclosure-en under -- v2.24-beslutningen var at
-            krisehenvisningen skal vises uansett skår, noe en lukket-som-
-            standard boks bak et klikk motvirket i praksis (kvalitetsrevisjon
-            2026-07-24, høyt funn). Kun det mindre kritiske, nivåspesifikke
-            fotnote-innholdet er fortsatt skjult bak klikk. */}
-        <div className="flex flex-col gap-1">
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{NON_DIAGNOSTIC_NOTICE}</p>
-          <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{CRISIS_NOTICE}</p>
-        </div>
+        {/* v2.64: KRISEHENVISNINGEN blir stående her, øverst og alltid synlig.
+            v2.24-beslutningen (kvalitetsrevisjon 2026-07-24, høyt funn) var at
+            den skal vises uansett skår -- den som trenger nummeret, skal ikke
+            måtte lete etter det. Det er ikke et forbehold, det er en livline.
+
+            Ikke-diagnostisk-forbeholdet er derimot flyttet NEDERST (produkteiers
+            ønske etter betatest): det er en presisering av hva resultatet ikke
+            er, og hører hjemme etter at man har lest det. De to sto tidligere
+            sammen og ble derfor behandlet likt -- men de gjør ulike jobber. */}
+        <p className="text-sm text-indigo/70 dark:text-lavender-400/70">{CRISIS_NOTICE}</p>
         {(tier === "free" || tier === "full" || tier === "extended") && (
           <Disclosure title="Mer om dette resultatnivået">
             {tier === "free" && (
@@ -406,6 +407,15 @@ function ResultatContent() {
           </Disclosure>
         )}
       </header>
+
+      {/* v2.64: KORTSTOKKEN ØVERST. Lå tidligere nederst i DetailedResult som
+          en ren deleseksjon. Betatesteren ba om "slides øverst for
+          hovedpoengene om deg" og pekte på Chess.com sin analyse som modell:
+          enkel oppsummering først, så dras du dypere. Kortene er allerede valgt
+          ut fra det som stikker MEST ut i profilen (pickMemeCards sorterer på
+          avstand fra midtpunktet), så de ER de tydeligste funnene.
+          FLYTTET, ikke duplisert -- de vises kun her nå. */}
+      <ShareCard factors={factors} facets={facets} />
 
       {tier === "free" && <FreeTierResult factors={factors} closingFree={closingFree} facets={facets} />}
 
@@ -472,6 +482,11 @@ function ResultatContent() {
           ferdige resultatet i stedet for en "fortsett testen"-oppfordring
           som ikke gir mening lenger. */}
       {tier && <TierUpgradeCta tier={tier} unlockedTiers={unlockedTiers} />}
+
+      {/* v2.64: ikke-diagnostisk-forbeholdet, flyttet hit fra toppen. */}
+      <p className="border-t border-lavender-400 pt-6 text-sm text-indigo/60 dark:border-white/10 dark:text-lavender-400/60">
+        {NON_DIAGNOSTIC_NOTICE}
+      </p>
 
       {/* Betaperioden (v2.37) -- fjernes ved lansering, se FeedbackPrompt.tsx. */}
       <FeedbackPrompt />
