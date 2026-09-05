@@ -42,6 +42,9 @@ import { Button, buttonClassNames } from "@/components/ui/Button";
 import { PageBackground } from "@/components/ui/PageBackground";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { FreeTierResult } from "@/components/resultat/FreeTierResult";
+import { LockedContentTeaser } from "@/components/resultat/LockedContentTeaser";
+import { DemoViewSwitch } from "@/components/resultat/DemoViewSwitch";
+import { DEMO_VIEW_SWITCH_ENABLED } from "@/lib/featureFlags";
 import { DetailedResult } from "@/components/resultat/DetailedResult";
 import { HistoryTable } from "@/components/resultat/HistoryTable";
 import { TierUpgradeCta } from "@/components/resultat/TierUpgradeCta";
@@ -336,11 +339,34 @@ function ResultatContent() {
   // `richCombos` gir en bredere oppsummering (flere trekk, flere
   // kombinasjonssetninger) på Utvidet-tieren, som har den mest presise
   // fasettdataen å bygge dette på -- se doc-kommentaren i interpretations.ts.
+  /**
+   * v2.65: FORHÅNDSVISNING AV GRATISVERSJONEN, via `?visning=gratis`.
+   *
+   * Produkteier kunne ikke se hvordan den ubetalte visningen ser ut, fordi
+   * alle nå tar 120 spørsmål og dermed alltid får den detaljerte. Uten en
+   * måte å bytte på, er gratisproduktet umulig å vurdere -- og det er det
+   * gratisproduktet som avgjør om noen i det hele tatt vil betale.
+   *
+   * MERK AT DETTE IKKE ER EN BETALINGSMUR. Den finnes ikke ennå (ingen
+   * betalingsintegrasjon i kodebasen). Dette er en visningsbryter til
+   * testing, og den lever i URL-en fordi det gjør den delbar: produkteier
+   * kan sende lenken til en tester og be dem se på nøyaktig samme versjon,
+   * også på mobil, uten innlogging.
+   *
+   * Når ekte betaling kommer, MÅ tilgangen avgjøres på serveren. En
+   * URL-parameter er ingen sperre -- her er den harmløs fordi den bare kan
+   * gi deg MINDRE innhold enn du allerede har rett på.
+   */
+  const previewFree = searchParams.get("visning") === "gratis";
+
   const closing = isDetailed ? buildClosingSynthesis(factors, facets, { richCombos: tier === "extended" }) : null;
   // Gratis-tierens egen, korte "samlede" analyse (v2.33) -- egen, enklere
   // variant nederst på siden (ikke en fane, siden gratis-tieren ikke har
   // fane-navigasjon i utgangspunktet).
-  const closingFree = tier === "free" && factors ? buildClosingSynthesis(factors, [], { skipCombos: true }) : null;
+  const closingFree =
+    (tier === "free" || previewFree) && factors
+      ? buildClosingSynthesis(factors, [], { skipCombos: true })
+      : null;
 
   return (
     <PageBackground>
@@ -350,7 +376,10 @@ function ResultatContent() {
           <h1 className="font-display text-2xl font-semibold text-indigo dark:text-white sm:text-3xl">
             Din profil
           </h1>
-          {isDetailed && (
+          {/* v2.65: PDF-en inneholder den detaljerte rapporten, så knappen
+              skjules i gratis-forhåndsvisningen -- ellers ville demoen tilby
+              en nedlasting av nettopp det innholdet den skal vise at mangler. */}
+          {isDetailed && !previewFree && (
             <Button
               type="button"
               variant="secondary"
@@ -417,9 +446,31 @@ function ResultatContent() {
           FLYTTET, ikke duplisert -- de vises kun her nå. */}
       <ShareCard factors={factors} facets={facets} />
 
-      {tier === "free" && <FreeTierResult factors={factors} closingFree={closingFree} facets={facets} />}
+      {/* v2.65: Demobryteren står rett under kortstokken -- like over det
+          første innholdet som faktisk endrer seg når man trykker, slik at
+          sammenhengen er synlig uten å rulle. Vises kun mens flagget er på. */}
+      {DEMO_VIEW_SWITCH_ENABLED && isDetailed && <DemoViewSwitch previewFree={previewFree} />}
 
-      {isDetailed && (
+      {(tier === "free" || previewFree) && (
+        <>
+          <FreeTierResult factors={factors} closingFree={closingFree} />
+          {/* Navngir det som ikke er med, i stedet for å sløre det -- se
+              komponentens egen doc-kommentar om informasjonsgapet. Krever
+              fasettdata, som kun finnes når testen faktisk er tatt i sin
+              helhet (altså i forhåndsvisningen, ikke på ekte "free"). */}
+          {facets.length > 0 && (
+            <LockedContentTeaser
+              facets={facets}
+              comboCount={
+                [...domainCombosByDomain.values()].reduce((n, list) => n + list.length, 0) +
+                [...facetCombosByDomain.values()].reduce((n, list) => n + list.length, 0)
+              }
+            />
+          )}
+        </>
+      )}
+
+      {isDetailed && !previewFree && (
         <DetailedResult
           factors={factors}
           facets={facets}

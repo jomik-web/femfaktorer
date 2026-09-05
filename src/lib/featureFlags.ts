@@ -55,3 +55,25 @@ export const BETA_ANSWER_SET_TOOLS_ENABLED = true;
  * fra adminpanelet uten ny utrulling.
  */
 export const SHARING_ENABLED = false;
+
+/**
+ * Synlig bryter på resultatsiden mellom gratis- og betalt visning (v2.65) --
+ * KUN for demo- og betatestperioden.
+ *
+ * Produkteier fikk aldri se gratisversjonen: alle tar nå 120 spørsmål og
+ * havner dermed alltid i den detaljerte visningen. Uten en bryter er
+ * gratisproduktet umulig å vurdere -- og det er nettopp gratisproduktet som
+ * avgjør om noen i det hele tatt kommer til å betale.
+ *
+ * Bryteren skriver til URL-en (`?visning=gratis`), ikke til lagret tilstand.
+ * Det gjør demoen delbar: send lenken til en tester, og de ser nøyaktig
+ * samme versjon, også på mobil, uten innlogging.
+ *
+ * DETTE ER IKKE EN BETALINGSMUR, og må aldri forveksles med en. En
+ * URL-parameter er ingen sperre. Her er den harmløs fordi den bare kan gi
+ * deg MINDRE innhold enn du allerede har rett på. Når ekte betaling kommer,
+ * MÅ tilgangen avgjøres på serveren -- og da skal dette flagget settes til
+ * false, slik at ingen betalende bruker møter en knapp som ser ut som om den
+ * skrur av det de nettopp betalte for.
+ */
+export const DEMO_VIEW_SWITCH_ENABLED = true;

@@ -1,7 +1,6 @@
 import { RoughFactorIndicator } from "@/components/RoughFactorIndicator";
 import { FactorHero } from "@/components/FactorHero";
 import { FactorIcon } from "@/components/FactorIcon";
-import { ShareCard } from "@/components/ShareCard";
 import { GrowthSection } from "@/components/resultat/GrowthSection";
 import {
   INTERPRETATIONS,
@@ -10,11 +9,21 @@ import {
   splitIntoParagraphs,
   type ClosingSynthesis,
 } from "@/data/interpretations";
-import type { FactorResult, FacetResult } from "@/lib/scoring";
+import type { FactorResult } from "@/lib/scoring";
 
 /**
- * Gratisnivåets resultatvisning (50 spørsmål) -- ren visning, all data
- * (factors/closingFree/facets) er allerede beregnet av forelderen.
+ * DEN UBETALTE RESULTATVISNINGEN -- ren visning, all data er beregnet av
+ * forelderen.
+ *
+ * v2.65: betydningen av denne komponenten er endret. Den var
+ * "gratisnivåets visning (50 spørsmål)"; nå tar ALLE 120 spørsmål, og dette
+ * er det man ser uten å ha betalt. Innholdet passet allerede: de fem
+ * hovedkategoriene med full tolkningstekst, jobb og kjærlighet, vekstdelen
+ * og en samlet oppsummering -- men ingen underkategorier og ingen samspill.
+ *
+ * Den skal føles HEL i seg selv, ikke som en amputert utgave. Merker folk at
+ * noe er tatt bort for å presse dem, føler de seg manipulert i stedet for
+ * nysgjerrige -- og da mister man både salget og deleviljen.
  *
  * v2.45 (Kvalitetsrevisjon 31.07.2026, kap. 5, funn 1): flyttet ut av
  * resultat/page.tsx (som var 989 linjer og voksende) til egen fil, sammen
@@ -25,11 +34,9 @@ import type { FactorResult, FacetResult } from "@/lib/scoring";
 export function FreeTierResult({
   factors,
   closingFree,
-  facets,
 }: {
   factors: FactorResult[];
   closingFree: ClosingSynthesis | null;
-  facets: FacetResult[];
 }) {
   return (
     <>
@@ -98,11 +105,6 @@ export function FreeTierResult({
         </section>
       )}
 
-      {/* v2.37/v2.38: delbart Spir-kort -- til slutt på rapporten, gjelder
-          alle tre nivåer (produkteiers eksplisitte ønske 25.07.2026).
-          `facets` er alltid tom for "free" her, så ShareCard faller
-          automatisk tilbake til domenekortet. */}
-      <ShareCard factors={factors} facets={facets} />
     </>
   );
 }
